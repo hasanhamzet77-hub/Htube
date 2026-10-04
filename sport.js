@@ -60,6 +60,15 @@ const AN={
  lunge:{o:"stand",pin:"ankleL",eq:"db2",ax:"z",alt:"legs",hot:["th"],t:[1.6,.3,1.2,.4],A:{ua:[.15,-1,0],fa:[.15,-1,0]},B:{ua:[.15,-1,0],fa:[.15,-1,0],thL:[.06,-.18,.98],shL:[.04,-1,.06],thR:[.06,-.6,-.8],shR:[.04,-.25,-.97]}}
 };
 
+const MUS={
+ fly:{p:["pecs"],s:["delt"]}, bench:{p:["pecs"],s:["triceps","delt"]}, dips:{p:["pecs","triceps"],s:["delt"]},
+ row:{p:["lats","back"],s:["biceps","traps"]}, dbrow:{p:["lats","back"],s:["biceps"]}, pullover:{p:["lats","pecs"],s:["triceps"]},
+ curl:{p:["biceps"],s:["forearm"]}, ohext:{p:["triceps"],s:[]}, hammer:{p:["biceps","forearm"],s:["triceps"]},
+ ohp:{p:["delt"],s:["triceps","traps"]}, lateral:{p:["delt"],s:["traps"]}, rear:{p:["delt","back"],s:["traps"]},
+ ifly:{p:["pecs"],s:["delt"]}, ipress:{p:["pecs","delt"],s:["triceps"]}, altcurl:{p:["biceps"],s:["forearm"]},
+ squat:{p:["quads","glutes"],s:["hams","back"]}, rdl:{p:["hams","glutes"],s:["back"]}, lunge:{p:["quads","glutes"],s:["hams","calves"]}
+};
+const MUS_RO={pecs:"piept",lats:"dorsali",back:"spate",traps:"trapez",delt:"umeri",biceps:"biceps",triceps:"triceps",forearm:"antebraț",abs:"abdomen",quads:"cvadriceps",hams:"femurali",glutes:"fesieri",calves:"gambe"};
 // ── încărcarea Three.js ──
 const THREE_URL="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js";
 let threeP=null;
@@ -86,42 +95,64 @@ function buildScene(THREE,canvas){
   plat.rotation.x=-Math.PI/2;scene.add(plat);
   [1.45,1.0,.55].forEach((r,i)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r-.012,r,128),new THREE.MeshBasicMaterial({color:0x8f8dff,transparent:true,opacity:i?.18:.6,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.y=.002+i*.001;scene.add(m)});
   const M={
-    body:new THREE.MeshStandardMaterial({color:0xd7dbee,roughness:.42,metalness:.12}),
-    hot:new THREE.MeshStandardMaterial({color:0x8d7dff,roughness:.35,metalness:.15,emissive:0x5a3dff,emissiveIntensity:.35}),
+    body:new THREE.MeshStandardMaterial({color:0xdcd6d1,roughness:.5,metalness:.05}),          // mușchi ca marmura unei statui
+    core:new THREE.MeshStandardMaterial({color:0x8e8781,roughness:.7,metalness:.05}),          // „scheletul” dintre mușchi
+    hot:new THREE.MeshStandardMaterial({color:0xd8140c,roughness:.35,metalness:.05,emissive:0xff1200,emissiveIntensity:.5}),
+    sec:new THREE.MeshStandardMaterial({color:0xe9907e,roughness:.45,metalness:.05,emissive:0x8a1a0a,emissiveIntensity:.25}),
     metal:new THREE.MeshStandardMaterial({color:0x9aa0b8,roughness:.25,metalness:.85}),
     plate:new THREE.MeshStandardMaterial({color:0x22242f,roughness:.55,metalness:.4}),
     pad:new THREE.MeshStandardMaterial({color:0x2c2f40,roughness:.7,metalness:.1}),
     frame:new THREE.MeshStandardMaterial({color:0x4b5066,roughness:.4,metalness:.7})
   };
   const cap=(r,l)=>new THREE.CapsuleGeometry(r,l,6,16);
-  const mesh=(geo,mat,y=0)=>{const m=new THREE.Mesh(geo,mat);m.position.y=y;return m};
+  const SPH=new THREE.SphereGeometry(1,28,20);
+  const body={meshes:{}};
+  // un mușchi = un elipsoid; cheia spune din ce grupă face parte (ca să-l putem colora în roșu)
+  const mus=(parent,key,rx,ry,rz,x,y,z,rotZ=0,rotX=0)=>{
+    const m=new THREE.Mesh(SPH,M.body);m.scale.set(rx,ry,rz);m.position.set(x,y,z);m.rotation.set(rotX,0,rotZ);
+    parent.add(m);(body.meshes[key]=body.meshes[key]||[]).push(m);return m};
+  const bone=(parent,r,l,y,sx=1,sz=1)=>{const m=new THREE.Mesh(cap(r,l),M.core);m.position.y=y;m.scale.set(sx,1,sz);parent.add(m);return m};
   const root=new THREE.Group();scene.add(root);
-  const body={meshes:{torso:[],ua:[],fa:[],th:[],delt:[]}};
   const pelvis=new THREE.Group();root.add(pelvis);
-  const pm=mesh(cap(.105,.17),M.body);pm.rotation.z=Math.PI/2;pelvis.add(pm);
+  const pm=new THREE.Mesh(cap(.1,.16),M.core);pm.rotation.z=Math.PI/2;pm.scale.set(1,1,.9);pelvis.add(pm);
+  for(const s of [-1,1])mus(pelvis,"glutes",.078,.085,.062,s*.07,-.04,-.07);
   const torso=new THREE.Group();torso.position.y=.04;pelvis.add(torso);
-  const abd=mesh(cap(.115,.2),M.body,.19);torso.add(abd);
-  const chest=new THREE.Mesh(new THREE.SphereGeometry(.165,24,18),M.body);chest.scale.set(1.28,1.02,.78);chest.position.y=.39;torso.add(chest);
-  body.meshes.torso.push(abd,chest);
-  torso.add(mesh(cap(.045,.06),M.body,.56));
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.102,24,18),M.body);head.scale.set(.92,1.1,1);head.position.set(0,.68,.01);torso.add(head);
+  bone(torso,.1,.24,.21,1.3,.86);
+  const rib=new THREE.Mesh(SPH,M.core);rib.scale.set(.165,.15,.115);rib.position.set(0,.38,0);torso.add(rib);
+  for(const s of [-1,1]){
+    mus(torso,"pecs",.102,.07,.046,s*.086,.405,.083,s*.22);                 // piept
+    mus(torso,"lats",.062,.155,.064,s*.122,.3,-.03,s*.32);                  // dorsali
+    mus(torso,"back",.04,.15,.034,s*.042,.27,-.088);                        // erectori / romboizi
+    mus(torso,"abs",.046,.092,.05,s*.105,.19,.035,-s*.18);                  // oblici
+    for(const [y,ry] of [[.305,.03],[.24,.031],[.175,.031],[.108,.038]])mus(torso,"abs",.036,ry,.022,s*.037,y,.097);   // pătrățelele
+  }
+  mus(torso,"traps",.135,.058,.062,0,.488,-.035);
+  mus(torso,"traps",.07,.05,.05,0,.53,-.02);
+  bone(torso,.045,.06,.57);
+  const head=new THREE.Mesh(SPH,M.body);head.scale.set(.094,.112,.102);head.position.set(0,.69,.01);torso.add(head);
   const arms={},legs={};
   for(const s of [-1,1]){
     const k=s<0?"R":"L";
     const sh=new THREE.Group();sh.position.set(s*.205,.47,0);torso.add(sh);
-    const delt=new THREE.Mesh(new THREE.SphereGeometry(.072,18,14),M.body);sh.add(delt);body.meshes.delt.push(delt);
+    mus(sh,"delt",.078,.088,.082,s*.012,-.025,0);
     const ua=new THREE.Group();sh.add(ua);
-    const uam=mesh(cap(.05,.19),M.body,-.145);ua.add(uam);body.meshes.ua.push(uam);
+    bone(ua,.034,.2,-.145);
+    mus(ua,"biceps",.043,.105,.046,0,-.145,.03);
+    mus(ua,"triceps",.047,.122,.045,0,-.13,-.027);
     const el=new THREE.Group();el.position.y=-.29;ua.add(el);
-    const fam=mesh(cap(.041,.19),M.body,-.135);el.add(fam);body.meshes.fa.push(fam);
-    el.add(mesh(new THREE.SphereGeometry(.043,14,12),M.body,-.29));
+    mus(el,"forearm",.044,.115,.041,0,-.1,.004);
+    bone(el,.027,.14,-.17);
+    const hand=new THREE.Mesh(SPH,M.body);hand.scale.set(.034,.046,.022);hand.position.y=-.29;el.add(hand);
     arms[k]={ua,el};
     const hip=new THREE.Group();hip.position.set(s*.1,-.02,0);pelvis.add(hip);
-    const thm=mesh(cap(.07,.29),M.body,-.215);hip.add(thm);body.meshes.th.push(thm);
+    bone(hip,.05,.3,-.215);
+    mus(hip,"quads",.074,.19,.068,s*.005,-.205,.024);
+    mus(hip,"hams",.063,.18,.056,0,-.215,-.03);
     const kn=new THREE.Group();kn.position.y=-.43;hip.add(kn);
-    kn.add(mesh(cap(.055,.3),M.body,-.21));
+    bone(kn,.037,.3,-.21);
+    mus(kn,"calves",.051,.11,.053,0,-.12,-.03);
     const an=new THREE.Group();an.position.y=-.42;kn.add(an);
-    const foot=new THREE.Mesh(new THREE.BoxGeometry(.09,.06,.22),M.body);foot.position.set(0,-.03,.06);an.add(foot);
+    const foot=new THREE.Mesh(new THREE.BoxGeometry(.085,.055,.21),M.core);foot.position.set(0,-.03,.06);an.add(foot);
     legs[k]={hip,kn,an};
   }
   // echipament
@@ -216,7 +247,9 @@ function setExercise(key){
   if(an.props==="rowbench")G.benchHand=handPos("L");
   if(an.pin==="ankleL"){cur.pinT={L:anklePos("L"),R:anklePos("R")}}
   for(const m of Object.values(G.body.meshes).flat())m.material=G.M.body;
-  for(const h of an.hot||[])for(const m of G.body.meshes[h]||[])m.material=G.M.hot;
+  const mu=MUS[key]||{p:[],s:[]};
+  for(const h of mu.s)for(const m of G.body.meshes[h]||[])m.material=G.M.sec;
+  for(const h of mu.p)for(const m of G.body.meshes[h]||[])m.material=G.M.hot;
   buildProps(an);
   G.barbell.visible=an.eq==="bb"||an.eq==="bbBack";
   G.dbs.R.visible=an.eq==="db2"||an.eq==="dbR";G.dbs.L.visible=an.eq==="db2";G.dbs.C.visible=an.eq==="db1";
@@ -355,6 +388,7 @@ function togglePause(){
 const $s=id=>document.getElementById(id);
 const fmt=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,"0");return h?`${h}:${String(m).padStart(2,"0")}:${x}`:`${m}:${x}`};
 function weekDates(){const d=new Date();const off=(d.getDay()+6)%7;return DSH.map((_,i)=>{const x=new Date(d);x.setHours(12,0,0,0);x.setDate(d.getDate()-off+i);return dk(x)})}
+const musTags=a=>{const m=MUS[a];if(!m)return"";return `<span class="sptags">${m.p.map(k=>`<i class="p">${MUS_RO[k]}</i>`).join("")}${m.s.map(k=>`<i>${MUS_RO[k]}</i>`).join("")}</span>`};
 function render(){
   const D=day(),wd=weekDates(),ti=(new Date().getDay()+6)%7;
   $s("sp-kick").textContent=sel===ti?"Azi":D.d;
@@ -375,7 +409,7 @@ function renderLive(full){
     const est=Math.round(D.ex.reduce((a,x)=>a+x.sets*(45+x.rest),0)/60);
     P.dataset.st="idle";
     P.innerHTML=`<button class="spgo" id="sp-go"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg><span><b>Începe antrenamentul</b><small>${D.ex.length} exerciții · ~${est} min</small></span></button>`;
-    $s("sp-hud").innerHTML=`<b>${esc(e.n)}</b><small>${e.sets} × ${e.reps}</small>`;
+    $s("sp-hud").innerHTML=`<b>${esc(e.n)}</b><small>${e.sets} × ${e.reps}</small>${musTags(e.a)}`;
     return;
   }
   if(sess.state==="done"){

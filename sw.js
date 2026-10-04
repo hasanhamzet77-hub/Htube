@@ -1,6 +1,6 @@
 // HTube: aplicația merge și fără internet; feed-ul se ia mereu proaspăt când există conexiune
-const CACHE = "htube-v17";
-const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./sport.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "virtus-v1";
+const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./sport.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./brand/intro.jpg", "./brand/emblem.png", "./brand/emblem-96.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" }))))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x)))));

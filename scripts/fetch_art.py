@@ -6,6 +6,7 @@ Rulează pe GitHub Actions (are nevoie de internet). Fără chei API."""
 import io, json, re, socket, sys, time, urllib.parse, urllib.request
 socket.setdefaulttimeout(20)
 DEADLINE = time.time() + 9 * 60   # nu stăm mai mult de 9 minute
+MET_DEADLINE = time.time() + 3 * 60
 from pathlib import Path
 
 try:
@@ -78,7 +79,7 @@ def aic(theme, items, seen, log):
             continue
         taken = 0
         for o in res.get("data", []):
-            if len(items) >= PER_THEME or taken >= 4:
+            if len(items) >= PER_THEME or taken >= 4 or time.time() > DEADLINE:
                 break
             key = "aic" + str(o.get("id"))
             if key in seen or not o.get("is_public_domain") or not o.get("image_id"):
@@ -124,7 +125,7 @@ def main():
         for x in items:
             seen.add(x["id"])
         for q, dept in (queries if met_ok else []):
-            if time.time() > DEADLINE:
+            if time.time() > MET_DEADLINE:
                 break
             if len(items) >= PER_THEME:
                 break
@@ -135,7 +136,7 @@ def main():
                 continue
             taken, fails = 0, 0
             for oid in ids:
-                if len(items) >= PER_THEME or taken >= 4:   # cel mult 4 pe căutare, ca să fie variat
+                if len(items) >= PER_THEME or taken >= 4 or time.time() > MET_DEADLINE:   # cel mult 4 pe căutare
                     break
                 if oid in seen:
                     continue
@@ -175,9 +176,16 @@ def main():
             aic(theme, items, seen, log)
         out[theme] = items
         print(theme, len(items), flush=True)
+    # miniaturi mici (pentru intro-ul de la deschidere)
+    (OUT / "thumb").mkdir(exist_ok=True)
+    for v in out.values():
+        for x in v:
+            t = OUT / "thumb" / x["f"]
+            if not t.exists() and (OUT / x["f"]).exists():
+                im = Image.open(OUT / x["f"]).convert("RGB"); im.thumbnail((420, 420)); im.save(t, "JPEG", quality=62, optimize=True)
     # ștergem imaginile care nu mai sunt folosite
     used = {x["f"] for v in out.values() for x in v}
-    for p in OUT.glob("*.jpg"):
+    for p in list(OUT.glob("*.jpg")) + list((OUT / "thumb").glob("*.jpg")):
         if p.name not in used:
             p.unlink()
     (ROOT / "art.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
