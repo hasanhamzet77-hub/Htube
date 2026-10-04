@@ -206,15 +206,46 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .addbook{aspect-ratio:2/3;border:1.5px dashed var(--line);border-radius:6px;display:grid;place-items:center;align-content:center;gap:4px;color:var(--muted);font-size:12.5px;text-align:center;padding:8px;cursor:pointer}
 .addbook b{font-size:26px;font-weight:400;line-height:1}
 
-.jl{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
-.ji{display:block;width:100%;margin-bottom:6px;font:inherit;font-size:16px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical}
-.ji:focus{outline:2px solid var(--accent);outline-offset:0}
-.jpast{margin-top:18px}
+
+/* ── Jurnal de seară: pagină ascunsă la stânga feed-ului (glisezi spre dreapta) ── */
+:root{--paper:#f7f2e8;--rule:#e4dccb;--cover:#1f2f6e;--cover2:#2f4fd8;--gold:#e9c46a}
+@media (prefers-color-scheme: dark){:root{--paper:#18160f;--rule:#2d2a21;--cover:#1b2557;--cover2:#3a56d9;--gold:#e3c46a}}
+#jrpage{position:fixed;inset:0;z-index:8;background:var(--bg);overflow:hidden}
+#jr-anim{position:absolute;inset:0;display:grid;place-items:center;perspective:1400px;cursor:pointer}
+.ja-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:700;font-size:44px;letter-spacing:-.03em;opacity:0;white-space:nowrap}
+.ja-logo i{font-style:normal;color:var(--accent)}
+.ja-book{position:absolute;left:50%;top:50%;width:150px;height:210px;margin-top:-105px;transform-style:preserve-3d;transform-origin:75px 105px;opacity:0}
+.ja-pages{position:absolute;inset:0;background:var(--paper);border-radius:2px 6px 6px 2px;box-shadow:2px 0 0 var(--rule),4px 1px 0 var(--paper),5px 1px 0 var(--rule),0 18px 40px rgba(0,0,0,.22);padding:22px 14px 0 16px;overflow:hidden}
+.ja-pages small{display:block;font-size:6px;color:var(--muted);text-transform:capitalize}
+.ja-pages b{display:block;font-family:var(--serif);font-weight:500;font-size:13px;margin:2px 0 8px;color:var(--ink)}
+.ja-pages i{display:block;height:9px;border-bottom:1px solid var(--rule)}
+.ja-cover{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d}
+.ja-front,.ja-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px 6px 6px 2px}
+.ja-front{background:linear-gradient(135deg,var(--cover2),var(--cover));box-shadow:inset 7px 0 0 rgba(0,0,0,.18),inset 9px 0 0 rgba(255,255,255,.08);display:grid;place-items:center;align-content:center;gap:6px;color:var(--gold)}
+.ja-front b{font-family:var(--serif);font-weight:500;font-size:64px;line-height:1}
+.ja-front span{font-size:9px;letter-spacing:.32em;text-transform:uppercase;opacity:.85}
+.ja-back{background:var(--paper);transform:rotateY(180deg);border-radius:6px 2px 2px 6px;box-shadow:inset -6px 0 12px rgba(0,0,0,.08)}
+#jr-sheet{position:absolute;inset:0;background:var(--paper);overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;padding:calc(14px + env(safe-area-inset-top,0px)) 0 calc(40px + env(safe-area-inset-bottom,0px))}
+#jr-sheet .wrap{max-width:560px}
+.jtop{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.jtop small{font-size:12.5px;color:var(--muted);text-transform:capitalize}
+#jr-close{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13.5px;font-weight:600;color:var(--muted);padding:8px 4px}
+#jr-close svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.jtitle{font-family:var(--serif);font-weight:500;font-size:34px;line-height:1.1;letter-spacing:-.01em;margin:4px 0 2px}
+.jsub{font-size:13px;color:var(--muted);margin:0 0 6px}
+.jl{display:block;font-family:var(--serif);font-style:italic;font-size:18px;color:var(--muted);margin:26px 0 4px}
+.ji{display:block;width:100%;font-family:var(--serif);font-size:19px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:6px 0;line-height:32px}
+textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-linear-gradient(transparent 0 31px,var(--rule) 31px 32px);min-height:96px}
+.ji:focus{outline:none;border-bottom-color:var(--accent)}
+.ji::placeholder{color:color-mix(in srgb,var(--muted) 55%,transparent)}
+.jdone{margin-top:28px;width:100%}
+.jpast{margin-top:30px}
 .jpast summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--accent);padding:6px 0}
-.jday{padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
-.jday b{display:block;font-size:12px;letter-spacing:.04em;text-transform:capitalize;color:var(--muted);margin-bottom:4px}
+.jday{padding:14px 0;border-bottom:1px solid var(--rule);font-family:var(--serif);font-size:16.5px}
+.jday b{display:block;font-family:var(--sans);font-size:12px;letter-spacing:.04em;text-transform:capitalize;color:var(--muted);margin-bottom:4px}
 .jday p{margin:2px 0}
-.jday i{font-style:normal;color:var(--muted)}
+.jday i{color:var(--muted)}
+#jr-skip{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:12px;color:var(--muted);opacity:.7}
 
 /* cititor PDF pe ecran întreg */
 #reader{position:fixed;inset:0;z-index:10;background:var(--soft);display:flex;flex-direction:column}
@@ -293,20 +324,6 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <button class="btn" id="md-start">Începe</button>
     </div>
 
-    <div class="sec" id="jr">
-      <div class="sec-h"><h3>Jurnal de seară</h3><span class="muted" id="jr-st"></span></div>
-      <p class="note" id="jr-hint"></p>
-      <label class="jl">3 lucruri pentru care sunt recunoscător azi</label>
-      <input class="ji" data-j="g0" placeholder="1." maxlength="160" autocomplete="off">
-      <input class="ji" data-j="g1" placeholder="2." maxlength="160" autocomplete="off">
-      <input class="ji" data-j="g2" placeholder="3." maxlength="160" autocomplete="off">
-      <label class="jl">Lecția zilei</label>
-      <textarea class="ji" data-j="l" rows="2" placeholder="Ce am învățat azi, despre mine sau despre oameni" maxlength="600"></textarea>
-      <label class="jl">Mâine fac mai bine</label>
-      <textarea class="ji" data-j="m" rows="2" placeholder="Un singur lucru concret" maxlength="400"></textarea>
-      <div id="jr-past"></div>
-    </div>
-
     <div class="sec">
       <div class="sec-h"><h3>Raft</h3><span class="muted" id="bk-count"></span><label class="link" for="bk-file">+ Adaugă PDF</label></div>
       <input type="file" id="bk-file" accept="application/pdf,.pdf" multiple hidden>
@@ -369,6 +386,34 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
   </div>
   <div id="rd-pages"></div>
 </div>
+
+<section id="jrpage" hidden>
+  <div id="jr-anim" aria-hidden="true">
+    <div class="ja-logo">H<i>Tube</i></div>
+    <div class="ja-book">
+      <div class="ja-pages"><div class="ja-ink"><small id="ja-date"></small><b>Jurnal de seară</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="ja-cover"><div class="ja-front"><b>H</b><span>Jurnal</span></div><div class="ja-back"></div></div>
+    </div>
+    <div id="jr-skip">Atinge ca să sari peste</div>
+  </div>
+  <div id="jr-sheet">
+    <div class="wrap" id="jr">
+      <div class="jtop"><small id="jr-date"></small><button id="jr-close" aria-label="Înapoi la feed">Feed<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
+      <h1 class="jtitle">Jurnal de seară</h1>
+      <p class="jsub"><span id="jr-st"></span><span id="jr-hint"></span></p>
+      <label class="jl">Trei lucruri pentru care sunt recunoscător azi</label>
+      <input class="ji" data-j="g0" placeholder="1." maxlength="160" autocomplete="off">
+      <input class="ji" data-j="g1" placeholder="2." maxlength="160" autocomplete="off">
+      <input class="ji" data-j="g2" placeholder="3." maxlength="160" autocomplete="off">
+      <label class="jl">Lecția zilei</label>
+      <textarea class="ji" data-j="l" rows="3" placeholder="Ce am învățat azi, despre mine sau despre oameni" maxlength="600"></textarea>
+      <label class="jl">Mâine fac mai bine</label>
+      <textarea class="ji" data-j="m" rows="3" placeholder="Un singur lucru concret" maxlength="400"></textarea>
+      <button class="btn jdone" id="jr-done">Gata pentru azi</button>
+      <div id="jr-past"></div>
+    </div>
+  </div>
+</section>
 
 <div id="medov" hidden>
   <button id="md-x" aria-label="Oprește meditația"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -1073,7 +1118,7 @@ function renderJournal(){
 }
 function jStreak(){
   let n=0,i=jFilled(S.journal[dk()])?0:-1;while(jFilled(S.journal[dk(dayAt(i))])){n++;i--}
-  $("jr-st").textContent=n?n+(n===1?" seară":" seri")+" la rând":"";
+  $("jr-st").textContent=n?n+(n===1?" seară":" seri")+" la rând · ":"";
 }
 let jT=0;
 $("jr").addEventListener("input",ev=>{
@@ -1086,6 +1131,89 @@ $("jr").addEventListener("input",ev=>{
     $("jr-hint").textContent=jFilled(S.journal[k])?"Salvat automat. Poți reveni oricând azi.":$("jr-hint").textContent},600);
 });
 
+// ── pagina jurnalului: stă ascunsă la stânga feed-ului; o deschizi glisând spre dreapta ──
+const JW=150,JH=210;
+let jrOpen=false,jrSkip=false;
+const jrAllowed=()=>!$("v-feed").hidden&&!jrOpen&&$("reader").hidden&&$("medov").hidden&&!isFull;
+async function openJournal(){
+  if(jrOpen)return;jrOpen=true;jrSkip=false;stopAll();
+  const pg=$("jrpage"),an=$("jr-anim"),sh=$("jr-sheet");
+  const logo=an.querySelector(".ja-logo"),book=an.querySelector(".ja-book"),cover=an.querySelector(".ja-cover");
+  const dstr=new Date().toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long"});
+  $("ja-date").textContent=$("jr-date").textContent=dstr;
+  renderJournal();
+  pg.style.transform=pg.style.opacity="";
+  an.hidden=false;sh.style.opacity=0;sh.style.pointerEvents="none";sh.scrollTop=0;pg.hidden=false;
+  const anims=[];
+  const A=(el,kf,d,delay=0,e="cubic-bezier(.65,0,.35,1)")=>{
+    const a=el.animate(kf,{duration:d,delay,easing:e,fill:"both"});anims.push(a);
+    if(jrSkip)a.finish();return a.finished};
+  try{
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches)throw 0;
+    const s=Math.max(innerWidth/JW,innerHeight/JH)*1.12,closed=`translateX(${-JW/2}px)`;
+    // 1. apare logo-ul HTube
+    await A(logo,[{opacity:0,transform:"translate(-50%,-50%) scale(.8)"},{opacity:1,transform:"translate(-50%,-50%) scale(1)"}],520,60,"cubic-bezier(.2,.8,.2,1)");
+    // 2. logo-ul se strânge și devine o carte
+    await Promise.all([
+      A(logo,[{opacity:1,transform:"translate(-50%,-50%) scale(1)"},{opacity:0,transform:"translate(-50%,-50%) scale(.3)"}],420,280),
+      A(book,[{opacity:0,transform:closed+" scale(.25) rotate(-10deg)"},{opacity:1,transform:closed+" scale(1) rotate(0deg)"}],680,360,"cubic-bezier(.2,.9,.25,1.15)")]);
+    // 3. coperta se deschide
+    await Promise.all([
+      A(cover,[{transform:"rotateY(0deg)"},{transform:"rotateY(-168deg)"}],950,160,"cubic-bezier(.45,0,.2,1)"),
+      A(book,[{opacity:1,transform:closed+" scale(1) rotate(0deg)"},{opacity:1,transform:"translateX(0px) scale(1.15) rotate(0deg)"}],950,160,"cubic-bezier(.45,0,.2,1)")]);
+    // 4. pagina se apropie de ecran și devine jurnalul
+    await Promise.all([
+      A(book,[{opacity:1,transform:"translateX(0px) scale(1.15) rotate(0deg)"},{opacity:1,transform:`translateX(${-JW/2}px) scale(${s}) rotate(0deg)`}],780,120,"cubic-bezier(.7,0,.3,1)"),
+      A(an.querySelector(".ja-ink"),[{opacity:1},{opacity:0}],280,120),
+      A(sh,[{opacity:0},{opacity:1}],320,600)]);
+  }catch(e){}
+  if(!jrOpen)return;
+  sh.style.opacity=1;sh.style.pointerEvents="";an.hidden=true;
+  anims.forEach(a=>{try{a.cancel()}catch(_){}});
+}
+function closeJournal(){
+  if(!jrOpen)return;jrSkip=true;
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  const pg=$("jrpage");
+  pg.animate([{transform:pg.style.transform||"translateX(0)",opacity:1},{transform:"translateX(-35%)",opacity:0}],{duration:260,easing:"cubic-bezier(.4,0,1,1)"})
+    .finished.then(()=>{pg.hidden=true;pg.style.transform="";jrOpen=false;$("jr-anim").hidden=true;if(!$("v-azi").hidden)renderHabits()});
+}
+$("jr-anim").addEventListener("click",()=>{jrSkip=true;document.getAnimations&&$("jr-anim").getAnimations({subtree:true}).forEach(a=>{try{a.finish()}catch(_){}});$("jr-sheet").getAnimations().forEach(a=>{try{a.finish()}catch(_){}})});
+$("jr-close").addEventListener("click",closeJournal);
+$("jr-done").addEventListener("click",()=>{save();const f=jFilled(S.journal[dk()]);closeJournal();toast(f?"Noapte bună. Ne vedem mâine.":"Jurnalul te așteaptă diseară")});
+// glisare: spre dreapta în Feed deschide jurnalul, spre stânga în jurnal îl închide
+(()=>{
+  let st=null;
+  const movers=()=>[document.querySelector("main"),$("hdr")];
+  const reset=els=>els.forEach(el=>{el.style.transition="transform .25s ease, opacity .25s ease";el.style.transform="";el.style.opacity="";setTimeout(()=>{el.style.transition=""},260)});
+  addEventListener("touchstart",e=>{
+    st=null;if(e.touches.length!==1)return;
+    const t=e.target,p=e.touches[0];
+    if(jrOpen){if(!$("jr-anim").hidden)return;st={x:p.clientX,y:p.clientY,dir:-1,lock:0,d:0};return}
+    if(!jrAllowed()||t.closest(".srow,.chips,#stage,nav,input,select,textarea"))return;
+    st={x:p.clientX,y:p.clientY,dir:1,lock:0,d:0};
+  },{passive:true});
+  addEventListener("touchmove",e=>{
+    if(!st)return;
+    const p=e.touches[0],dx=p.clientX-st.x,dy=p.clientY-st.y;
+    if(!st.lock){if(Math.abs(dx)<12&&Math.abs(dy)<12)return;st.lock=(Math.abs(dx)>Math.abs(dy)*1.4&&Math.sign(dx)===st.dir)?1:-1}
+    if(st.lock<0)return;
+    e.preventDefault();
+    st.d=Math.max(0,dx*st.dir);
+    const off=st.dir*Math.min(st.d*.4,110);
+    (st.dir>0?movers():[$("jrpage")]).forEach(el=>{el.style.transition="none";el.style.transform=`translateX(${off}px)`;el.style.opacity=String(1-Math.min(st.d/700,.3))});
+  },{passive:false});
+  const end=()=>{
+    if(!st)return;const s=st;st=null;if(s.lock!==1)return;
+    if(s.dir>0){reset(movers());if(s.d>70)openJournal()}
+    else if(s.d>70)closeJournal();else reset([$("jrpage")]);
+  };
+  addEventListener("touchend",end);addEventListener("touchcancel",end);
+  // pe calculator: săgeata stânga/dreapta
+  addEventListener("keydown",e=>{if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;
+    if(e.key==="ArrowRight"&&jrAllowed())openJournal();else if((e.key==="ArrowLeft"||e.key==="Escape")&&jrOpen)closeJournal()});
+})();
+
 // ── pagina Azi ──
 function renderAzi(){
   const now=new Date(),h=now.getHours();
@@ -1095,7 +1223,7 @@ function renderAzi(){
     const d=Math.floor((now-now.getTimezoneOffset()*6e4)/864e5),q=quotes[(d*7919)%quotes.length];
     $("az-q").textContent=`„${q.t}”`;$("az-qs").innerHTML=`— <b>${esc(q.who)}</b>${q.src?", "+esc(q.src):""}`;
   }
-  renderHabits();renderMed();renderJournal();renderShelf();
+  renderHabits();renderMed();renderShelf();
 }
 $("v-azi").addEventListener("click",e=>{
   const h=e.target.closest("[data-h]");
