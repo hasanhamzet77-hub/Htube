@@ -141,7 +141,8 @@ def keep(item, person, block):
         return False
     if any(w in t for w in person.get("block", [])):
         return False
-    if person.get("allow") and not any(w in t for w in person["allow"]):
+    # Shorts au titluri foarte scurte: pentru ele ajunge lista de excluderi; clipurile lungi trebuie să fie clar motivaționale
+    if person.get("allow") and not item["s"] and not any(w in t for w in person["allow"]):
         return False
     return True
 

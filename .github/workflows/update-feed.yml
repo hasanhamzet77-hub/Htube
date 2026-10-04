@@ -5,7 +5,7 @@ on:
     - cron: "17 */2 * * *"   # la fiecare 2 ore
   workflow_dispatch: {}       # buton manual: Actions → Run workflow
   push:
-    paths: ["channels.json"]  # imediat ce schimbi canalele
+    paths: ["channels.json", "scripts/**"]  # imediat ce schimbi persoanele sau colectorul
 
 permissions:
   contents: write
