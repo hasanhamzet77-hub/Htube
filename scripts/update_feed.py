@@ -3,7 +3,7 @@
 1) canalele oficiale, prin fluxurile RSS publice YouTube (video + Shorts separat);
 2) căutări pe tot YouTube-ul (Shorts și podcasturi de pe alte conturi), filtrate după nume.
 Rulează automat pe GitHub Actions. Fără chei API."""
-import json, re, sys, time, urllib.parse, urllib.request, xml.etree.ElementTree as ET
+import json, re, sys, time, unicodedata, urllib.parse, urllib.request, xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -46,7 +46,8 @@ def resolve(ref, cache):
     raise RuntimeError("nu am găsit ID pentru " + ref)
 
 
-def rss(xml, person, short):
+def rss(xml, person, short, origin=1):
+    """origin 1 = canal oficial; 2 = canal de fani dedicat (se aplică filtrele, numele poate fi și în descriere)."""
     out = []
     for e in ET.fromstring(xml).findall("a:entry", NS):
         vid = e.findtext("yt:videoId", namespaces=NS)
@@ -54,10 +55,30 @@ def rss(xml, person, short):
             continue
         title = e.findtext("a:title", namespaces=NS) or ""
         ch = e.findtext("a:author/a:name", namespaces=NS) or person["name"]
-        out.append({"id": vid, "t": title, "who": person["name"], "ch": ch, "c": person["c"],
-                    "p": e.findtext("a:published", namespaces=NS) or NOW.isoformat(),
-                    "s": short if short is not None else "#shorts" in title.lower(), "o": 1})
+        it = {"id": vid, "t": title, "who": person["name"], "ch": ch, "c": person["c"],
+              "p": e.findtext("a:published", namespaces=NS) or NOW.isoformat(),
+              "s": short if short is not None else "#shorts" in title.lower(), "o": origin}
+        if origin == 2:
+            it["_d"] = (e.findtext("media:group/media:description", namespaces=NS) or "")[:600]
+        out.append(it)
     return out
+
+
+def channel_items(ref, person, cache, origin):
+    cid = resolve(ref, cache)
+    part = []
+    for prefix, short in (("UULF", False), ("UUSH", True)):
+        try:
+            part += rss(get(f"https://www.youtube.com/feeds/videos.xml?playlist_id={prefix}{cid[2:]}"), person, short, origin)
+        except Exception:
+            pass
+    if not part:
+        part = rss(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}"), person, None, origin)
+    return part
+
+
+def norm(s):
+    return unicodedata.normalize("NFKC", s or "").lower()
 
 
 def walk(node, found):
@@ -132,12 +153,13 @@ def search(q, person):
 
 
 def keep(item, person, block):
-    t = item["t"].lower()
+    t = norm(item["t"])
     if any(w in t for w in block):
         return False
-    if item["o"]:  # canal oficial
+    if item["o"] == 1:  # canal oficial
         return not any(w in t for w in person.get("block", []))
-    if not any(w in t for w in person.get("must", [person["name"].lower()])):
+    hay = t + " " + norm(item.get("_d", "")) if item["o"] == 2 else t
+    if not any(w in hay for w in person.get("must", [person["name"].lower()])):
         return False
     if any(w in t for w in person.get("block", [])):
         return False
@@ -156,20 +178,12 @@ def main():
     log = []
     for person in CFG["persons"]:
         got = []
-        for ref in person.get("channels", []):
-            try:
-                cid = resolve(ref, cache)
-                part = []
-                for prefix, short in (("UULF", False), ("UUSH", True)):
-                    try:
-                        part += rss(get(f"https://www.youtube.com/feeds/videos.xml?playlist_id={prefix}{cid[2:]}"), person, short)
-                    except Exception:
-                        pass
-                if not part:
-                    part = rss(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}"), person, None)
-                got += part
-            except Exception as e:
-                log.append(f"  ! {person['name']} {ref}: {e}")
+        for origin, key in ((1, "channels"), (2, "fan_channels")):
+            for ref in person.get(key, []):
+                try:
+                    got += channel_items(ref, person, cache, origin)
+                except Exception as e:
+                    log.append(f"  ! {person['name']} {ref}: {e}")
         for q in person.get("search", []):
             try:
                 got += search(q, person)
@@ -180,6 +194,7 @@ def main():
         for it in got:
             if not keep(it, person, block):
                 continue
+            it.pop("_d", None)
             prev = merged.get(it["id"])
             if prev and not it["o"]:
                 it["p"] = prev["p"]  # păstrăm data primei apariții pentru clipurile găsite prin căutare
