@@ -18,8 +18,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 20
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Adu clipurile noi
@@ -29,4 +31,12 @@ jobs:
           git config user.name "htube-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add feed.json channel_ids.json
-          git diff --cached --quiet || (git commit -m "Feed actualizat $(date -u +%Y-%m-%dT%H:%MZ)" && git push)
+          git diff --cached --quiet && exit 0
+          git commit -m "Feed actualizat $(date -u +%Y-%m-%dT%H:%MZ)"
+          # dacă între timp a apărut alt commit (o modificare a aplicației), îl luăm și încercăm din nou
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            sleep 3
+          done
+          exit 1

@@ -386,7 +386,10 @@ h2{font-family:var(--display);font-weight:600;letter-spacing:-.02em}
 #v-set>h2:first-child,#v-saved .ptitle{margin-top:calc(16px + env(safe-area-inset-top,0px))}
 #v-saved .ptitle{margin-top:4px}
 main.wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}
-.short{height:calc(100dvh - 86px - env(safe-area-inset-bottom,0px))}
+/* Shorts pe tot ecranul: fiecare clip are exact înălțimea ecranului, deci sub bară nu se mai vede clipul următor */
+.short{height:100%}
+#stage.short .sinfo2{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+#stage.short .sside2{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .toast{bottom:calc(98px + env(safe-area-inset-bottom,0px));background:var(--glass);color:var(--ink);border:1px solid var(--glass-b);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,.15);font-weight:600}
 /* bara de navigare: plutește, din sticlă, cu un indicator care alunecă */
 nav{left:50%;right:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(calc(100% - 24px),440px);padding:6px;border-radius:26px;
