@@ -65,6 +65,11 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10p
 .qsrc{font-size:12.5px;color:var(--muted)}
 .idea h3{margin:0;font-size:16.5px;font-weight:700;letter-spacing:-.01em}
 .idea p{margin:0}
+.th-title{margin:0;font-family:var(--serif);font-size:22px;font-weight:500;line-height:1.25;letter-spacing:-.01em}
+.th-parts{list-style:none;margin:0;padding:0 0 0 14px;border-left:2px solid var(--line);display:grid;gap:14px}
+.th-parts p{margin:0;font-size:16px;line-height:1.6}
+.th-n{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-bottom:2px;font-variant-numeric:tabular-nums}
+.th-more{justify-self:start;font-size:14px;font-weight:600;color:var(--accent);padding:4px 0}
 .vtitle{margin:0;font-weight:600;font-size:15.5px;line-height:1.35}
 .player{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;display:block}
 .player img{width:100%;height:100%;object-fit:cover;display:block}
@@ -178,6 +183,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 </nav>
 
 <script src="data.js"></script>
+<script src="threads.js"></script>
 <script>
 const CATS={mot:"Motivație",dev:"Minte",biz:"Afaceri",soc:"Oameni",san:"Sănătate",int:"Înțelepciune"};
 const $=id=>document.getElementById(id);
@@ -201,8 +207,9 @@ const save=()=>{try{localStorage.setItem("htube2",JSON.stringify(S))}catch(e){}}
 let FEED={updated:null,items:[]};
 const quotes=(window.QUOTES||[]).map((q,i)=>({k:"q",id:"q"+i,t:q[0],who:q[1],src:q[2],c:q[3]}));
 const ideas=(window.IDEAS||[]).map((x,i)=>({k:"i",id:"i"+i,...x}));
+const threads=(window.THREADS||[]).map((x,i)=>({k:"t",id:"t"+i,...x}));
 const vids=()=>[...S.clips,...FEED.items].filter(v=>!S.hidden.includes(v.id));
-const byId=id=>quotes.find(x=>x.id===id)||ideas.find(x=>x.id===id)||S.clips.find(v=>v.id===id)||FEED.items.find(v=>v.id===id);
+const byId=id=>quotes.find(x=>x.id===id)||ideas.find(x=>x.id===id)||threads.find(x=>x.id===id)||S.clips.find(v=>v.id===id)||FEED.items.find(v=>v.id===id);
 
 const placeholderDate=iso=>!iso||iso.startsWith("2026-01-01");
 function ago(iso){
@@ -223,12 +230,12 @@ function makeGen(){
   const all=vids().filter(ok);
   const fresh=all.filter(v=>!v.s&&isNew(v.p));
   const longPool=()=>{const old=all.filter(v=>!v.s&&!isNew(v.p));return [...shuffle(old.slice(0,60)),...shuffle(old.slice(60))]};
-  const pools={v:[...fresh,...longPool()],s:shuffle(all.filter(v=>v.s)),q:shuffle(quotes.filter(ok)),i:shuffle(ideas.filter(ok))};
-  const idx={v:0,s:0,q:0,i:0};
+  const pools={v:[...fresh,...longPool()],s:shuffle(all.filter(v=>v.s)),q:shuffle(quotes.filter(ok)),i:shuffle(ideas.filter(ok)),t:shuffle(threads.filter(ok))};
+  const idx={v:0,s:0,q:0,i:0,t:0};
   const take=k=>{if(!pools[k].length)return null;
     if(idx[k]>=pools[k].length){pools[k]=k==="v"?longPool():shuffle(pools[k]);idx[k]=0}
     return pools[k][idx[k]++]};
-  const pattern=["v","q","i","q","v","q","S","q","v","i","q","v","q"];
+  const pattern=["v","q","t","q","v","i","S","q","v","q","t","v","i","q"];
   let step=0;
   return n=>{
     const out=[];let guard=0;
@@ -257,6 +264,12 @@ function render(x){
     <div class="meta">${dotc(x.c)}<span>${CATS[x.c]||""}</span></div>
     <p class="quote${x.t.length>110?" long":""}">${esc(x.t)}</p>
     <div class="qsrc">— <b>${esc(x.who)}</b>${x.src?", "+esc(x.src):""}</div>${actions(x,true)}</article>`;
+  if(x.k==="t")return `<article class="item thread">
+    <div class="meta">${dotc(x.c)}<span class="who">${esc(x.who)}</span><span class="ago">Thread · ${x.parts.length} părți</span></div>
+    <h3 class="th-title">${esc(x.h)}</h3>
+    <ol class="th-parts">${x.parts.map((p,i)=>`<li${i>0?" hidden":""}><span class="th-n">${i+1}/${x.parts.length}</span><p>${esc(p)}</p></li>`).join("")}</ol>
+    <button class="th-more" data-a="expand">Citește tot (${x.parts.length} părți)</button>
+    <div class="qsrc">${esc(x.src)}</div>${actions(x,true)}</article>`;
   if(x.k==="i")return `<article class="item idea">
     <div class="meta">${dotc(x.c)}<span class="who">${esc(x.who)}</span><span class="ago">${CATS[x.c]||""}</span></div>
     <h3>${esc(x.h)}</h3><p>${esc(x.t)}</p><div class="qsrc">${esc(x.s)}</div>${actions(x,true)}</article>`;
@@ -349,7 +362,7 @@ function buildShorts(startId){
 
 function settings(){
   const v=vids();$("st-v").textContent=v.filter(x=>!x.s).length;$("st-s").textContent=v.filter(x=>x.s).length;
-  $("st-q").textContent=quotes.length+ideas.length;
+  $("st-q").textContent=quotes.length+ideas.length+threads.length;
   $("st-u").textContent=FEED.updated?"Ultima actualizare automată: "+new Date(FEED.updated).toLocaleString("ro-RO"):"";
   $("vcat").innerHTML=Object.entries(CATS).map(([k,x])=>`<option value="${k}">${x}</option>`).join("");
   fetch("channels.json?t="+Date.now()).then(r=>r.json()).then(cfg=>{
@@ -385,11 +398,14 @@ document.addEventListener("click",async e=>{
   const ch=e.target.closest(".chip");
   if(ch){cat=ch.dataset.c;chips();resetFeed();window.scrollTo(0,0);return}
   const a=e.target.closest("[data-a]");
+  if(a&&a.dataset.a==="expand"){
+    const art=a.closest(".thread");art.querySelectorAll(".th-parts li").forEach(li=>li.hidden=false);a.remove();return;
+  }
   if(a){
     const id=a.dataset.id;
     if(a.dataset.a==="save"){const on=!S.saved.includes(id);S.saved=on?[id,...S.saved]:S.saved.filter(x=>x!==id);a.setAttribute("aria-pressed",on);toast(on?"Salvat":"Scos din salvate")}
     if(a.dataset.a==="hide"){S.clips=S.clips.filter(c=>c.id!==id);if(!S.hidden.includes(id))S.hidden.push(id);S.saved=S.saved.filter(x=>x!==id);const it=a.closest(".item,.short");if(it)it.remove();toast("Nu-ți mai arăt asta")}
-    if(a.dataset.a==="copy"){const x=byId(id);const txt=x.k==="q"?`„${x.t}” — ${x.who}`:`${x.h}: ${x.t}`;try{await navigator.clipboard.writeText(txt);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
+    if(a.dataset.a==="copy"){const x=byId(id);const txt=x.k==="q"?`„${x.t}” — ${x.who}`:x.k==="t"?`${x.h} — ${x.who}\n\n${x.parts.map((p,i)=>`${i+1}. ${p}`).join("\n\n")}`:`${x.h}: ${x.t}`;try{await navigator.clipboard.writeText(txt);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
     save();if(!$("v-saved").hidden)renderSaved();return;
   }
   if(e.target.closest("#newpill")){$("newpill").hidden=true;window.scrollTo(0,0);resetFeed();return}
