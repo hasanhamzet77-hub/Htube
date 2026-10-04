@@ -120,6 +120,17 @@ window.QUOTES = [
 ["Uită-te în oglindă și spune-ți adevărul despre tine. Acolo începe schimbarea.","David Goggins","Oglinda responsabilității (idee)","mot"],
 ["Motivația e de rahat. Disciplina te duce mai departe.","David Goggins","idee frecventă","mot"],
 ["Păstrează un borcan cu biscuiți: lista victoriilor tale grele. Scoate unul când vrei să renunți.","David Goggins","Can't Hurt Me (idee)","mot"],
+// ── Jocko Willink (fost comandant Navy SEAL)
+["Disciplina înseamnă libertate.","Jocko Willink","Discipline Equals Freedom","mot"],
+["Nu există echipe proaste, doar lideri proști.","Jocko Willink","Extreme Ownership","biz"],
+["Când ceva merge prost, spune „Bine.” Apoi caută ce poți folosi din asta.","Jocko Willink","„Good” (idee)","mot"],
+["Tot ce se întâmplă în lumea ta e responsabilitatea ta. Fără scuze, fără vinovați.","Jocko Willink","Extreme Ownership (idee)","dev"],
+["Motivația vine și pleacă. Disciplina rămâne.","Jocko Willink","(idee)","mot"],
+["Prioritizează și execută. Un singur lucru odată, cel mai important primul.","Jocko Willink","Extreme Ownership (idee)","biz"],
+["Simplu bate complicat. Dacă oamenii nu înțeleg planul, nu-l pot executa.","Jocko Willink","Extreme Ownership (idee)","biz"],
+["Nu ai chef azi? Nu contează. Fă-o oricum.","Jocko Willink","(idee)","mot"],
+["Ego-ul îți întunecă judecata. Lasă-l deoparte și ascultă.","Jocko Willink","Extreme Ownership (idee)","dev"],
+["Câștigi ziua dimineața devreme, înainte ca lumea să se trezească.","Jocko Willink","(idee)","mot"],
 // ── Dezvoltare personală modernă
 ["Disciplina e puntea dintre obiective și realizări.","Jim Rohn","","dev"],
 ["Ești media celor cinci oameni cu care petreci cel mai mult timp.","Jim Rohn","","soc"],
@@ -208,6 +219,8 @@ window.QUOTES = [
 
 // Idei scurte (formulate cu cuvintele mele, pe baza autorilor citați)
 window.IDEAS = [
+ {c:"mot",who:"Jocko Willink",h:"„Bine.”",t:"Ai pierdut un client, s-a stricat o piesă, a picat o afacere? Spune „Bine.” Ai mai mult timp să te pregătești, ai învățat ceva, ai o problemă de rezolvat. Nu negi realitatea, doar te uiți imediat la ce poți face cu ea.",s:"Jocko Willink (idee)"},
+ {c:"biz",who:"Jocko Willink",h:"Asumarea extremă",t:"Când ceva nu iese, întreabă-te întâi ce ai fi putut face tu altfel: instrucțiuni mai clare, verificare mai bună, alt plan. Cine își asumă tot câștigă controlul asupra lucrurilor.",s:"Extreme Ownership (idee)"},
  {c:"dev",who:"Shi Heng Yi",h:"Cele 5 obstacole ale minții",t:"Dorința de plăceri, aversiunea, lenea, neliniștea și îndoiala. Când nu avansezi, întreabă-te care dintre ele te ține pe loc acum. Numindu-l, îi iei din putere.",s:"Învățătură Shaolin / budistă"},
  {c:"dev",who:"Shi Heng Yi",h:"Disciplina ca respect de sine",t:"Nu aștepta să ai chef. Antrenamentul zilnic, mic și constant, construiește un om care se poate baza pe el însuși.",s:"Shi Heng Yi (idee)"},
  {c:"dev",who:"Vadim Zeland",h:"Scade importanța",t:"Cu cât un lucru îți pare mai important, cu atât te încordezi și greșești. Fă tot ce ține de tine, dar ține rezultatul ușor în mână.",s:"Transurfing (idee)"},

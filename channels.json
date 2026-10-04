@@ -20,6 +20,12 @@
       "must": ["goggins"]
     },
     {
+      "name": "Jocko Willink", "c": "mot",
+      "channels": ["UCkqcY4CAuBFNFho6JgygCnA"],
+      "search": ["Jocko Willink shorts", "Jocko Willink motivation", "Jocko Willink discipline", "Jocko Willink extreme ownership", "Jocko Willink podcast interview"],
+      "must": ["jocko", "willink"]
+    },
+    {
       "name": "Brian Tracy", "c": "dev",
       "channels": ["@BrianTracyOfficial"],
       "search": ["Brian Tracy shorts", "Brian Tracy interview success"],
