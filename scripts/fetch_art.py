@@ -14,6 +14,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "art"
 API = "https://collectionapi.metmuseum.org/public/collection/v1"
+AIC = "https://api.artic.edu/api/v1/artworks/search"
 UA = {"User-Agent": "HTube/1.0 (personal app; github.com/hasanhamzet77-hub/htube)"}
 PER_THEME = 16
 
@@ -53,6 +54,54 @@ def search(q, dept):
     return (res.get("objectIDs") or [])[:60]
 
 
+# a doua sursă: Art Institute of Chicago (domeniu public, CC0), imagini prin IIIF
+AIC_Q = {
+    "stoic": ["Roman portrait head marble", "Marcus Aurelius", "philosopher", "Roman emperor bust", "Greek portrait head"],
+    "roman": ["Roman soldier", "Roman triumph", "Roman ruins", "Roman emperor", "gladiator"],
+    "war": ["battle", "warrior", "armor knight", "Hercules", "Saint George dragon"],
+    "sacred": ["angel Italian", "Saint Michael", "Annunciation", "altarpiece Italian", "saint Italian painting"],
+    "myth": ["Apollo", "Minerva", "Prometheus", "Jupiter", "Orpheus"],
+    "east": ["samurai", "Hokusai", "Hiroshige", "Chinese landscape", "Japanese warrior print"],
+    "nature": ["storm at sea", "sunrise", "mountain landscape", "Turner", "waterfall"],
+}
+def aic(theme, items, seen, log):
+    for q in AIC_Q.get(theme, []):
+        if len(items) >= PER_THEME:
+            return
+        url = AIC + "?" + urllib.parse.urlencode({"q": q, "limit": 40, "fields": "id,title,image_id,artist_title,artist_display,date_display,classification_title,is_public_domain,term_titles"})
+        try:
+            res = get(url)
+        except Exception as e:
+            log.append(f"AIC {theme}/{q}: căutare eșuată {e}")
+            continue
+        taken = 0
+        for o in res.get("data", []):
+            if len(items) >= PER_THEME or taken >= 4:
+                break
+            key = "aic" + str(o.get("id"))
+            if key in seen or not o.get("is_public_domain") or not o.get("image_id"):
+                continue
+            title = o.get("title") or ""
+            if BLOCK.search(title + " " + " ".join(o.get("term_titles") or [])) or BAD_CLASS.search(o.get("classification_title") or ""):
+                continue
+            try:
+                im = Image.open(io.BytesIO(get(f"https://www.artic.edu/iiif/2/{o['image_id']}/full/843,/0/default.jpg", binary=True))).convert("RGB")
+            except Exception as e:
+                log.append(f"AIC img {o.get('id')}: {e}")
+                continue
+            if min(im.size) < 380:
+                continue
+            im.thumbnail((900, 900))
+            f = f"{theme}-aic{o['id']}.jpg"
+            im.save(OUT / f, "JPEG", quality=78, optimize=True, progressive=True)
+            items.append({"f": f, "id": key, "t": title[:90], "a": (o.get("artist_title") or "")[:60], "d": (o.get("date_display") or "")[:30],
+                          "w": im.size[0], "h": im.size[1], "src": "Art Institute of Chicago"})
+            seen.add(key)
+            taken += 1
+            time.sleep(.2)
+        log.append(f"AIC {theme}/{q}: +{taken}")
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     old = {}
@@ -82,7 +131,8 @@ def main():
                     continue
                 try:
                     o = get(f"{API}/objects/{oid}")
-                except Exception:
+                except Exception as e:
+                    log.append(f"Met obj {oid}: {e}")
                     continue
                 title = o.get("title") or ""
                 if not o.get("isPublicDomain") or not o.get("primaryImageSmall"):
@@ -101,12 +151,14 @@ def main():
                 im.thumbnail((900, 900))
                 f = f"{theme}-{oid}.jpg"
                 im.save(OUT / f, "JPEG", quality=78, optimize=True, progressive=True)
-                items.append({"f": f, "id": oid, "t": title[:90], "a": (o.get("artistDisplayName") or o.get("culture") or "")[:60],
+                items.append({"src": "The Met", "f": f, "id": oid, "t": title[:90], "a": (o.get("artistDisplayName") or o.get("culture") or "")[:60],
                               "d": (o.get("objectDate") or "")[:30], "w": im.size[0], "h": im.size[1]})
                 seen.add(oid)
                 taken += 1
                 time.sleep(.15)
             log.append(f"{theme}/{q}: +{taken}")
+        if len(items) < PER_THEME:
+            aic(theme, items, seen, log)
         out[theme] = items
         print(theme, len(items), flush=True)
     # ștergem imaginile care nu mai sunt folosite
@@ -116,6 +168,7 @@ def main():
             p.unlink()
     (ROOT / "art.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print("\n".join(log))
+    (ROOT / "art_log.txt").write_text("\n".join(log) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
