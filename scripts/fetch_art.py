@@ -3,7 +3,9 @@
 pentru imaginile de sub citate: statui romane și stoici, soldați și războinici, pictură italiană religioasă,
 mitologie, artă japoneză și chineză, peisaje dramatice. Le salvează micșorate în art/ și scrie art.json.
 Rulează pe GitHub Actions (are nevoie de internet). Fără chei API."""
-import io, json, re, sys, time, urllib.parse, urllib.request
+import io, json, re, socket, sys, time, urllib.parse, urllib.request
+socket.setdefaulttimeout(20)
+DEADLINE = time.time() + 9 * 60   # nu stăm mai mult de 9 minute
 from pathlib import Path
 
 try:
@@ -51,7 +53,7 @@ def search(q, dept):
     if dept:
         p["departmentId"] = dept
     res = get(f"{API}/search?" + urllib.parse.urlencode(p))
-    return (res.get("objectIDs") or [])[:60]
+    return (res.get("objectIDs") or [])[:25]
 
 
 # a doua sursă: Art Institute of Chicago (domeniu public, CC0), imagini prin IIIF
@@ -66,7 +68,7 @@ AIC_Q = {
 }
 def aic(theme, items, seen, log):
     for q in AIC_Q.get(theme, []):
-        if len(items) >= PER_THEME:
+        if len(items) >= PER_THEME or time.time() > DEADLINE:
             return
         url = AIC + "?" + urllib.parse.urlencode({"q": q, "limit": 40, "fields": "id,title,image_id,artist_title,artist_display,date_display,classification_title,is_public_domain,term_titles"})
         try:
@@ -122,6 +124,8 @@ def main():
         for x in items:
             seen.add(x["id"])
         for q, dept in (queries if met_ok else []):
+            if time.time() > DEADLINE:
+                break
             if len(items) >= PER_THEME:
                 break
             try:
@@ -179,6 +183,11 @@ def main():
     (ROOT / "art.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print("\n".join(log))
     (ROOT / "art_log.txt").write_text("\n".join(log) + "\n", encoding="utf-8")
+    # rezumat vizibil în GitHub (adnotări)
+    print("::notice::" + " · ".join(f"{k} {len(v)}" for k, v in out.items()))
+    errs = [l for l in log if "eșuat" in l or "indisponibil" in l or "Error" in l or "rror" in l][:5]
+    for e in errs:
+        print("::warning::" + e[:300])
 
 
 if __name__ == "__main__":
