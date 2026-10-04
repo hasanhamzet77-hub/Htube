@@ -34,10 +34,10 @@ BLOCK = re.compile(r"nude|naked|venus|bath|leda|crucif|martyr|massacre|decapit|b
 BAD_CLASS = re.compile(r"coin|gem|glass|textile|ceramic|vase|jewel|seal|furniture|metalwork|book|manuscript|photograph", re.I)
 
 
-def get(url, binary=False, tries=3):
+def get(url, binary=False, tries=2, timeout=15):
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
                 data = r.read()
                 return data if binary else json.loads(data.decode("utf-8"))
         except Exception as e:
@@ -111,11 +111,17 @@ def main():
         except Exception:
             old = {}
     seen, out, log = set(), {}, []
+    met_ok = True
+    try:
+        get(f"{API}/search?q=Marcus%20Aurelius&hasImages=true", tries=1, timeout=12)
+    except Exception as e:
+        met_ok = False
+        log.append(f"Met indisponibil de aici ({e}); folosesc Art Institute of Chicago")
     for theme, queries in THEMES.items():
         items = [x for x in old.get(theme, []) if (OUT / x["f"]).exists()]   # păstrăm ce avem deja
         for x in items:
             seen.add(x["id"])
-        for q, dept in queries:
+        for q, dept in (queries if met_ok else []):
             if len(items) >= PER_THEME:
                 break
             try:
@@ -123,16 +129,20 @@ def main():
             except Exception as e:
                 log.append(f"{theme}/{q}: căutare eșuată {e}")
                 continue
-            taken = 0
+            taken, fails = 0, 0
             for oid in ids:
                 if len(items) >= PER_THEME or taken >= 4:   # cel mult 4 pe căutare, ca să fie variat
                     break
                 if oid in seen:
                     continue
                 try:
-                    o = get(f"{API}/objects/{oid}")
+                    o = get(f"{API}/objects/{oid}", tries=1, timeout=12)
                 except Exception as e:
                     log.append(f"Met obj {oid}: {e}")
+                    fails += 1
+                    if fails > 6:
+                        met_ok = False
+                        break
                     continue
                 title = o.get("title") or ""
                 if not o.get("isPublicDomain") or not o.get("primaryImageSmall"):

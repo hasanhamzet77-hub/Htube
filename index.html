@@ -335,6 +335,15 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 @keyframes breath{0%{transform:scale(.62)}40%{transform:scale(1)}100%{transform:scale(.62)}}
 .mtime{position:relative;font-size:48px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .mcue{position:relative;font-family:var(--serif);font-style:italic;font-size:19px;color:#a9abb3;min-height:28px;margin-top:-4px}
+.mman{position:relative;max-width:420px;margin:18px auto 0;min-height:0;font-family:var(--serif);font-size:20px;line-height:1.45;color:#ecebe7;text-wrap:pretty}
+.mman p{margin:0 0 8px;opacity:0;transform:translateY(8px);transition:opacity 1.4s ease,transform 1.4s ease}
+.mman p.v{opacity:.38;transform:none}.mman p.on{opacity:1;transform:none;text-shadow:0 0 22px rgba(143,163,255,.45)}
+#medov.mantra .mring{transform:scale(.72);margin-top:-30px}
+.mring{transition:transform 1.6s ease,margin 1.6s ease}
+#medov.mantra .mhint{display:none}
+.mman-set{margin:2px 0 12px}
+#md-msel{margin:2px 0 8px}
+.mprev{font-family:var(--serif);font-size:15px;line-height:1.5;color:var(--muted);margin:0 0 10px;white-space:pre-line}
 .mhint{margin-top:26px;font-size:13px;color:#6f717a}
 .mdone{display:grid;gap:14px;justify-items:center}
 .mdone p{font-family:var(--serif);font-size:24px;margin:0}
@@ -535,6 +544,14 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <div class="sec-h"><h3>Meditație</h3><span class="muted" id="md-total"></span></div>
       <div class="pres" id="md-pre"></div>
       <label class="tog"><input type="checkbox" id="md-breath"> Respirație ghidată (4 s inspiri, 6 s expiri)</label>
+      <div class="mman-set">
+        <label class="tog"><input type="checkbox" id="md-mon"> Mantra de recunoștință la final</label>
+        <div id="md-mopt">
+          <select id="md-msel" aria-label="Alege mantra"></select>
+          <p class="mprev" id="md-mprev"></p>
+          <label class="tog"><input type="checkbox" id="md-voice"> Citește-o și cu voce</label>
+        </div>
+      </div>
       <button class="btn" id="md-start">Începe</button>
     </div>
 
@@ -657,6 +674,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <div><div class="mtime" id="md-time">10:00</div><div class="mcue" id="md-cue"></div></div>
     </div>
     <div class="mhint" id="md-hint">Atinge cercul pentru pauză</div>
+    <div class="mman" id="md-mt" aria-live="polite"></div>
   </div>
   <div class="mdone" id="md-done" hidden><p id="md-msg"></p><button class="btn" id="md-ok">Închide</button></div>
 </div>
@@ -1235,12 +1253,52 @@ $("hb-emo").addEventListener("input",e=>{const g=graphemes(e.target.value.trim()
 $("hb-pick").addEventListener("click",e=>{const b=e.target.closest("[data-emo]");if(b){$("hb-emo").value=b.dataset.emo;renderPick()}});
 $("hb-cancel").addEventListener("click",()=>openAdd(false));
 
+// ── mantre de recunoștință pentru finalul meditației (le spui tu, în gând sau cu voce) ──
+const MANTRAS=[
+ {n:"Mulțumire și ocrotire",l:["Îți mulțumesc, Creatorule, pentru încă o zi pe acest pământ.","Îți mulțumesc pentru viața mea, pentru sănătatea mea și pentru familia mea.","Te rog, ocrotește-ne astăzi: pe mine și pe cei pe care îi iubesc.","Pune lumina Ta în jurul nostru și ferește-ne de orice rău.","Dacă astăzi m-am conectat cu Tine, arată-mi un semn clar, ca să știu că vine de la Tine.","Sunt aici. Sunt treaz. Sunt recunoscător."]},
+ {n:"Semnul",l:["Divinitate, îți mulțumesc că mi-ai mai dat o zi.","Îți mulțumesc pentru familia mea, pentru tot ce am și pentru tot ce vine.","Îi las în grija Ta pe ai mei; păzește-ne pașii, drumurile și casa.","Dacă m-ai auzit, trimite-mi astăzi un semn pe care să-l recunosc.","Îl voi primi cu ochii deschiși și cu inima deschisă."]},
+ {n:"Conștientizare",l:["Mulțumesc pentru această dimineață și pentru respirația care îmi dă viață.","Mulțumesc pentru familia mea; ține-ne sănătoși, uniți și în siguranță.","Astăzi aleg să fiu conștient de gândurile, cuvintele și faptele mele.","Nu reacționez din frică. Aleg din liniște.","Tot ce fac azi, fac cu atenție, cu răbdare și cu iubire.","Eu creez ziua de azi, iar Tu ești cu mine."]},
+ {n:"Ca și cum s-ar fi întâmplat deja",l:["Îți mulțumesc, Doamne, ca și cum tot ce cer s-ar fi întâmplat deja.","Mulțumesc că familia mea este sănătoasă, unită și ocrotită.","Mulțumesc pentru ziua bună care mă așteaptă.","Mulțumesc pentru semnul pe care mi-l vei arăta astăzi; îl aștept cu încredere.","Primesc această zi cu recunoștință."]},
+ {n:"Scurtă, de repetat de 3 ori",l:["Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent.","Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent.","Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent."]}
+];
+const MAN_LINE=7;   // secunde pe rând: timp să-l spui încet și să-l simți
+function renderMantraSet(){
+  const on=S.med.mantraOn!==false,i=Math.min(S.med.mantra||0,MANTRAS.length-1);
+  $("md-mon").checked=on;$("md-mopt").hidden=!on;$("md-voice").checked=!!S.med.voice;
+  $("md-msel").innerHTML=MANTRAS.map((m,k)=>`<option value="${k}"${k===i?" selected":""}>${esc(m.n)}</option>`).join("");
+  $("md-mprev").textContent=MANTRAS[i].l.slice(0,i===4?3:6).join("\n");
+}
+$("md-mon").addEventListener("change",e=>{S.med.mantraOn=e.target.checked;save();renderMantraSet()});
+$("md-msel").addEventListener("change",e=>{S.med.mantra=+e.target.value;save();renderMantraSet()});
+$("md-voice").addEventListener("change",e=>{S.med.voice=e.target.checked;save();if(e.target.checked)speak("Mulțumesc.")});
+let roVoice=null;
+function speak(t){
+  try{
+    const ss=window.speechSynthesis;if(!ss)return;
+    if(!roVoice)roVoice=ss.getVoices().find(v=>/^ro/i.test(v.lang))||null;
+    const u=new SpeechSynthesisUtterance(t);u.lang="ro-RO";if(roVoice)u.voice=roVoice;u.rate=.82;u.pitch=.95;u.volume=1;ss.speak(u);
+  }catch(e){}
+}
+function mantraTick(){
+  const ov=$("medov"),box=$("md-mt");
+  if(S.med.mantraOn===false||!md){ov.classList.remove("mantra");return}
+  const M=MANTRAS[Math.min(S.med.mantra||0,MANTRAS.length-1)],start=Math.min(M.l.length*MAN_LINE+4,md.dur*.6);
+  if(md.left>start){ov.classList.remove("mantra");return}
+  if(!md.mOn){md.mOn=true;md.mi=-1;ov.classList.add("mantra");box.innerHTML=M.l.map(t=>`<p>${esc(t)}</p>`).join("");bell(.12)}
+  const idx=Math.min(M.l.length-1,Math.floor((start-md.left)/MAN_LINE));
+  if(idx!==md.mi&&md.run){
+    md.mi=idx;
+    box.querySelectorAll("p").forEach((p,k)=>{p.className=k<idx?"v":k===idx?"on":"";p.hidden=k>idx+0||k<idx-2});
+    if(S.med.voice)speak(M.l[idx]);
+  }
+}
+
 // ── meditație ──
 const MD_PRE=[5,10,15,20];
 const fmtM=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 function renderMed(){
   $("md-pre").innerHTML=MD_PRE.map(m=>`<button class="pre" data-m="${m}" aria-pressed="${m===S.med.pick}">${m}<small>min</small></button>`).join("");
-  $("md-breath").checked=!!S.med.breath;
+  $("md-breath").checked=!!S.med.breath;renderMantraSet();
   $("md-start").textContent=`Începe · ${S.med.pick} minute`;
   const today=S.med.days[dk()]||0;
   $("md-total").textContent=S.med.total?(today?`azi ${today} min · `:"")+`total ${S.med.total} min`:"";
@@ -1268,6 +1326,8 @@ function startMed(){
   ov.classList.remove("breath","run");void ov.offsetWidth;   // repornește animația respirației de la zero
   if(S.med.breath)ov.classList.add("breath");
   setMedRun(true);bell(.22);lockWake();
+  ov.classList.remove("mantra");$("md-mt").innerHTML="";
+  if(S.med.voice&&window.speechSynthesis){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
   clearInterval(mdInt);mdInt=setInterval(medTick,250);medTick();
 }
 function setMedRun(on){
@@ -1280,7 +1340,8 @@ function medTick(){
   $("md-time").textContent=fmtM(Math.ceil(md.left));
   $("md-arc").style.strokeDashoffset=(295.3*(1-md.left/md.dur)).toFixed(1);
   const el=md.dur-md.left;
-  $("md-cue").textContent=S.med.breath&&md.run?(el%10<4?"Inspiră":"Expiră"):"";
+  mantraTick();
+  $("md-cue").textContent=S.med.breath&&md.run&&!md.mOn?(el%10<4?"Inspiră":"Expiră"):"";
   if(md.run&&md.left<=0)finishMed(true);
 }
 function finishMed(full){
@@ -1293,10 +1354,11 @@ function finishMed(full){
   md.run=false;$("medov").classList.remove("run");
   bell(.4);setTimeout(()=>bell(.3),3200);
   $("md-run").hidden=true;$("md-done").hidden=false;
-  $("md-msg").textContent=`${mins} minute de liniște.`;
+  $("md-msg").textContent=`${mins} minute de liniște.${md.mOn?" Fii atent azi la semne.":""}`;
+  $("medov").classList.remove("mantra");
 }
 function closeMed(){
-  clearInterval(mdInt);unlockWake();md=null;$("medov").hidden=true;
+  clearInterval(mdInt);unlockWake();md=null;try{speechSynthesis.cancel()}catch(e){}$("medov").classList.remove("mantra");$("medov").hidden=true;
   renderMed();renderHabits();
 }
 $("md-ring").addEventListener("click",()=>{
