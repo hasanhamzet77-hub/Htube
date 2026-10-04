@@ -28,6 +28,7 @@
   --accent:#8fa3ff; --live:#4ade80; --on-accent:#0e0f12;
   --c-mot:#ff8a4c; --c-dev:#b197fc; --c-biz:#8fa3ff; --c-soc:#4fd1a8; --c-san:#f783ac; --c-int:#e3c46a; color-scheme:dark}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.5;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
@@ -162,8 +163,87 @@ nav.dark{background:#000;border-color:#1c1c1c}
 nav.dark .tab{color:#8a8a8a}
 nav.dark .tab[aria-selected="true"]{color:#fff}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:13px;padding:8px 14px;border-radius:999px;z-index:9}
+/* ── Azi: obiceiuri, meditație, raft de cărți ── */
+.azi-top{padding:18px 0 6px}
+.azi-top small{font-size:12.5px;color:var(--muted);text-transform:capitalize}
+.azi-top h2{margin:2px 0 14px;font-size:26px;letter-spacing:-.02em}
+.dq{font-family:var(--serif);font-size:19px;line-height:1.38;margin:0}
+.sec{padding:20px 0 14px;border-top:1px solid var(--line);margin-top:14px}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.sec-h h3{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sec-h .muted{font-size:12.5px;color:var(--muted)}
+.link{margin-left:auto;font-size:13.5px;font-weight:600;color:var(--accent);cursor:pointer}
+.hb{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hb:last-child{border-bottom:0}
+.hchk{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.hchk svg{width:16px;height:16px;fill:none;stroke:var(--bg);stroke-width:3;opacity:0}
+.hb.done .hchk{background:var(--live);border-color:var(--live)}
+.hb.done .hchk svg{opacity:1}
+.hname{flex:1;min-width:0}
+.hname b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hname small{font-size:12px;color:var(--muted)}
+.week{display:flex;gap:4px;flex:none}
+.wd{width:18px;height:18px;border-radius:5px;background:var(--soft);display:block}
+.wd.on{background:color-mix(in srgb,var(--live) 75%,transparent)}
+.wd.today{outline:1.5px solid var(--muted);outline-offset:1px}
+.hdel{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);flex:none}
+.hdel svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.pres{display:flex;gap:8px;margin:4px 0 12px}
+.pre{flex:1;padding:12px 0;border-radius:12px;background:var(--soft);font-weight:600;font-variant-numeric:tabular-nums}
+.pre small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.pre[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.pre[aria-pressed="true"] small{color:inherit;opacity:.7}
+.tog{display:flex;align-items:center;gap:10px;font-size:14px;margin-bottom:12px;color:var(--muted)}
+.tog input{width:auto;accent-color:var(--accent)}
+.shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 12px}
+.book{display:grid;gap:6px;text-align:left;min-width:0}
+.bcov{aspect-ratio:2/3;border-radius:6px;overflow:hidden;background:var(--soft);box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.08);display:grid;place-items:center;position:relative}
+.bcov img{width:100%;height:100%;object-fit:cover;display:block}
+.bcov i{font-style:normal;font-family:var(--serif);font-size:13px;padding:8px;text-align:center;color:var(--muted)}
+.bprog{position:absolute;left:0;bottom:0;height:3px;background:var(--accent)}
+.book b{font-size:12.5px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book small{font-size:11.5px;color:var(--muted);margin-top:-4px}
+.addbook{aspect-ratio:2/3;border:1.5px dashed var(--line);border-radius:6px;display:grid;place-items:center;align-content:center;gap:4px;color:var(--muted);font-size:12.5px;text-align:center;padding:8px;cursor:pointer}
+.addbook b{font-size:26px;font-weight:400;line-height:1}
+
+/* cititor PDF pe ecran întreg */
+#reader{position:fixed;inset:0;z-index:10;background:var(--soft);display:flex;flex-direction:column}
+#reader[hidden]{display:none}
+.rbar{display:flex;align-items:center;gap:2px;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:var(--bg);border-bottom:1px solid var(--line)}
+.rbar button{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;flex:none;color:var(--ink)}
+.rbar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
+.rbar .rt{flex:1;min-width:0;padding:0 4px}
+.rbar .rt b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbar .rt small{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+#rd-night[aria-pressed="true"]{color:var(--accent)}
+#rd-pages{position:relative;flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 0 calc(24px + env(safe-area-inset-bottom,0px))}
+.pg{margin:0 auto 10px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);position:relative}
+.pg canvas{width:100%;height:100%;display:block}
+.pg span{position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font-size:13px}
+#reader.night .pg{background:#111}
+#reader.night .pg canvas{filter:invert(.92) hue-rotate(180deg)}
+
+/* meditație pe ecran întreg */
+#medov{position:fixed;inset:0;z-index:10;background:#0b0c0f;color:#ecebe7;display:grid;place-items:center;text-align:center;padding:env(safe-area-inset-top,0px) 24px env(safe-area-inset-bottom,0px)}
+#medov[hidden]{display:none}
+#md-x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:12px;width:44px;height:44px;display:grid;place-items:center;color:#8d8f98}
+#md-x svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2}
+.mring{position:relative;width:min(78vw,320px);aspect-ratio:1;display:grid;place-items:center}
+.mring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.mring circle{fill:none;stroke-width:3}
+.mbreath{position:absolute;inset:16%;border-radius:50%;background:radial-gradient(circle,rgba(143,163,255,.28),rgba(143,163,255,.06) 70%);transform:scale(.62)}
+#medov.breath .mbreath{animation:breath 10s ease-in-out infinite;animation-play-state:paused}
+#medov.breath.run .mbreath{animation-play-state:running}
+@keyframes breath{0%{transform:scale(.62)}40%{transform:scale(1)}100%{transform:scale(.62)}}
+.mtime{position:relative;font-size:48px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mcue{position:relative;font-family:var(--serif);font-style:italic;font-size:19px;color:#a9abb3;min-height:28px;margin-top:-4px}
+.mhint{margin-top:26px;font-size:13px;color:#6f717a}
+.mdone{display:grid;gap:14px;justify-items:center}
+.mdone p{font-family:var(--serif);font-size:24px;margin:0}
+.mdone .btn{background:#ecebe7;color:#0b0c0f;padding:11px 28px}
+
 @media (prefers-reduced-motion:no-preference){.item,.strip{animation:fade .35s ease both}@keyframes fade{from{opacity:.4;transform:translateY(6px)}}}
-@media (prefers-reduced-motion:reduce){.dot,.refresh.spin svg{animation:none}}
+@media (prefers-reduced-motion:reduce){.dot,.refresh.spin svg,#medov.breath .mbreath{animation:none}}
 </style>
 </head>
 <body>
@@ -182,6 +262,34 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 
 <main class="wrap">
   <section id="v-feed"><div id="feed"></div><div class="sentinel" id="sentinel">Se încarcă…</div></section>
+  <section id="v-azi" hidden>
+    <div class="azi-top">
+      <small id="az-date"></small>
+      <h2 id="az-hi">Bună ziua</h2>
+      <p class="dq" id="az-q"></p>
+      <div class="qsrc" id="az-qs"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h3>Obiceiuri</h3><span class="muted" id="hb-score"></span><button class="link" id="hb-edit">Editează</button></div>
+      <div id="habits"></div>
+      <form id="hb-add" hidden><input id="hb-name" placeholder="Obicei nou (ex. 20 flotări)" maxlength="40" autocomplete="off"><button class="btn" type="submit">Adaugă obiceiul</button></form>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h3>Meditație</h3><span class="muted" id="md-total"></span></div>
+      <div class="pres" id="md-pre"></div>
+      <label class="tog"><input type="checkbox" id="md-breath"> Respirație ghidată (4 s inspiri, 6 s expiri)</label>
+      <button class="btn" id="md-start">Începe</button>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h3>Raft</h3><span class="muted" id="bk-count"></span><label class="link" for="bk-file">+ Adaugă PDF</label></div>
+      <input type="file" id="bk-file" accept="application/pdf,.pdf" multiple hidden>
+      <div class="shelf" id="shelf"></div>
+      <p class="note">Cărțile stau doar pe telefonul tău, în aplicație. Pagina la care ai rămas se ține minte.</p>
+    </div>
+  </section>
   <section id="v-saved" hidden><h2>Salvate</h2><div id="saved"></div></section>
   <section id="v-set" hidden>
     <h2>HTube</h2>
@@ -225,9 +333,35 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
   </div>
 </div>
 
+<div id="reader" hidden>
+  <div class="rbar">
+    <button id="rd-back" aria-label="Înapoi la raft"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="rt"><b id="rd-t"></b><small id="rd-pg"></small></div>
+    <button id="rd-zo" aria-label="Micșorează"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+    <button id="rd-zi" aria-label="Mărește"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
+    <button id="rd-night" aria-pressed="false" aria-label="Mod noapte"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+    <button id="rd-del" aria-label="Șterge cartea"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
+  </div>
+  <div id="rd-pages"></div>
+</div>
+
+<div id="medov" hidden>
+  <button id="md-x" aria-label="Oprește meditația"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="md-run">
+    <div class="mring" id="md-ring">
+      <span class="mbreath"></span>
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" stroke="#22242a"/><circle id="md-arc" cx="50" cy="50" r="47" stroke="#8fa3ff" stroke-linecap="round" stroke-dasharray="295.3" stroke-dashoffset="0"/></svg>
+      <div><div class="mtime" id="md-time">10:00</div><div class="mcue" id="md-cue"></div></div>
+    </div>
+    <div class="mhint" id="md-hint">Atinge cercul pentru pauză</div>
+  </div>
+  <div class="mdone" id="md-done" hidden><p id="md-msg"></p><button class="btn" id="md-ok">Închide</button></div>
+</div>
+
 <nav id="nav" role="tablist">
   <button class="tab" role="tab" data-v="feed" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
   <button class="tab" role="tab" data-v="shorts" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
+  <button class="tab" role="tab" data-v="azi" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4.4 3-7.5 8-7.5 0 5-3.2 7.8-8 7.5zM12 15c0-3.3-2.4-5.6-7-5.6 0 4 2.6 6 7 5.6z"/></svg>Azi</button>
   <button class="tab" role="tab" data-v="saved" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Salvate</button>
   <button class="tab" role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Setări</button>
 </nav>
@@ -274,20 +408,44 @@ function ago(iso){
 const isNew=iso=>!placeholderDate(iso)&&(Date.now()-new Date(iso))<48*36e5;
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
 
+// istoric: ce ți-a apărut deja pe ecran, ca la fiecare refresh să vină altceva
+S.seen=S.seen||{};
+const SEEN_MAX=5000;
+let seenDirty=false;
+function markSeen(ids){
+  const now=Date.now();ids.forEach(id=>{if(id)S.seen[id]=now});
+  if(!seenDirty){seenDirty=true;setTimeout(()=>{seenDirty=false;
+    const k=Object.keys(S.seen);
+    if(k.length>SEEN_MAX)k.sort((a,b)=>S.seen[a]-S.seen[b]).slice(0,k.length-SEEN_MAX).forEach(i=>delete S.seen[i]);
+    save()},1500)}
+}
+// amestec: întâi ce n-ai văzut (în ordine aleatorie), apoi ce ai văzut demult; ce ai văzut azi vine ultimul
+function mix(arr){
+  const now=Date.now();
+  return arr.map(x=>{const t=S.seen[x.id];let sc=Math.random();
+      if(t){const h=(now-t)/36e5;sc+=h<12?3:h<48?2:h<168?1:.4}
+      return [sc,x]})
+    .sort((a,b)=>a[0]-b[0]).map(p=>p[1]);
+}
+
 // generator de feed infinit: clipuri, citate, idei și benzi de Shorts, amestecate fără sfârșit
 let cat="all", gen=null;
 function makeGen(){
   const ok=x=>(cat==="all"||x.c===cat)&&!S.hidden.includes(x.id);
   const all=vids().filter(ok);
-  const fresh=all.filter(v=>!v.s&&isNew(v.p));
-  const longPool=()=>{const old=all.filter(v=>!v.s&&!isNew(v.p));return [...shuffle(old.slice(0,60)),...shuffle(old.slice(60))]};
-  const pools={v:[...fresh,...longPool()],s:shuffle(all.filter(v=>v.s)),q:shuffle(quotes.filter(ok)),i:shuffle(ideas.filter(ok)),t:shuffle(threads.filter(ok))};
-  const idx={v:0,s:0,q:0,i:0,t:0};
-  const take=k=>{if(!pools[k].length)return null;
-    if(idx[k]>=pools[k].length){pools[k]=k==="v"?longPool():shuffle(pools[k]);idx[k]=0}
-    return pools[k][idx[k]++]};
+  const src={v:all.filter(v=>!v.s),s:all.filter(v=>v.s),q:quotes.filter(ok),i:ideas.filter(ok),t:threads.filter(ok)};
+  const pools={},idx={},last={};
+  for(const k in src){pools[k]=mix(src[k]);idx[k]=0}
+  // nu pune două clipuri de la aceeași persoană unul după altul
+  const take=k=>{
+    if(!pools[k].length)return null;
+    if(idx[k]>=pools[k].length){pools[k]=mix(src[k]);idx[k]=0}
+    const pl=pools[k],j=idx[k];
+    for(let m=j;m<Math.min(pl.length,j+10);m++){if((pl[m].who||pl[m].ch)!==last[k]){[pl[j],pl[m]]=[pl[m],pl[j]];break}}
+    const x=pl[idx[k]++];last[k]=x.who||x.ch;return x};
   const pattern=["v","q","t","q","v","i","S","q","v","q","t","v","i","q"];
-  let step=0;
+  const starts=pattern.map((k,i)=>k==="S"?-1:i).filter(i=>i>=0);
+  let step=starts[Math.random()*starts.length|0];   // fiecare refresh începe în alt punct
   return n=>{
     const out=[];let guard=0;
     while(out.length<n&&guard++<n*6){
@@ -335,6 +493,7 @@ function more(){
   const batch=gen(14);
   if(!batch.length){$("feed").innerHTML=`<div class="empty">Nimic în categoria asta încă.</div>`;$("sentinel").hidden=true;return}
   $("sentinel").hidden=false;
+  markSeen(batch.flatMap(x=>x.k==="strip"?x.row.map(s=>s.id):[x.id]));
   $("feed").insertAdjacentHTML("beforeend",batch.map(render).join(""));
   watchPlayers($("feed"));
 }
@@ -386,6 +545,7 @@ function activate(box){
   if(active===box){position();return}
   active=box;activeShort=!!box.dataset.sid;userPaused=false;
   const id=boxId(box);
+  markSeen([id]);
   cover.src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
   stage.className="loading"+(activeShort?" short":"");stage.hidden=false;position();
   $("c-seek").value=0;$("c-time").textContent="0:00";
@@ -477,20 +637,18 @@ $("c-snd").addEventListener("click",e=>{e.stopPropagation();if(soundIsOn())muteB
   t.addEventListener("wheel",e=>{e.preventDefault();if(isFull)return;if(Math.abs(e.deltaY)>20&&Date.now()-lastW>600){lastW=Date.now();go(e.deltaY>0?1:-1)}},{passive:false});
 })();
 
-// clipurile din feed pornesc când sunt cel puțin 60% pe ecran
-const timers=new Map();
+// clipurile lungi din feed NU pornesc singure: pornesc doar când apeși pe ele,
+// și se opresc când ies de pe ecran
 const vio=new IntersectionObserver(es=>es.forEach(e=>{
-  const b=e.target;
-  if(e.intersectionRatio>=.6){if(!timers.has(b))timers.set(b,setTimeout(()=>{timers.delete(b);if(!$("v-shorts").hidden)return;activate(b)},250))}
-  else{clearTimeout(timers.get(b));timers.delete(b);if(e.intersectionRatio<.35)deactivate(b)}
-}),{threshold:[0,.35,.6,1]});
+  if(e.intersectionRatio<.35)deactivate(e.target);
+}),{threshold:[0,.35]});
 function watchPlayers(root){root.querySelectorAll(".player:not([data-w])").forEach(b=>{b.dataset.w=1;vio.observe(b)})}
 function stopAll(){deactivate()}
 
 // Shorts pe ecran întreg; fiecare pornește când ajunge în centru
 let shortsIO=null;
 function buildShorts(startId){
-  const list=shuffle(vids().filter(v=>v.s));
+  const list=mix(vids().filter(v=>v.s));
   if(startId){const i=list.findIndex(v=>v.id===startId);if(i>0)list.unshift(...list.splice(i,1))}
   const box=$("v-shorts");
   if(shortsIO)shortsIO.disconnect();
@@ -562,7 +720,8 @@ document.addEventListener("click",async e=>{
 function switchTo(v,startShort){
   stopAll();
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
-  $("v-feed").hidden=v!=="feed";$("v-saved").hidden=v!=="saved";$("v-set").hidden=v!=="set";
+  $("v-feed").hidden=v!=="feed";$("v-saved").hidden=v!=="saved";$("v-set").hidden=v!=="set";$("v-azi").hidden=v!=="azi";
+  if(v==="azi")renderAzi();
   $("v-shorts").hidden=v!=="shorts";$("hdr").hidden=v!=="feed";$("newpill").hidden=true;
   $("nav").classList.toggle("dark",v==="shorts");
   if(v==="shorts")buildShorts(startShort);else if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}
@@ -582,6 +741,328 @@ $("addv").addEventListener("submit",e=>{
   if(!m){toast("Linkul nu pare de YouTube");return}
   S.clips.unshift({id:m[1],t:"Clip adăugat de tine",ch:"Adăugat de tine",c:$("vcat").value,p:new Date().toISOString(),s:/\/shorts\//.test(u),v:0});
   save();$("addv").reset();toast("Adăugat în feed");settings();
+});
+
+// ══════════ AZI: obiceiuri, meditație, raft de cărți ══════════
+const dk=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dayAt=n=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+n);return d};
+if(!S.habits)S.habits=[
+  {id:"h1",n:"Meditație",k:"med"},
+  {id:"h2",n:"Citit 10 minute",k:"read"},
+  {id:"h3",n:"Mișcare / sport",k:""},
+  {id:"h4",n:"Fără telefon în prima oră",k:""}];
+S.hlog=S.hlog||{};                                   // {"2026-10-04":["h1","h3"]}
+S.med=Object.assign({pick:10,breath:true,total:0,days:{}},S.med||{});
+S.rd=S.rd||{};                                       // minute citite pe zi
+
+const isDone=(h,d)=>(S.hlog[d]||[]).includes(h.id);
+function setDone(id,d,on){
+  const a=(S.hlog[d]||[]).filter(x=>x!==id);if(on)a.push(id);
+  if(a.length)S.hlog[d]=a;else delete S.hlog[d];save();
+}
+function streak(h){
+  let n=0,i=isDone(h,dk())?0:-1;
+  while(isDone(h,dk(dayAt(i)))){n++;i--}
+  return n;
+}
+// bifare automată: meditația și cititul se bifează singure când le faci în aplicație
+function autoDone(kind){
+  const h=S.habits.find(x=>x.k===kind);
+  if(h&&!isDone(h,dk())){setDone(h.id,dk(),true);toast("Bifat: "+h.n);if(!$("v-azi").hidden)renderHabits()}
+}
+
+let hbEdit=false;
+function renderHabits(){
+  const t=dk(),days=[...Array(7)].map((_,i)=>dk(dayAt(i-6)));
+  const done=S.habits.filter(h=>isDone(h,t)).length;
+  $("hb-score").textContent=S.habits.length?`${done} din ${S.habits.length} azi`:"";
+  $("hb-edit").textContent=hbEdit?"Gata":"Editează";
+  $("hb-add").hidden=!hbEdit;
+  $("habits").innerHTML=S.habits.length?S.habits.map(h=>{
+    const on=isDone(h,t),st=streak(h);
+    return `<div class="hb${on?" done":""}">
+      <button class="hchk" data-h="${h.id}" aria-pressed="${on}" aria-label="${esc(h.n)}"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+      <div class="hname"><b>${esc(h.n)}</b><small>${st?st+(st===1?" zi":" zile")+" la rând":"începe azi"}</small></div>
+      ${hbEdit?`<button class="hdel" data-hdel="${h.id}" aria-label="Șterge obiceiul">${ic.x}</button>`
+        :`<span class="week">${days.map(d=>`<button class="wd${isDone(h,d)?" on":""}${d===t?" today":""}" data-h="${h.id}" data-d="${d}" aria-label="${esc(h.n)} ${d}"></button>`).join("")}</span>`}
+    </div>`}).join(""):`<p class="note">Niciun obicei încă. Apasă „Editează” ca să adaugi.</p>`;
+}
+
+// ── meditație ──
+const MD_PRE=[5,10,15,20];
+const fmtM=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+function renderMed(){
+  $("md-pre").innerHTML=MD_PRE.map(m=>`<button class="pre" data-m="${m}" aria-pressed="${m===S.med.pick}">${m}<small>min</small></button>`).join("");
+  $("md-breath").checked=!!S.med.breath;
+  $("md-start").textContent=`Începe · ${S.med.pick} minute`;
+  const today=S.med.days[dk()]||0;
+  $("md-total").textContent=S.med.total?(today?`azi ${today} min · `:"")+`total ${S.med.total} min`:"";
+}
+let md=null,mdInt=0,actx=null,wakeL=null;
+// clopoțel sintetizat (fără fișiere audio): armonicele unui bol tibetan
+function bell(vol){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended")actx.resume();
+    const t=actx.currentTime;
+    [[262,1],[723,.42],[1415,.2],[2340,.08]].forEach(([f,g])=>{
+      const o=actx.createOscillator(),a=actx.createGain();o.type="sine";o.frequency.value=f;
+      a.gain.setValueAtTime(0,t);a.gain.linearRampToValueAtTime(vol*g,t+.015);a.gain.exponentialRampToValueAtTime(.0001,t+6);
+      o.connect(a);a.connect(actx.destination);o.start(t);o.stop(t+6.1)});
+  }catch(e){}
+}
+async function lockWake(){try{wakeL=await navigator.wakeLock.request("screen")}catch(e){wakeL=null}}
+function unlockWake(){try{wakeL&&wakeL.release()}catch(e){}wakeL=null}
+function startMed(){
+  stopAll();
+  const dur=S.med.pick*60;
+  md={dur,left:dur,endAt:Date.now()+dur*1000,run:true};
+  const ov=$("medov");ov.hidden=false;$("md-run").hidden=false;$("md-done").hidden=true;
+  ov.classList.remove("breath","run");void ov.offsetWidth;   // repornește animația respirației de la zero
+  if(S.med.breath)ov.classList.add("breath");
+  setMedRun(true);bell(.22);lockWake();
+  clearInterval(mdInt);mdInt=setInterval(medTick,250);medTick();
+}
+function setMedRun(on){
+  md.run=on;$("medov").classList.toggle("run",on);
+  $("md-hint").textContent=on?"Atinge cercul pentru pauză":"Pauză · atinge ca să continui";
+}
+function medTick(){
+  if(!md)return;
+  if(md.run)md.left=Math.max(0,(md.endAt-Date.now())/1000);
+  $("md-time").textContent=fmtM(Math.ceil(md.left));
+  $("md-arc").style.strokeDashoffset=(295.3*(1-md.left/md.dur)).toFixed(1);
+  const el=md.dur-md.left;
+  $("md-cue").textContent=S.med.breath&&md.run?(el%10<4?"Inspiră":"Expiră"):"";
+  if(md.run&&md.left<=0)finishMed(true);
+}
+function finishMed(full){
+  clearInterval(mdInt);unlockWake();
+  if(md.run)md.left=Math.max(0,(md.endAt-Date.now())/1000);
+  const mins=full?md.dur/60:Math.floor((md.dur-md.left)/60);
+  if(mins>0){S.med.total+=mins;const k=dk();S.med.days[k]=(S.med.days[k]||0)+mins;save()}
+  if(mins>=3)autoDone("med");
+  if(!full){closeMed();return}
+  md.run=false;$("medov").classList.remove("run");
+  bell(.4);setTimeout(()=>bell(.3),3200);
+  $("md-run").hidden=true;$("md-done").hidden=false;
+  $("md-msg").textContent=`${mins} minute de liniște.`;
+}
+function closeMed(){
+  clearInterval(mdInt);unlockWake();md=null;$("medov").hidden=true;
+  renderMed();renderHabits();
+}
+$("md-ring").addEventListener("click",()=>{
+  if(!md||md.left<=0)return;
+  if(md.run){md.left=Math.max(0,(md.endAt-Date.now())/1000);setMedRun(false)}
+  else{md.endAt=Date.now()+md.left*1000;setMedRun(true)}
+  medTick();
+});
+$("md-x").addEventListener("click",()=>{if(!md){closeMed();return}if(!$("md-done").hidden||(md.dur-md.left)<60)closeMed();else finishMed(false)});
+$("md-ok").addEventListener("click",closeMed);
+$("md-breath").addEventListener("change",e=>{S.med.breath=e.target.checked;save()});
+
+// ── raft de cărți: PDF-urile stau în IndexedDB, pe telefon ──
+const PDFJS="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/";
+let pdfjsP=null;
+function loadPdfjs(){
+  return pdfjsP||(pdfjsP=new Promise((res,rej)=>{
+    const s=document.createElement("script");s.src=PDFJS+"pdf.min.js";
+    s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";res(window.pdfjsLib)};
+    s.onerror=()=>{pdfjsP=null;rej(new Error("pdf.js"))};
+    document.head.appendChild(s);
+  }));
+}
+let dbP=null;
+function db(){
+  return dbP||(dbP=new Promise((res,rej)=>{
+    const r=indexedDB.open("htube-books",1);
+    r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore("books",{keyPath:"id"});d.createObjectStore("files")};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>{dbP=null;rej(r.error)};
+  }));
+}
+function idb(stores,mode,fn){
+  return db().then(d=>new Promise((res,rej)=>{
+    const t=d.transaction(stores,mode);let out;const r=fn(t);
+    if(r)r.onsuccess=()=>{out=r.result};
+    t.oncomplete=()=>res(out);t.onerror=t.onabort=()=>rej(t.error);
+  }));
+}
+const bk={
+  all:()=>idb("books","readonly",t=>t.objectStore("books").getAll()),
+  put:b=>idb("books","readwrite",t=>t.objectStore("books").put(b)),
+  file:id=>idb("files","readonly",t=>t.objectStore("files").get(id)),
+  add:(b,buf)=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").put(buf,b.id);return t.objectStore("books").put(b)}),
+  del:id=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").delete(id);return t.objectStore("books").delete(id)})
+};
+let BOOKS=[],addingN=0;
+async function renderShelf(){
+  try{BOOKS=(await bk.all()).sort((a,b)=>(b.last||b.add)-(a.last||a.add))}catch(e){BOOKS=[]}
+  $("bk-count").textContent=BOOKS.length?BOOKS.length+(BOOKS.length===1?" carte":" cărți"):"";
+  $("shelf").innerHTML=BOOKS.map(b=>{
+    const pr=b.n&&b.pg>1?Math.round(b.pg/b.n*100):0;
+    return `<button class="book" data-book="${b.id}"><span class="bcov">${b.cov?`<img src="${b.cov}" alt="">`:`<i>${esc(b.t)}</i>`}<span class="bprog" style="width:${pr}%"></span></span><b>${esc(b.t)}</b><small>${b.pg>1?`p. ${b.pg} din ${b.n}`:`${b.n} pagini`}</small></button>`}).join("")
+    +Array.from({length:addingN},()=>`<div class="book"><span class="bcov"><i>Se adaugă…</i></span></div>`).join("")
+    +`<label class="addbook" for="bk-file"><b>+</b>${BOOKS.length?"Adaugă":"Adaugă prima carte (PDF)"}</label>`;
+}
+$("bk-file").addEventListener("change",async e=>{
+  const files=[...e.target.files];e.target.value="";
+  if(!files.length)return;
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+  addingN+=files.length;renderShelf();
+  let ok=0;
+  for(const f of files){
+    try{
+      const buf=await f.arrayBuffer();
+      const lib=await loadPdfjs();
+      const doc=await lib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;
+      let cov="";
+      try{
+        const pg=await doc.getPage(1),v=pg.getViewport({scale:300/pg.getViewport({scale:1}).width});
+        const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;
+        const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);
+        await pg.render({canvasContext:ctx,viewport:v}).promise;cov=c.toDataURL("image/jpeg",.72);
+      }catch(_){}
+      const b={id:"b"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+        t:f.name.replace(/\.pdf$/i,"").replace(/[_]+/g," ").replace(/\s+/g," ").trim()||"Carte",
+        n:doc.numPages,pg:1,cov,add:Date.now(),last:0};
+      doc.destroy();
+      await bk.add(b,buf);ok++;
+    }catch(err){toast(String(err).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu am putut deschide "+f.name)}
+    addingN--;renderShelf();
+  }
+  if(ok)toast(ok===1?"Carte adăugată pe raft":ok+" cărți adăugate");
+});
+
+// cititorul: pagini una sub alta, desenate doar când sunt aproape de ecran
+let RD=null,rdRaf=0;
+async function openBook(id){
+  const b=BOOKS.find(x=>x.id===id);if(!b)return;
+  stopAll();
+  $("reader").hidden=false;$("rd-t").textContent=b.t;$("rd-pg").textContent="Se deschide…";$("rd-pages").innerHTML="";
+  $("reader").classList.toggle("night",!!S.night);$("rd-night").setAttribute("aria-pressed",!!S.night);
+  try{
+    const [lib,buf]=await Promise.all([loadPdfjs(),bk.file(id)]);
+    if(!buf)throw new Error("lipsă");
+    const doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+    if($("reader").hidden){doc.destroy();return}
+    const v=(await doc.getPage(1)).getViewport({scale:1});
+    RD={b,doc,z:S.zoom||1,ratio:v.height/v.width,cur:b.pg||1,t0:Date.now()};
+    b.last=Date.now();bk.put(b).catch(()=>{});
+    layoutReader(RD.cur);
+  }catch(e){toast(String(e).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu pot deschide cartea");closeReader()}
+}
+function layoutReader(goTo){
+  const box=$("rd-pages");
+  if(RD.io)RD.io.disconnect();
+  if(RD.pages)RD.pages.forEach(unDraw);
+  RD.w=Math.round(Math.min(box.clientWidth-16,860)*RD.z);
+  box.innerHTML=Array.from({length:RD.doc.numPages},(_,i)=>`<div class="pg" data-n="${i+1}" style="width:${RD.w}px;height:${Math.round(RD.w*RD.ratio)}px"><span>${i+1}</span></div>`).join("");
+  RD.pages=[...box.children];
+  RD.io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?drawPage(e.target):unDraw(e.target)),{root:box,rootMargin:"120% 0px"});
+  RD.pages.forEach(el=>RD.io.observe(el));
+  const t=RD.pages[Math.min(RD.pages.length,goTo||1)-1];
+  box.scrollTop=t?t.offsetTop-12:0;
+  box.scrollLeft=Math.max(0,(box.scrollWidth-box.clientWidth)/2);
+  updPage();
+}
+async function drawPage(el){
+  if(el.dataset.st)return;el.dataset.st="1";
+  const R=RD,n=+el.dataset.n;
+  try{
+    const pg=await R.doc.getPage(n);
+    if(RD!==R||!el.dataset.st)return;
+    const v1=pg.getViewport({scale:1});
+    el.style.height=Math.round(R.w*v1.height/v1.width)+"px";
+    let sc=R.w/v1.width*Math.min(window.devicePixelRatio||1,2.5);
+    const maxPx=5e6;if(v1.width*v1.height*sc*sc>maxPx)sc=Math.sqrt(maxPx/(v1.width*v1.height));
+    const v=pg.getViewport({scale:sc});
+    const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;
+    const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);
+    el._task=pg.render({canvasContext:ctx,viewport:v});
+    await el._task.promise;el._task=null;
+    if(RD!==R||!el.dataset.st){c.width=c.height=0;return}
+    el.innerHTML="";el.appendChild(c);
+  }catch(e){if(el.dataset.st&&RD===R)delete el.dataset.st}
+}
+function unDraw(el){
+  if(!el.dataset.st)return;delete el.dataset.st;
+  try{el._task&&el._task.cancel()}catch(e){}
+  const c=el.querySelector("canvas");if(c){c.width=c.height=0}
+  el.innerHTML=`<span>${el.dataset.n}</span>`;
+}
+function updPage(){
+  if(!RD||!RD.pages)return;
+  const box=$("rd-pages"),y=box.scrollTop+box.clientHeight*.4,P2=RD.pages;
+  let lo=0,hi=P2.length-1;
+  while(lo<hi){const m=(lo+hi+1)>>1;if(P2[m].offsetTop<=y)lo=m;else hi=m-1}
+  const n=lo+1;
+  if(n!==RD.cur){RD.cur=n;clearTimeout(RD.saveT);RD.saveT=setTimeout(saveProgress,800)}
+  $("rd-pg").textContent=`${n} / ${RD.doc.numPages}`;
+}
+function saveProgress(){if(!RD)return;RD.b.pg=RD.cur;RD.b.last=Date.now();bk.put(RD.b).catch(()=>{})}
+// timpul de citit se adună pe zi; la 10 minute se bifează „Citit”
+function readTick(){
+  if(!RD)return;const now=Date.now(),m=(now-RD.t0)/6e4;
+  if(!document.hidden&&m<3){const k=dk();S.rd[k]=(S.rd[k]||0)+m;save();if(S.rd[k]>=10)autoDone("read")}
+  RD.t0=now;
+}
+setInterval(readTick,30000);
+function closeReader(){
+  if(RD){readTick();saveProgress();clearTimeout(RD.saveT);
+    if(RD.io)RD.io.disconnect();if(RD.pages)RD.pages.forEach(unDraw);
+    try{RD.doc.destroy()}catch(e){}RD=null}
+  $("reader").hidden=true;$("rd-pages").innerHTML="";
+  renderShelf();renderHabits();
+}
+function zoom(f){
+  if(!RD)return;const nz=Math.min(3,Math.max(.6,Math.round(RD.z*f*100)/100));
+  if(nz===RD.z)return;RD.z=nz;S.zoom=nz;save();layoutReader(RD.cur);
+}
+$("rd-pages").addEventListener("scroll",()=>{if(!rdRaf)rdRaf=requestAnimationFrame(()=>{rdRaf=0;updPage()})},{passive:true});
+$("rd-back").addEventListener("click",closeReader);
+$("rd-zi").addEventListener("click",()=>zoom(1.25));
+$("rd-zo").addEventListener("click",()=>zoom(.8));
+$("rd-night").addEventListener("click",()=>{S.night=!S.night;save();$("reader").classList.toggle("night",S.night);$("rd-night").setAttribute("aria-pressed",S.night)});
+$("rd-del").addEventListener("click",async()=>{
+  if(!RD)return;const b=RD.b;
+  if(!confirm(`Ștergi „${b.t}” de pe raft?`))return;
+  closeReader();try{await bk.del(b.id);toast("Carte ștearsă")}catch(e){}renderShelf();
+});
+let rdResize=0;
+addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);rdResize=setTimeout(()=>RD&&layoutReader(RD.cur),250)});
+
+// ── pagina Azi ──
+function renderAzi(){
+  const now=new Date(),h=now.getHours();
+  $("az-date").textContent=now.toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long"});
+  $("az-hi").textContent=h<5?"Noapte bună":h<11?"Bună dimineața":h<18?"Bună ziua":"Bună seara";
+  if(quotes.length){
+    const d=Math.floor((now-now.getTimezoneOffset()*6e4)/864e5),q=quotes[(d*7919)%quotes.length];
+    $("az-q").textContent=`„${q.t}”`;$("az-qs").innerHTML=`— <b>${esc(q.who)}</b>${q.src?", "+esc(q.src):""}`;
+  }
+  renderHabits();renderMed();renderShelf();
+}
+$("v-azi").addEventListener("click",e=>{
+  const h=e.target.closest("[data-h]");
+  if(h){const hb=S.habits.find(x=>x.id===h.dataset.h),d=h.dataset.d||dk();if(hb){setDone(hb.id,d,!isDone(hb,d));renderHabits()}return}
+  const del=e.target.closest("[data-hdel]");
+  if(del){const hb=S.habits.find(x=>x.id===del.dataset.hdel);if(hb&&confirm(`Ștergi obiceiul „${hb.n}”?`)){S.habits=S.habits.filter(x=>x!==hb);save();renderHabits()}return}
+  if(e.target.closest("#hb-edit")){hbEdit=!hbEdit;renderHabits();return}
+  const pr=e.target.closest(".pre");
+  if(pr){S.med.pick=+pr.dataset.m;save();renderMed();return}
+  if(e.target.closest("#md-start")){startMed();return}
+  const b=e.target.closest("[data-book]");
+  if(b){openBook(b.dataset.book);return}
+});
+$("hb-add").addEventListener("submit",e=>{
+  e.preventDefault();const n=$("hb-name").value.trim();if(!n)return;
+  S.habits.push({id:"h"+Date.now().toString(36),n,k:""});save();$("hb-add").reset();renderHabits();
+});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden)return;
+  if(md&&md.run)lockWake();                       // ecranul rămâne aprins în timpul meditației
+  if(!$("v-azi").hidden)renderHabits();             // a trecut miezul nopții? bifele se resetează
 });
 
 chips();loadFeed();
