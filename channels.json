@@ -1,0 +1,18 @@
+{
+  "_info": "Canalele din care HTube aduce automat clipuri. Poți folosi @handle sau ID-ul canalului (UC...). Categorii: mot, dev, biz, soc, san.",
+  "channels": [
+    {"name": "Andrew Huberman", "handle": "@hubermanlab", "c": "san"},
+    {"name": "Huberman Lab Clips", "handle": "@HubermanLabClips", "c": "san"},
+    {"name": "Peter Attia MD", "handle": "@PeterAttiaMD", "c": "san"},
+    {"name": "Shi Heng Yi", "id": "UCRRtZjnxd5N6Vvq-jU9uoOw", "handle": "@ShiHengYiOnline", "c": "dev"},
+    {"name": "HealthyGamerGG (Dr. K)", "handle": "@HealthyGamerGG", "c": "dev"},
+    {"name": "Daily Stoic", "handle": "@DailyStoic", "c": "dev"},
+    {"name": "David Goggins", "id": "UCb38juXPhVW34F-B2fVBtlA", "c": "mot"},
+    {"name": "Motiversity", "handle": "@Motiversity", "c": "mot"},
+    {"name": "Mel Robbins", "handle": "@melrobbins", "c": "mot"},
+    {"name": "Brian Tracy", "handle": "@BrianTracyOfficial", "c": "dev"},
+    {"name": "Alex Hormozi", "handle": "@AlexHormozi", "c": "biz"},
+    {"name": "Jeremy Miner", "handle": "@JeremyMiner", "c": "biz"}
+  ],
+  "block_words": ["news", "breaking", "știri", "stiri", "election", "trump", "biden", "politics", "war update", "nachrichten"]
+}

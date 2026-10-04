@@ -4,292 +4,381 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>HTube</title>
-<meta name="theme-color" content="#2f4fd8">
+<meta name="theme-color" content="#f5f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0f12" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HTube">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400;1,6..72,500&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: o singură coloană de telefon — bară de brand, categorii, gândul zilei, feed, bară de tab-uri jos */
+/* Layout: o coloană îngustă, fără carduri — postări separate de linii fine; citatele în serif mare; Shorts pe ecran întreg */
 :root{
-  --bg:#eef1f6; --surface:#ffffff; --ink:#151a2b; --muted:#5d6580; --line:#d9deea;
-  --accent:#2f4fd8; --accent-soft:#e3e8fc; --on-accent:#ffffff; --gold:#b86e00;
-  --c-mot:#c2410c; --c-biz:#2f4fd8; --c-dev:#7c3aed; --c-soc:#0f8a6a; --c-san:#c0264b;
-  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
-  --body:"Figtree",system-ui,-apple-system,sans-serif;
+  --bg:#f5f4f1; --ink:#16171a; --muted:#6c6e76; --line:#e2e0da; --soft:#ebe9e3;
+  --accent:#2f4fd8; --live:#16a34a; --on-accent:#fff;
+  --c-mot:#d9480f; --c-dev:#7048e8; --c-biz:#2f4fd8; --c-soc:#0c8a6a; --c-san:#c2255c; --c-int:#8a6d1d;
+  --serif:"Newsreader", Georgia, "Times New Roman", serif;
+  --sans:"Figtree", system-ui, -apple-system, sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root{
-  --bg:#0f1322; --surface:#171c30; --ink:#e8ebf5; --muted:#99a1bd; --line:#283050;
-  --accent:#8ea2ff; --accent-soft:#232c55; --on-accent:#0f1322; --gold:#f2b14a;
-  --c-mot:#fb8a56; --c-biz:#8ea2ff; --c-dev:#b79bff; --c-soc:#4fd1a8; --c-san:#ff7a98; color-scheme:dark}}
+  --bg:#0e0f12; --ink:#ecebe7; --muted:#8d8f98; --line:#22242a; --soft:#191b20;
+  --accent:#8fa3ff; --live:#4ade80; --on-accent:#0e0f12;
+  --c-mot:#ff8a4c; --c-dev:#b197fc; --c-biz:#8fa3ff; --c-soc:#4fd1a8; --c-san:#f783ac; --c-int:#e3c46a; color-scheme:dark}}
 *{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:0 calc(90px + env(safe-area-inset-bottom,0px))}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em}
-.brand span{color:var(--accent)}
-.tag{font-size:12px;color:var(--muted)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-block:4px 12px;scrollbar-width:none}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:600px;margin:0 auto;padding-inline:18px}
+main.wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.bar{display:flex;align-items:center;gap:10px;padding-bottom:8px}
+.logo{font-weight:700;font-size:20px;letter-spacing:-.03em}
+.logo i{font-style:normal;color:var(--accent)}
+.live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--live) 60%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.refresh{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.refresh svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+.refresh.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;border-bottom:1px solid var(--line)}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:600 13px var(--body);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.daily{background:var(--accent);color:var(--on-accent);border-radius:18px;padding:20px;margin-block:4px 16px;display:grid;gap:10px}
-.daily small{text-transform:uppercase;letter-spacing:.1em;font-size:11px;font-weight:600;opacity:.85}
-.daily q{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.25;text-wrap:balance;quotes:"„" "”"}
-.daily .by{font-size:13px;opacity:.9}
-.feed{display:grid;gap:12px}
-.post{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:8px;min-width:0}
-.meta{display:flex;align-items:center;gap:8px;font-size:13px}
-.meta>div{min-width:0}
-.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 14px var(--display);color:#fff;flex:none}
-.who{font-weight:600}
-.vf{color:var(--gold);font-size:12px;font-weight:600;white-space:nowrap}
-.cat{margin-left:auto;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;text-align:right}
-.kind{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.post h3{margin:0;font-family:var(--display);font-weight:600;font-size:18px;line-height:1.3;text-wrap:balance}
-.post p{margin:0}
-.src{font-size:12.5px;color:var(--muted)}
-.src a{color:var(--accent);font-weight:600;text-decoration:none}
-.video{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;border:0;padding:0;cursor:pointer;display:block}
-.video img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9}
-.video .pb{position:absolute;inset:0;display:grid;place-items:center}
-.video .pb span{width:62px;height:62px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
-.video .pb svg{fill:var(--on-accent);margin-left:4px}
-.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.vch{font-size:12.5px;color:var(--muted)}
-.acts{display:flex;gap:6px;flex-wrap:wrap}
-.act{border:0;background:transparent;color:var(--muted);font:500 13px var(--body);padding:6px 10px;border-radius:8px;cursor:pointer}
-.act:hover{background:var(--accent-soft);color:var(--ink)}
-.act[aria-pressed="true"]{color:var(--accent);font-weight:600}
-.empty{text-align:center;color:var(--muted);padding:40px 10px}
-.srcs{display:grid;gap:10px}
-.srow{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center}
-.srow div{min-width:0}
-.srow b{display:block}
-.srow span{font-size:12.5px;color:var(--muted)}
-.lvl{margin-left:auto;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);flex:none}
-form{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-block:6px 18px}
-input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
-.btn{border:0;background:var(--accent);color:var(--on-accent);font:600 15px var(--body);border-radius:10px;padding:11px;cursor:pointer}
-.msg{font-size:13px;color:var(--muted);min-height:1em}
-h2{font-family:var(--display);font-size:20px;margin:6px 0 10px}
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:6}
-.tab{flex:1;max-width:200px;border:0;background:transparent;color:var(--muted);font:600 12px var(--body);padding:10px 4px 12px;cursor:pointer;display:grid;justify-items:center;gap:3px}
-.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2}
-.tab[aria-selected="true"]{color:var(--accent)}
-@media (prefers-reduced-motion:no-preference){.post{animation:in .25s ease both}@keyframes in{from{transform:translateY(4px)}}}
+.chip{flex:none;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--soft)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.newpill{position:fixed;left:50%;transform:translateX(-50%);top:calc(108px + env(safe-area-inset-top,0px));z-index:6;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+
+.item{padding-block:18px;border-bottom:1px solid var(--line);display:grid;gap:10px;min-width:0}
+.meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);min-width:0}
+.cat{width:8px;height:8px;border-radius:50%;flex:none}
+.who{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.new{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--live);text-transform:uppercase}
+.ago{margin-left:auto;white-space:nowrap}
+.quote{font-family:var(--serif);font-size:23px;line-height:1.32;font-weight:500;text-wrap:pretty;margin:0;letter-spacing:-.005em}
+.quote.long{font-size:20px}
+.qsrc{font-size:12.5px;color:var(--muted)}
+.idea h3{margin:0;font-size:16.5px;font-weight:700;letter-spacing:-.01em}
+.idea p{margin:0}
+.vtitle{margin:0;font-weight:600;font-size:15.5px;line-height:1.35}
+.player{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;display:block}
+.player img{width:100%;height:100%;object-fit:cover;display:block}
+.pb{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(transparent 55%,rgba(0,0,0,.35))}
+.pbtn{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center}
+.pbtn svg{width:20px;height:20px;fill:#111;margin-left:3px}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.acts{display:flex;gap:2px;margin-left:-8px}
+.act{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted);padding:6px 8px;border-radius:8px}
+.act svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8}
+.act[aria-pressed="true"]{color:var(--accent)}
+.act[aria-pressed="true"] svg{fill:currentColor}
+
+.strip{padding-block:18px;border-bottom:1px solid var(--line)}
+.strip h4{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.srow{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin-inline:-18px;padding-inline:18px}
+.srow::-webkit-scrollbar{display:none}
+.sthumb{flex:none;width:118px;aspect-ratio:9/16;border-radius:12px;overflow:hidden;position:relative;background:#000}
+.sthumb img{width:100%;height:100%;object-fit:cover}
+.sthumb span{position:absolute;left:6px;right:6px;bottom:6px;color:#fff;font-size:11px;font-weight:600;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,.8);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
+.sentinel{padding:28px 0;text-align:center;color:var(--muted);font-size:13px}
+.empty{padding:56px 10px;text-align:center;color:var(--muted)}
+
+/* Shorts: ecran întreg, derulare verticală */
+#v-shorts{position:fixed;inset:0;z-index:4;background:#000;overflow-y:auto;scroll-snap-type:y mandatory}
+.short{height:calc(100dvh - 62px - env(safe-area-inset-bottom,0px));scroll-snap-align:start;display:grid;place-items:center;position:relative;padding-top:env(safe-area-inset-top,0px)}
+.sframe{height:100%;aspect-ratio:9/16;max-width:100%;position:relative;background:#000}
+.sframe img{width:100%;height:100%;object-fit:cover}
+.sframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.sinfo{position:absolute;left:16px;right:70px;bottom:22px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9);pointer-events:none}
+.sinfo b{display:block;font-size:14px}
+.sinfo span{font-size:13px;opacity:.9}
+.sside{position:absolute;right:12px;bottom:26px;display:grid;gap:14px}
+.sside button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;color:#fff}
+.sside svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sside button[aria-pressed="true"] svg{fill:currentColor}
+
+h2{font-size:18px;margin:22px 0 8px;letter-spacing:-.01em}
+.row{display:flex;align-items:center;gap:12px;padding-block:12px;border-bottom:1px solid var(--line)}
+.row div{min-width:0}
+.row b{display:block;font-size:14.5px}
+.row small{color:var(--muted)}
+.row .n{margin-left:auto;font-size:12px;color:var(--muted);flex:none}
+.note{font-size:13.5px;color:var(--muted);margin:6px 0 10px}
+form{display:grid;gap:8px;margin-top:8px}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.btn{background:var(--ink);color:var(--bg);font-weight:600;border-radius:10px;padding:11px;text-align:center;text-decoration:none;display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.stats div{background:var(--soft);border-radius:12px;padding:12px}
+.stats b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.stats small{color:var(--muted);font-size:12px}
+
+nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.dark{background:#000;border-color:#1c1c1c}
+.tab{flex:1;max-width:140px;display:grid;justify-items:center;gap:2px;padding:9px 0 10px;font-size:11px;font-weight:600;color:var(--muted)}
+.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9}
+.tab[aria-selected="true"]{color:var(--ink)}
+nav.dark .tab{color:#8a8a8a}
+nav.dark .tab[aria-selected="true"]{color:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:13px;padding:8px 14px;border-radius:999px;z-index:9}
+@media (prefers-reduced-motion:no-preference){.item,.strip{animation:fade .35s ease both}@keyframes fade{from{opacity:.4;transform:translateY(6px)}}}
+@media (prefers-reduced-motion:reduce){.dot,.refresh.spin svg{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div><div class="brand">H<span>Tube</span></div><div class="tag">Doar ce te face mai bun. Fără știri.</div></div>
-    <div class="tag" id="count"></div>
-  </header>
-
-  <section id="v-feed">
+<header id="hdr">
+  <div class="wrap">
+    <div class="bar">
+      <div class="logo">H<i>Tube</i></div>
+      <div class="live"><span class="dot"></span><span id="upd">live</span></div>
+      <button class="refresh" id="refresh" aria-label="Reîmprospătează"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
+    </div>
     <div class="chips" id="chips" role="toolbar" aria-label="Categorii"></div>
-    <div class="daily" id="daily"></div>
-    <div class="feed" id="feed"></div>
-  </section>
+  </div>
+</header>
+<button class="newpill" id="newpill" hidden></button>
 
-  <section id="v-video" hidden>
-    <h2>Clipuri</h2>
-    <div class="feed" id="videos"></div>
-  </section>
+<main class="wrap">
+  <section id="v-feed"><div id="feed"></div><div class="sentinel" id="sentinel">Se încarcă…</div></section>
+  <section id="v-saved" hidden><h2>Salvate</h2><div id="saved"></div></section>
+  <section id="v-set" hidden>
+    <h2>HTube</h2>
+    <div class="stats"><div><b id="st-v">0</b><small>clipuri</small></div><div><b id="st-s">0</b><small>shorts</small></div><div><b id="st-q">0</b><small>citate și idei</small></div></div>
+    <p class="note" id="st-u"></p>
 
-  <section id="v-saved" hidden>
-    <h2>Salvate</h2>
-    <div class="feed" id="saved"></div>
-  </section>
+    <h2>YouTube Premium</h2>
+    <p class="note">Clipurile rulează în player-ul oficial YouTube. Dacă ești logat cu contul Premium în același browser, nu vezi reclame. Aplicația de pe ecranul iPhone-ului are browserul ei, așa că loghează-te o dată de aici:</p>
+    <a class="btn" href="https://accounts.google.com/ServiceLogin?service=youtube&amp;continue=https%3A%2F%2Fm.youtube.com%2F" target="_blank" rel="noopener">Conectează contul YouTube</a>
 
-  <section id="v-src" hidden>
     <h2>Adaugă un clip</h2>
     <form id="addv">
-      <input id="vurl" placeholder="Lipește linkul YouTube" required>
+      <input id="vurl" placeholder="Lipește linkul YouTube (și Shorts)" autocomplete="off">
       <select id="vcat"></select>
-      <input id="vtitle" placeholder="Despre ce e? (opțional)">
       <button class="btn" type="submit">Adaugă în feed</button>
-      <div class="msg" id="vmsg"></div>
     </form>
-    <h2>Sursele tale</h2>
-    <div class="srcs" id="srcs"></div>
-    <form id="addf">
-      <b>Adaugă o sursă</b>
-      <input id="sname" placeholder="Nume (ex: Alex Hormozi)" required>
-      <select id="scat"></select>
-      <input id="sdesc" placeholder="Carte, canal sau site (opțional)">
-      <button class="btn" type="submit">Adaugă sursa</button>
-    </form>
-  </section>
-</div>
 
-<nav role="tablist">
-  <button class="tab" role="tab" data-v="feed" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Feed</button>
-  <button class="tab" role="tab" data-v="video" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>Clipuri</button>
-  <button class="tab" role="tab" data-v="saved" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Salvate</button>
-  <button class="tab" role="tab" data-v="src" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Surse</button>
+    <h2>Canale urmărite</h2>
+    <p class="note">Clipurile noi de pe aceste canale apar automat, la fiecare 2 ore.</p>
+    <div id="chans"></div>
+  </section>
+</main>
+
+<section id="v-shorts" hidden></section>
+
+<nav id="nav" role="tablist">
+  <button class="tab" role="tab" data-v="feed" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
+  <button class="tab" role="tab" data-v="shorts" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
+  <button class="tab" role="tab" data-v="saved" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Salvate</button>
+  <button class="tab" role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Setări</button>
 </nav>
 
+<script src="data.js"></script>
 <script>
-const CATS={mot:"Motivație",biz:"Afaceri",dev:"Dezvoltare personală",soc:"Socializare",san:"Sănătate"};
-
-const SOURCES=[
- {n:"Marcus Aurelius",c:"mot",d:"Meditații (sec. II)",l:"Clasic"},
- {n:"Seneca",c:"mot",d:"Scrisori către Lucilius",l:"Clasic"},
- {n:"Epictet",c:"dev",d:"Manualul (Enchiridion)",l:"Clasic"},
- {n:"Alex Hormozi",c:"biz",d:"$100M Offers, $100M Leads",l:"Practician"},
- {n:"Paul Graham",c:"biz",d:"Eseuri, fondator Y Combinator",l:"Practician"},
- {n:"Naval Ravikant",c:"biz",d:"Eseuri și podcast despre avere",l:"Practician"},
- {n:"James Clear",c:"dev",d:"Atomic Habits",l:"Carte"},
- {n:"Cal Newport",c:"dev",d:"Deep Work, profesor Georgetown",l:"Carte"},
- {n:"Jocko Willink",c:"dev",d:"Extreme Ownership",l:"Carte"},
- {n:"Dale Carnegie",c:"soc",d:"Cum să-ți faci prieteni (1936)",l:"Carte"},
- {n:"Chris Voss",c:"soc",d:"Fost negociator FBI",l:"Practician"},
- {n:"Robert Cialdini",c:"soc",d:"Influence, psiholog",l:"Cercetare"},
- {n:"Andrew Huberman",c:"san",d:"Neurolog, Stanford",l:"Medic/Cercetare"},
- {n:"Peter Attia",c:"san",d:"Medic, Outlive",l:"Medic"},
- {n:"Brian Tracy",c:"dev",d:"Eat That Frog!, obiective și productivitate",l:"Carte"},
- {n:"Simon Sinek",c:"biz",d:"Start With Why, leadership",l:"Carte"},
- {n:"Mel Robbins",c:"mot",d:"The 5 Second Rule",l:"Practician"},
- {n:"OMS / WHO",c:"san",d:"Ghiduri oficiale de sănătate",l:"Oficial"}
-];
-
-// vid = ID YouTube verificat; ch = canalul care a publicat clipul
-const POSTS=[
- {id:1,c:"mot",who:"Marcus Aurelius",k:"Citat",t:"Ai putere asupra minții tale, nu asupra evenimentelor din afară. Înțelege asta și vei găsi tăria.",s:"Meditații, sec. II (traducere liberă)"},
- {id:3,c:"san",who:"Andrew Huberman",k:"Clip",h:"Lumina de dimineață",t:"5–10 minute de lumină naturală afară, în prima oră după trezire, ajută la fixarea ritmului circadian: mai multă energie ziua, somn mai bun noaptea.",s:"Huberman Lab",vid:"WDv4AWk0J3U",ch:"Huberman Lab Clips"},
- {id:2,c:"biz",who:"Alex Hormozi",k:"Clip",h:"Oferte la care e greu să spui nu",t:"Valoarea percepută crește când rezultatul dorit e mare și sigur, și scade cu cât clientul așteaptă mai mult și depune mai mult efort. Lucrează pe toți cei patru factori, nu doar pe preț.",s:"$100M Offers (2021)",vid:"qkS_pb97TyA",ch:"Plus Ultra Podcast (interviu)"},
- {id:4,c:"dev",who:"James Clear",k:"Clip",h:"1% mai bine pe zi",t:"Nu-ți fixa doar obiective, construiește sisteme. Fă obiceiul bun evident, atractiv, ușor și satisfăcător. Pe cel rău, invers.",s:"Atomic Habits (2018)",vid:"DELOQ4J6qc0",ch:"Carey Nieuwhof (interviu)"},
- {id:5,c:"soc",who:"Chris Voss",k:"Clip",h:"Oglindirea",t:"Repetă ultimele 1–3 cuvinte spuse de celălalt, pe ton de întrebare. Omul continuă să vorbească și îți dă mai multe informații, fără să simtă presiune.",s:"Never Split the Difference (2016)",vid:"00D3EsAO0hI",ch:"Big Think"},
- {id:6,c:"san",who:"OMS / WHO",k:"Ghid",h:"Câtă mișcare îți trebuie",t:"Adulții au nevoie de 150–300 de minute pe săptămână de efort moderat (sau 75–150 intens), plus forță de cel puțin 2 ori pe săptămână.",s:"Ghidul OMS pentru activitate fizică, 2020",url:"https://www.who.int/news-room/fact-sheets/detail/physical-activity"},
- {id:7,c:"mot",who:"Seneca",k:"Citat",t:"Nu avem prea puțin timp, ci pierdem mult din el.",s:"Despre scurtimea vieții (traducere liberă)"},
- {id:8,c:"biz",who:"Paul Graham",k:"Eseu",h:"Fă lucruri care nu se scalează",t:"La început, câștigi clienții unul câte unul, manual. Grija personală pe care o dai acum e avantajul pe care firmele mari nu-l pot copia.",s:"Do Things That Don't Scale (2013)",url:"https://paulgraham.com/ds.html"},
- {id:9,c:"dev",who:"Cal Newport",k:"Clip",h:"Munca profundă",t:"Blochează 60–90 de minute fără telefon pentru cea mai grea sarcină a zilei. Atenția fragmentată costă mai mult decât pare.",s:"Deep Work (2016)",vid:"nPzFhkTe2Uw",ch:"Cal Newport"},
- {id:10,c:"soc",who:"Dale Carnegie",k:"Principiu",h:"Numele omului",t:"Numele unei persoane e pentru ea cel mai important sunet. Reține-l și folosește-l, iar oamenii te vor ține minte.",s:"Cum să-ți faci prieteni (1936)"},
- {id:11,c:"san",who:"Peter Attia",k:"Clip",h:"Zona 2: cât și cât de des",t:"Capacitatea cardio (VO2 max) e unul dintre cei mai puternici predictori ai duratei de viață. Baza ei e mult efort ușor, în zona 2, câteva ore pe săptămână.",s:"Outlive (2023)",vid:"z82GCNXdLAA",ch:"Peter Attia MD"},
- {id:12,c:"biz",who:"Naval Ravikant",k:"Idee",h:"Pârghie",t:"Averea vine din cunoaștere specifică plus pârghie: capital, oameni, cod sau conținut. Ultimele două nu cer permisiunea nimănui.",s:"How to Get Rich (2018)"},
- {id:13,c:"dev",who:"Jocko Willink",k:"Clip",h:"Responsabilitate totală",t:"Când ceva merge prost, întreabă întâi ce puteai face tu diferit. Cine își asumă tot, controlează mai mult.",s:"Extreme Ownership (2015)",vid:"ljqra3BcqWM",ch:"TEDx Talks"},
- {id:14,c:"soc",who:"Robert Cialdini",k:"Studiu",h:"Reciprocitatea",t:"Oamenii simt nevoia să întoarcă un gest. Dă primul ceva util, fără condiții. E cel mai solid principiu de influență studiat.",s:"Influence (1984)"},
- {id:15,c:"mot",who:"Epictet",k:"Citat",t:"Nu lucrurile ne tulbură, ci părerile noastre despre ele.",s:"Manualul, cap. 5 (traducere liberă)"},
- {id:16,c:"san",who:"Andrew Huberman",k:"Clip",h:"Somnul vine primul",t:"Adulții au nevoie de cel puțin 7 ore de somn. Fără somn, antrenamentul, dieta și concentrarea dau rezultate mult mai slabe.",s:"Huberman Lab Essentials",vid:"RTgJSQtvo88",ch:"Andrew Huberman"},
- {id:18,c:"dev",who:"Epictet",k:"Principiu",h:"Dihotomia controlului",t:"Împarte orice problemă în două: ce depinde de tine și ce nu. Toată energia merge pe prima listă.",s:"Manualul, cap. 1"},
- {id:19,c:"dev",who:"Brian Tracy",k:"Clip",h:"Regula 80/20 la obiective",t:"Din 10 lucruri pe listă, 2 aduc cât celelalte 8 la un loc. Găsește-le pe acelea și începe cu ele.",s:"Brian Tracy",vid:"cdiApKj3QPg",ch:"Brian Tracy"},
- {id:20,c:"mot",who:"Brian Tracy",k:"Clip",h:"Mănâncă broasca dimineața",t:"Fă prima, la prima oră, sarcina cea mai grea și mai importantă a zilei. Restul zilei merge mai ușor.",s:"Eat That Frog! (2001)",vid:"v9eAE8sHYvs",ch:"Motivation Radio"},
- {id:21,c:"san",who:"Andrew Huberman",k:"Clip",h:"Dopamina și motivația",t:"Motivația ține de nivelul tău de bază de dopamină. Recompensele ușoare și dese (telefon, junk food) îl coboară; efortul și răbdarea îl ridică.",s:"Huberman Lab",vid:"lc0h3KaWhec",ch:"Huberman Lab Clips"},
- {id:22,c:"dev",who:"Andrew Huberman",k:"Clip",h:"Investește dopamina în efort",t:"Învață-te să simți plăcere în timpul efortului, nu doar la final. Atunci munca grea devine ceva ce poți susține ani de zile.",s:"Huberman Lab, cu Michael Easter",vid:"gMF142JSNYs",ch:"Huberman Lab Clips"},
- {id:23,c:"biz",who:"Simon Sinek",k:"Clip",h:"Începe cu De ce",t:"Oamenii nu cumpără ce faci, ci de ce o faci. Spune întâi motivul tău, apoi cum și abia la final ce vinzi.",s:"TEDxPugetSound (2009)",vid:"u4ZoJKF_VuA",ch:"TEDx Talks"},
- {id:24,c:"mot",who:"Mel Robbins",k:"Clip",h:"Regula de 5 secunde",t:"Când știi că trebuie să faci ceva, numără 5-4-3-2-1 și mișcă-te înainte ca mintea să găsească scuze.",s:"The 5 Second Rule (2017)",vid:"oOSoyZMt-D4",ch:"Mel Robbins Show"}
-];
-
-let store={saved:[],hidden:[],extra:[],clips:[]};
-try{const s=JSON.parse(localStorage.getItem("htube")||"null");if(s)store=Object.assign(store,s)}catch(e){}
-const persist=()=>{try{localStorage.setItem("htube",JSON.stringify(store))}catch(e){}};
-
-let cat="all";
+const CATS={mot:"Motivație",dev:"Minte",biz:"Afaceri",soc:"Oameni",san:"Sănătate",int:"Înțelepciune"};
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const ini=n=>n.split(/[\s/]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
-const color=c=>`var(--c-${c})`;
-const allPosts=()=>[...store.clips,...POSTS];
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const ic={
+  heart:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  copy:'<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  play:'<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg>'
+};
+const playBtn=`<span class="pb"><span class="pbtn">${ic.play}</span></span>`;
 
-function ytId(u){
-  const m=String(u).match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
-  return m?m[1]:(/^[A-Za-z0-9_-]{11}$/.test(u.trim())?u.trim():null);
+// stare locală (rămâne doar pe telefon)
+let S={saved:[],hidden:[],clips:[]};
+try{Object.assign(S,JSON.parse(localStorage.getItem("htube2")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("htube2",JSON.stringify(S))}catch(e){}};
+
+// date
+let FEED={updated:null,items:[]};
+const quotes=(window.QUOTES||[]).map((q,i)=>({k:"q",id:"q"+i,t:q[0],who:q[1],src:q[2],c:q[3]}));
+const ideas=(window.IDEAS||[]).map((x,i)=>({k:"i",id:"i"+i,...x}));
+const vids=()=>[...S.clips,...FEED.items].filter(v=>!S.hidden.includes(v.id));
+const byId=id=>quotes.find(x=>x.id===id)||ideas.find(x=>x.id===id)||S.clips.find(v=>v.id===id)||FEED.items.find(v=>v.id===id);
+
+const placeholderDate=iso=>!iso||iso.startsWith("2026-01-01");
+function ago(iso){
+  if(placeholderDate(iso))return"";
+  const m=(Date.now()-new Date(iso))/6e4;
+  if(m<60)return Math.max(1,Math.round(m))+" min";
+  if(m<1440)return Math.round(m/60)+" h";
+  if(m<43200)return Math.round(m/1440)+" z";
+  return new Date(iso).toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
 }
+const isNew=iso=>!placeholderDate(iso)&&(Date.now()-new Date(iso))<48*36e5;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// generator de feed infinit: clipuri, citate, idei și benzi de Shorts, amestecate fără sfârșit
+let cat="all", gen=null;
+function makeGen(){
+  const ok=x=>(cat==="all"||x.c===cat)&&!S.hidden.includes(x.id);
+  const all=vids().filter(ok);
+  const fresh=all.filter(v=>!v.s&&isNew(v.p));
+  const longPool=()=>{const old=all.filter(v=>!v.s&&!isNew(v.p));return [...shuffle(old.slice(0,60)),...shuffle(old.slice(60))]};
+  const pools={v:[...fresh,...longPool()],s:shuffle(all.filter(v=>v.s)),q:shuffle(quotes.filter(ok)),i:shuffle(ideas.filter(ok))};
+  const idx={v:0,s:0,q:0,i:0};
+  const take=k=>{if(!pools[k].length)return null;
+    if(idx[k]>=pools[k].length){pools[k]=k==="v"?longPool():shuffle(pools[k]);idx[k]=0}
+    return pools[k][idx[k]++]};
+  const pattern=["v","q","i","q","v","q","S","q","v","i","q","v","q"];
+  let step=0;
+  return n=>{
+    const out=[];let guard=0;
+    while(out.length<n&&guard++<n*6){
+      const k=pattern[step++%pattern.length];
+      if(k==="S"){const row=[];for(let j=0;j<8;j++){const s=take("s");if(s&&!row.includes(s))row.push(s)}if(row.length>=3)out.push({k:"strip",row});continue}
+      const x=take(k)||take("q")||take("i");
+      if(x)out.push(x.k?x:{k:"v",...x});
+    }
+    return out;
+  };
+}
+
+function actions(x,copy){
+  const sv=S.saved.includes(x.id);
+  return `<div class="acts">
+    <button class="act" data-a="save" data-id="${esc(x.id)}" aria-pressed="${sv}" aria-label="Salvează">${ic.heart}</button>
+    ${copy?`<button class="act" data-a="copy" data-id="${esc(x.id)}" aria-label="Copiază">${ic.copy}</button>`:""}
+    <button class="act" data-a="hide" data-id="${esc(x.id)}" aria-label="Nu-mi mai arăta">${ic.x}</button></div>`;
+}
+const dotc=c=>`<span class="cat" style="background:var(--c-${c||"int"})"></span>`;
+const thumb=id=>`<img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="">`;
+function render(x){
+  if(x.k==="strip")return `<div class="strip"><h4>Shorts</h4><div class="srow">${x.row.map(s=>`<button class="sthumb" data-short="${s.id}">${thumb(s.id)}<span>${esc(s.t)}</span></button>`).join("")}</div></div>`;
+  if(x.k==="q")return `<article class="item">
+    <div class="meta">${dotc(x.c)}<span>${CATS[x.c]||""}</span></div>
+    <p class="quote${x.t.length>110?" long":""}">${esc(x.t)}</p>
+    <div class="qsrc">— <b>${esc(x.who)}</b>${x.src?", "+esc(x.src):""}</div>${actions(x,true)}</article>`;
+  if(x.k==="i")return `<article class="item idea">
+    <div class="meta">${dotc(x.c)}<span class="who">${esc(x.who)}</span><span class="ago">${CATS[x.c]||""}</span></div>
+    <h3>${esc(x.h)}</h3><p>${esc(x.t)}</p><div class="qsrc">${esc(x.s)}</div>${actions(x,true)}</article>`;
+  return `<article class="item">
+    <div class="meta">${dotc(x.c)}<span class="who">${esc(x.ch)}</span>${isNew(x.p)?'<span class="new">nou</span>':""}<span class="ago">${ago(x.p)}</span></div>
+    <button class="player" data-vid="${x.id}" aria-label="Pornește clipul">${thumb(x.id)}${playBtn}</button>
+    <p class="vtitle">${esc(x.t)}</p>${actions(x)}</article>`;
+}
+
+function resetFeed(){stopAll();gen=makeGen();$("feed").innerHTML="";more()}
+function more(){
+  const batch=gen(14);
+  if(!batch.length){$("feed").innerHTML=`<div class="empty">Nimic în categoria asta încă.</div>`;$("sentinel").hidden=true;return}
+  $("sentinel").hidden=false;
+  $("feed").insertAdjacentHTML("beforeend",batch.map(render).join(""));
+}
+new IntersectionObserver(e=>{if(e[0].isIntersecting&&gen&&!$("v-feed").hidden)more()},{rootMargin:"900px"}).observe($("sentinel"));
 
 function chips(){
-  const all=[["all","Toate"],...Object.entries(CATS)];
-  $("chips").innerHTML=all.map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
+  $("chips").innerHTML=[["all","Toate"],...Object.entries(CATS)].map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
 }
-function daily(){
-  const q=POSTS.filter(p=>p.k==="Citat");
-  const d=Math.floor(Date.now()/864e5)%q.length;
-  $("daily").innerHTML=`<small>Gândul zilei</small><q>${q[d].t}</q><div class="by">${q[d].who} · ${q[d].s}</div>`;
-}
-function card(p){
-  const sv=store.saved.includes(p.id);
-  const vid=p.vid?`<button class="video" data-vid="${p.vid}" aria-label="Pornește clipul"><img loading="lazy" src="https://i.ytimg.com/vi/${p.vid}/hqdefault.jpg" alt=""><span class="pb"><span><svg width="22" height="22" viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg></span></span></button>${p.ch?`<div class="vch">Clip publicat de ${esc(p.ch)}</div>`:""}`:"";
-  return `<article class="post">
-    <div class="meta"><span class="av" style="background:${color(p.c)}">${ini(p.who)}</span>
-      <div><span class="who">${esc(p.who)}</span> <span class="vf">${p.mine?"adăugat de tine":"✓ verificat"}</span><div class="kind">${p.k}</div></div>
-      <span class="cat" style="color:${color(p.c)}">${CATS[p.c]}</span></div>
-    ${p.h?`<h3>${esc(p.h)}</h3>`:""}
-    ${p.t?`<p>${esc(p.t)}</p>`:""}
-    ${vid}
-    ${p.s?`<div class="src">Sursă: ${p.url?`<a href="${p.url}" target="_blank" rel="noopener">${esc(p.s)}</a>`:esc(p.s)}</div>`:""}
-    <div class="acts">
-      <button class="act" data-a="save" data-id="${p.id}" aria-pressed="${sv}">${sv?"Salvat":"Salvează"}</button>
-      <button class="act" data-a="hide" data-id="${p.id}">${p.mine?"Șterge":"Nu-mi mai arăta"}</button>
-    </div></article>`;
-}
-const list=(f)=>allPosts().filter(p=>!store.hidden.includes(p.id)&&f(p));
-function render(){
-  const fl=list(p=>cat==="all"||p.c===cat);
-  $("feed").innerHTML=fl.length?fl.map(card).join(""):`<div class="empty">Nimic aici. Alege altă categorie.</div>`;
-  $("count").textContent=fl.length+" postări";
-  const vl=list(p=>p.vid);
-  $("videos").innerHTML=vl.length?vl.map(card).join(""):`<div class="empty">Niciun clip. Adaugă unul din tab-ul Surse.</div>`;
-  const sl=allPosts().filter(p=>store.saved.includes(p.id));
-  $("saved").innerHTML=sl.length?sl.map(card).join(""):`<div class="empty">Apasă „Salvează” pe o postare ca s-o găsești aici.</div>`;
-}
-function srcs(){
-  const all=[...SOURCES,...store.extra];
-  $("srcs").innerHTML=all.map(s=>`<div class="srow"><span class="av" style="background:${color(s.c)}">${ini(s.n)}</span><div><b>${esc(s.n)}</b><span>${CATS[s.c]} · ${esc(s.d)}</span></div><span class="lvl">${esc(s.l)}</span></div>`).join("");
-  const opts=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
-  $("scat").innerHTML=opts; $("vcat").innerHTML=opts;
-}
-function stopVideos(except){
-  document.querySelectorAll(".video iframe").forEach(f=>{
-    const b=f.parentElement; if(b===except)return;
-    const id=b.dataset.vid;
-    b.innerHTML=`<img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt=""><span class="pb"><span><svg width="22" height="22" viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg></span></span>`;
+
+// player YouTube standard (fără „nocookie”, ca să funcționeze contul Premium)
+const embed=(id,short)=>`<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&rel=0&modestbranding=1${short?"&loop=1&playlist="+id:""}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Clip"></iframe>`;
+function stopAll(except){
+  document.querySelectorAll(".player iframe,.sframe iframe").forEach(f=>{
+    const box=f.parentElement;if(box===except)return;
+    box.innerHTML=thumb(box.dataset.vid||box.dataset.sid)+playBtn;
   });
 }
 
-document.addEventListener("click",e=>{
-  const v=e.target.closest(".video");
-  if(v&&!v.querySelector("iframe")){
-    stopVideos(v);
-    v.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.dataset.vid}?autoplay=1&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Clip"></iframe>`;
-    return;
-  }
+// Shorts pe ecran întreg; pornesc singure când ajung în centru
+let shortsIO=null;
+function buildShorts(startId){
+  const list=shuffle(vids().filter(v=>v.s));
+  if(startId){const i=list.findIndex(v=>v.id===startId);if(i>0)list.unshift(...list.splice(i,1))}
+  const box=$("v-shorts");
+  if(shortsIO)shortsIO.disconnect();
+  if(!list.length){box.innerHTML=`<div class="short"><div class="empty" style="color:#aaa">Shorts apar aici după prima actualizare automată.</div></div>`;return}
+  box.innerHTML=list.map(s=>`<div class="short">
+    <div class="sframe" data-sid="${s.id}">${thumb(s.id)}${playBtn}</div>
+    <div class="sinfo"><b>${esc(s.ch)}</b><span>${esc(s.t)}</span></div>
+    <div class="sside"><button data-a="save" data-id="${s.id}" aria-pressed="${S.saved.includes(s.id)}" aria-label="Salvează">${ic.heart}</button><button data-a="hide" data-id="${s.id}" aria-label="Nu-mi mai arăta">${ic.x}</button></div></div>`).join("");
+  box.scrollTop=0;
+  shortsIO=new IntersectionObserver(es=>es.forEach(e=>{
+    const f=e.target.querySelector(".sframe");
+    if(e.isIntersecting){stopAll(f);if(!f.querySelector("iframe"))f.innerHTML=embed(f.dataset.sid,true)}
+  }),{root:box,threshold:.7});
+  box.querySelectorAll(".short").forEach(el=>shortsIO.observe(el));
+}
+
+function settings(){
+  const v=vids();$("st-v").textContent=v.filter(x=>!x.s).length;$("st-s").textContent=v.filter(x=>x.s).length;
+  $("st-q").textContent=quotes.length+ideas.length;
+  $("st-u").textContent=FEED.updated?"Ultima actualizare automată: "+new Date(FEED.updated).toLocaleString("ro-RO"):"";
+  $("vcat").innerHTML=Object.entries(CATS).map(([k,x])=>`<option value="${k}">${x}</option>`).join("");
+  fetch("channels.json?t="+Date.now()).then(r=>r.json()).then(cfg=>{
+    $("chans").innerHTML=cfg.channels.map(c=>{const n=FEED.items.filter(i=>i.ch===c.name).length;
+      return `<div class="row">${dotc(c.c)}<div><b>${esc(c.name)}</b><small>${CATS[c.c]}</small></div><span class="n">${n} clipuri</span></div>`}).join("");
+  }).catch(()=>{});
+}
+
+// actualizare: la deschidere, la revenirea în aplicație și la fiecare 10 minute
+async function loadFeed(user){
+  const r=$("refresh");r.classList.add("spin");
+  try{
+    const data=await (await fetch("feed.json?t="+Date.now(),{cache:"no-store"})).json();
+    const before=new Set(FEED.items.map(i=>i.id));
+    const first=!FEED.items.length;
+    FEED=data;
+    const fresh=first?0:data.items.filter(i=>!before.has(i.id)).length;
+    $("upd").textContent=data.updated?"actualizat acum "+(ago(data.updated)||"puțin"):"live";
+    if(first||user){resetFeed();if(user)toast(fresh?fresh+" clipuri noi":"Feed amestecat din nou")}
+    else if(fresh){const p=$("newpill");p.textContent="↑ "+fresh+" clipuri noi";p.hidden=false}
+  }catch(e){if(!gen)resetFeed();if(user)toast("Fără internet. Arăt ce am.")}
+  r.classList.remove("spin");
+}
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+
+document.addEventListener("click",async e=>{
+  const p=e.target.closest(".player");
+  if(p&&!p.querySelector("iframe")){stopAll(p);p.innerHTML=embed(p.dataset.vid);return}
+  const sf=e.target.closest(".sframe");
+  if(sf&&!sf.querySelector("iframe")){stopAll(sf);sf.innerHTML=embed(sf.dataset.sid,true);return}
+  const st=e.target.closest(".sthumb");
+  if(st){switchTo("shorts",st.dataset.short);return}
   const ch=e.target.closest(".chip");
-  if(ch){cat=ch.dataset.c;chips();render();return}
-  const a=e.target.closest(".act");
-  if(a){const id=isNaN(+a.dataset.id)?a.dataset.id:+a.dataset.id;
-    if(a.dataset.a==="save"){store.saved=store.saved.includes(id)?store.saved.filter(x=>x!==id):[...store.saved,id]}
-    else{
-      if(store.clips.some(c=>c.id===id))store.clips=store.clips.filter(c=>c.id!==id);
-      else store.hidden.push(id);
-      store.saved=store.saved.filter(x=>x!==id);
-    }
-    persist();render();return}
-  const t=e.target.closest(".tab");
-  if(t){stopVideos(null);
-    document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b===t));
-    ["feed","video","saved","src"].forEach(x=>$("v-"+x).hidden=x!==t.dataset.v);
-    window.scrollTo(0,0)}
+  if(ch){cat=ch.dataset.c;chips();resetFeed();window.scrollTo(0,0);return}
+  const a=e.target.closest("[data-a]");
+  if(a){
+    const id=a.dataset.id;
+    if(a.dataset.a==="save"){const on=!S.saved.includes(id);S.saved=on?[id,...S.saved]:S.saved.filter(x=>x!==id);a.setAttribute("aria-pressed",on);toast(on?"Salvat":"Scos din salvate")}
+    if(a.dataset.a==="hide"){S.clips=S.clips.filter(c=>c.id!==id);if(!S.hidden.includes(id))S.hidden.push(id);S.saved=S.saved.filter(x=>x!==id);const it=a.closest(".item,.short");if(it)it.remove();toast("Nu-ți mai arăt asta")}
+    if(a.dataset.a==="copy"){const x=byId(id);const txt=x.k==="q"?`„${x.t}” — ${x.who}`:`${x.h}: ${x.t}`;try{await navigator.clipboard.writeText(txt);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
+    save();if(!$("v-saved").hidden)renderSaved();return;
+  }
+  if(e.target.closest("#newpill")){$("newpill").hidden=true;window.scrollTo(0,0);resetFeed();return}
+  if(e.target.closest("#refresh")){loadFeed(true);return}
+  const t=e.target.closest(".tab");if(t)switchTo(t.dataset.v);
 });
+function switchTo(v,startShort){
+  stopAll();
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
+  $("v-feed").hidden=v!=="feed";$("v-saved").hidden=v!=="saved";$("v-set").hidden=v!=="set";
+  $("v-shorts").hidden=v!=="shorts";$("hdr").hidden=v!=="feed";$("newpill").hidden=true;
+  $("nav").classList.toggle("dark",v==="shorts");
+  if(v==="shorts")buildShorts(startShort);else if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}
+  if(v==="saved")renderSaved();
+  if(v==="set")settings();
+  if(v!=="shorts")window.scrollTo(0,0);
+}
+function renderSaved(){
+  const list=S.saved.map(byId).filter(Boolean).map(x=>x.k?x:{k:"v",...x});
+  $("saved").innerHTML=list.length?list.map(render).join(""):`<div class="empty">Apasă inimioara pe un citat sau un clip ca să-l găsești aici.</div>`;
+}
 $("addv").addEventListener("submit",e=>{
   e.preventDefault();
-  const id=ytId($("vurl").value);
-  if(!id){$("vmsg").textContent="Linkul nu pare de YouTube. Copiază-l din butonul Share al clipului.";return}
-  store.clips.unshift({id:"c"+Date.now(),c:$("vcat").value,who:"Clipul tău",k:"Clip",h:$("vtitle").value.trim(),vid:id,mine:true});
-  persist();render();$("addv").reset();$("vmsg").textContent="Adăugat în feed.";
+  const u=$("vurl").value.trim();
+  const m=u.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
+  if(!m){toast("Linkul nu pare de YouTube");return}
+  S.clips.unshift({id:m[1],t:"Clip adăugat de tine",ch:"Adăugat de tine",c:$("vcat").value,p:new Date().toISOString(),s:/\/shorts\//.test(u),v:0});
+  save();$("addv").reset();toast("Adăugat în feed");settings();
 });
-$("addf").addEventListener("submit",e=>{
-  e.preventDefault();
-  const n=$("sname").value.trim(); if(!n)return;
-  store.extra.push({n,c:$("scat").value,d:$("sdesc").value.trim()||"Adăugată de tine",l:"Nou"});
-  persist();$("addf").reset();srcs();
-});
-daily();chips();srcs();render();
+
+chips();loadFeed();
+setInterval(()=>{if(!document.hidden)loadFeed()},10*60*1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadFeed()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>

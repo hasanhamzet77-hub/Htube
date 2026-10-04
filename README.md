@@ -1,39 +1,29 @@
 # HTube
 
-Feed personal pe telefon: motivație, afaceri, dezvoltare personală, socializare și sănătate. Fără știri, fără algoritm. Clipurile rulează direct în aplicație.
+Feed personal pe telefon: motivație, minte, afaceri, oameni, sănătate și înțelepciune. Fără știri, fără algoritm. Se actualizează singur.
 
-## Cum o pui pe iPhone (o singură dată, ~10 minute)
+**Link:** https://hasanhamzet77-hub.github.io/Htube/
+Deschide-l în Safari → Share → **Add to Home Screen**.
 
-1. Intră pe github.com cu contul tău și apasă **New repository**.
-2. Nume: `htube`, bifează **Public**, apoi **Create repository**.
-3. Apasă **uploading an existing file** și trage înăuntru toate fișierele din arhivă: `index.html`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`. Apasă **Commit changes**.
-4. Mergi la **Settings → Pages**. La *Branch* alege `main` și `/ (root)`, apoi **Save**.
-5. După 1–2 minute aplicația e live la: `https://hasanhamzet77-hub.github.io/htube/`
-6. Deschide linkul în **Safari** pe iPhone → butonul **Share** → **Add to Home Screen** (Adaugă pe ecranul principal).
+## Cum se actualizează
 
-Gata. HTube apare cu iconiță proprie și se deschide pe tot ecranul, ca o aplicație normală.
+- La fiecare **2 ore**, GitHub rulează automat `scripts/update_feed.py`, care aduce clipurile noi (video și Shorts) de pe canalele din `channels.json` și le scrie în `feed.json`.
+- Aplicația verifică feed-ul când o deschizi, când revii în ea și la fiecare 10 minute. Clipurile noi apar cu eticheta **NOU** sau ca buton „↑ clipuri noi”.
+- Butonul ↻ din colț reamestecă feed-ul. Feed-ul nu se termină: clipurile, citatele, ideile și benzile de Shorts se amestecă la infinit.
+- Actualizare manuală: pe GitHub → **Actions** → „Actualizează feed-ul HTube” → **Run workflow**.
 
-## Ce face
+## Cum adaugi sau scoți canale
 
-- **Feed**: postări filtrate pe cele 5 categorii, plus „Gândul zilei”.
-- **Clipuri**: doar videoclipurile, cu player direct în aplicație.
-- **Salvate**: ce ai marcat cu „Salvează”.
-- **Surse**: lipești un link YouTube și clipul intră în feed; adaugi surse noi.
-- „Nu-mi mai arăta” scoate definitiv o postare din feed.
+Editează `channels.json` direct pe GitHub (creionul ✏️). Fiecare canal are nume, `@handle` și categorie (`mot`, `dev`, `biz`, `soc`, `san`). La salvare, feed-ul se actualizează imediat.
 
-Salvările și clipurile adăugate de tine rămân pe telefon (în aplicație, nu în cloud).
+## YouTube Premium
 
-## Clipurile incluse (verificate: canal + titlu)
+Player-ul e cel oficial YouTube. Ca să nu vezi reclame, trebuie să fii logat cu contul Premium în browserul aplicației: Setări → **Conectează contul YouTube**.
 
-| Persoană | Canal |
-|---|---|
-| Andrew Huberman (4 clipuri) | Huberman Lab Clips, Andrew Huberman |
-| Brian Tracy (2) | Brian Tracy, Motivation Radio |
-| Peter Attia | Peter Attia MD |
-| Cal Newport | Cal Newport |
-| Simon Sinek | TEDx Talks |
-| Jocko Willink | TEDx Talks |
-| Mel Robbins | Mel Robbins Show |
-| Chris Voss | Big Think |
-| James Clear | Carey Nieuwhof (interviu) |
-| Alex Hormozi | Plus Ultra Podcast (interviu) |
+## Ce e în aplicație
+
+- **Feed**: clipuri, citate, idei și Shorts, amestecate; filtre pe categorii.
+- **Shorts**: ecran întreg, derulezi în sus și pornesc singure.
+- **Salvate**: tot ce ai marcat cu ♥.
+- **Setări**: statistici, conectare YouTube, adaugi orice clip prin link, lista canalelor.
+- `data.js`: 185 de citate (Marcus Aurelius, Seneca, Epictet, Sun Tzu, Musashi, Lao Tzu, Confucius, Goggins și alții, plus proverbe din 15+ culturi) și 33 de idei scurte (Shi Heng Yi, Zeland, Dispenza, Huberman, Hormozi, Jeremy Miner, Chris Voss și alții).
