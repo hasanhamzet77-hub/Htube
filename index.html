@@ -99,13 +99,36 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10p
 .sframe{height:100%;aspect-ratio:9/16;max-width:100%;position:relative;background:#000}
 .sframe img{width:100%;height:100%;object-fit:cover}
 .sframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.sinfo{position:absolute;left:16px;right:70px;bottom:22px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9);pointer-events:none}
-.sinfo b{display:block;font-size:14px}
-.sinfo span{font-size:13px;opacity:.9}
-.sside{position:absolute;right:12px;bottom:26px;display:grid;gap:14px}
-.sside button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;color:#fff}
-.sside svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
-.sside button[aria-pressed="true"] svg{fill:currentColor}
+
+/* player unic, poziționat peste clipul activ; controalele sunt ale aplicației */
+#stage{position:fixed;z-index:3;background:#000;overflow:hidden;border-radius:14px;pointer-events:none}
+#stage.short{border-radius:0;z-index:6}
+#stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+#stage.short iframe{transform:scale(1.02)}
+#cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .2s ease;pointer-events:none}
+#stage:not(.loading) #cover{opacity:0}
+.big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.45);display:grid;place-items:center;opacity:0;transition:opacity .2s}
+#stage.paused .big{opacity:1}
+.big svg{width:26px;height:26px;fill:#fff;margin-left:4px}
+.unmute{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);color:#fff;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:999px}
+#stage.short .unmute{top:calc(14px + env(safe-area-inset-top,0px))}
+.ctl{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:4px;padding:18px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;transition:opacity .3s}
+#stage.idle .ctl,#stage.idle .sover{opacity:0}
+.ctl button,.sside2 button{pointer-events:auto;width:36px;height:36px;display:grid;place-items:center;color:#fff;flex:none}
+.ctl svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
+#c-play svg{fill:#fff;stroke:none;width:16px;height:16px}
+#c-cc[aria-pressed="true"]{color:#ffd43b}
+.ctl input[type=range]{pointer-events:auto;flex:1;min-width:0;accent-color:#fff;height:28px;padding:0;margin:0;background:none;border:0}
+.ctl time{font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sover{display:none}
+#stage.short .sover{display:block;transition:opacity .3s}
+.sinfo2{position:absolute;left:16px;right:70px;bottom:64px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.sinfo2 b{display:block;font-size:14px}
+.sinfo2 span{font-size:13px;opacity:.92;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sside2{position:absolute;right:10px;bottom:72px;display:grid;gap:12px}
+.sside2 button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16)}
+.sside2 svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sside2 button[aria-pressed="true"] svg{fill:currentColor}
 
 h2{font-size:18px;margin:22px 0 8px;letter-spacing:-.01em}
 .row{display:flex;align-items:center;gap:12px;padding-block:12px;border-bottom:1px solid var(--line)}
@@ -175,6 +198,23 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 
 <section id="v-shorts" hidden></section>
 
+<div id="stage" class="loading" hidden>
+  <div id="yt"></div>
+  <img id="cover" alt="">
+  <span class="big"><svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg></span>
+  <span class="unmute" id="unmute" hidden>Atinge pentru sunet</span>
+  <div class="sover"><div class="sinfo2"><b id="s-who"></b><span id="s-t"></span></div>
+    <div class="sside2"><button id="s-save" data-a="save" aria-label="Salvează"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button><button id="s-hide" data-a="hide" aria-label="Nu-mi mai arăta"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+  <div class="ctl">
+    <button id="c-play" aria-label="Play / pauză"></button>
+    <button id="c-back" aria-label="Înapoi 10 secunde"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5"/><text x="12" y="15.5" font-size="7" text-anchor="middle" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="700">10</text></svg></button>
+    <input type="range" id="c-seek" min="0" max="1000" value="0" aria-label="Derulează">
+    <time id="c-time">0:00</time>
+    <button id="c-cc" aria-pressed="false" aria-label="Subtitrare"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"/></svg></button>
+    <button id="c-snd" aria-label="Sunet"></button>
+  </div>
+</div>
+
 <nav id="nav" role="tablist">
   <button class="tab" role="tab" data-v="feed" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
   <button class="tab" role="tab" data-v="shorts" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
@@ -193,6 +233,7 @@ const ic={
   copy:'<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   play:'<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg>',
+  pause:'<svg viewBox="0 0 12 12"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg>',
   mute:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>',
   vol:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>'
 };
@@ -293,54 +334,114 @@ function chips(){
   $("chips").innerHTML=[["all","Toate"],...Object.entries(CATS)].map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
 }
 
-// ── player YouTube oficial (contul Premium funcționează), pornire automată când clipul e pe ecran
-// Browserele pornesc singure doar clipurile fără sunet; butonul de sunet le deblochează.
-let soundOn=false, ytReady=false;
-const players=new Map();
-window.onYouTubeIframeAPIReady=()=>{ytReady=true};
-(()=>{const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s)})();
-const embed=(id,short)=>`<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=${soundOn?0:1}&playsinline=1&rel=0&modestbranding=1${short?"&loop=1&playlist="+id:""}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Clip"></iframe>`;
+// ── un singur player YouTube, refolosit pentru toate clipurile ──
+// Avantaje: sunetul deblocat o dată rămâne pornit, clipul nou se încarcă în același player (fără ecran negru),
+// iar controalele sunt ale aplicației (play, bară, -10s, subtitrare, sunet), nu cele YouTube.
+let ytReady=false, P=null, active=null, activeShort=false, pending=null, unlocked=false, subsOn=false, userPaused=false, idleT=null;
+const stage=$("stage"), cover=$("cover");
 const boxId=b=>b.dataset.vid||b.dataset.sid;
-function mount(box){
-  if(players.has(box)||!box.isConnected)return;
-  stopAll(box);
-  const id=boxId(box), short=!!box.dataset.sid;
-  if(!ytReady||!window.YT||!YT.Player){box.innerHTML=embed(id,short);players.set(box,null);return}
-  const div=document.createElement("div");box.innerHTML="";box.appendChild(div);
-  const vars={autoplay:1,mute:1,playsinline:1,rel:0,modestbranding:1,controls:1};
-  if(short){vars.loop=1;vars.playlist=id}
-  const started=Date.now();
-  const p=new YT.Player(div,{videoId:id,width:"100%",height:"100%",playerVars:vars,events:{
-    onReady:e=>{e.target.mute();e.target.playVideo();if(soundOn){e.target.unMute();e.target.setVolume(100)}},
-    onStateChange:e=>{
-      // dacă browserul a blocat pornirea cu sunet, o reluăm fără sunet
-      if(e.data===2&&soundOn&&Date.now()-started<2500){e.target.mute();e.target.playVideo()}
-      if(e.data===0&&short){e.target.seekTo(0);e.target.playVideo()}
-    }}});
-  players.set(box,p);
+const fmt=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,"0");return h?`${h}:${String(m).padStart(2,"0")}:${x}`:`${m}:${x}`};
+window.onYouTubeIframeAPIReady=()=>{
+  P=new YT.Player("yt",{width:"100%",height:"100%",playerVars:{autoplay:1,mute:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,rel:0,playsinline:1,modestbranding:1,cc_lang_pref:"ro",hl:"ro",origin:location.origin},
+    events:{onReady:()=>{ytReady=true;P.mute();if(pending){const b=pending;pending=null;active=null;activate(b)}},onStateChange:onState}});
+};
+(()=>{const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s)})();
+
+function position(){
+  if(!active)return;
+  if(!active.isConnected){deactivate();return}
+  const r=active.getBoundingClientRect();
+  stage.style.cssText=`top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px`;
 }
-function unmount(box){
-  if(!players.has(box))return;
-  const p=players.get(box);try{p&&p.destroy()}catch(e){}
-  players.delete(box);
-  box.innerHTML=thumb(boxId(box))+playBtn;
+let rafP=0;const queuePos=()=>{if(!rafP)rafP=requestAnimationFrame(()=>{rafP=0;position()})};
+addEventListener("scroll",queuePos,{passive:true});addEventListener("resize",queuePos);
+$("v-shorts").addEventListener("scroll",queuePos,{passive:true});
+
+function activate(box){
+  if(!box||!box.isConnected)return;
+  if(active===box){position();return}
+  active=box;activeShort=!!box.dataset.sid;userPaused=false;
+  const id=boxId(box);
+  cover.src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  stage.className="loading"+(activeShort?" short":"");stage.hidden=false;position();
+  $("c-seek").value=0;$("c-time").textContent="0:00";
+  if(activeShort){const it=byId(id)||{};$("s-who").textContent=it.who||it.ch||"";$("s-t").textContent=it.t||"";
+    $("s-save").dataset.id=$("s-hide").dataset.id=id;$("s-save").setAttribute("aria-pressed",S.saved.includes(id))}
+  if(!ytReady){pending=box;return}
+  P.loadVideoById({videoId:id});
+  if(unlocked)P.unMute();else P.mute();
+  showUnmute();wake();
 }
-function stopAll(except){[...players.keys()].forEach(b=>{if(b!==except)unmount(b)})}
-function setSound(on){
-  soundOn=on;
-  players.forEach(p=>{try{if(!p)return;on?(p.unMute(),p.setVolume(100),p.playVideo()):p.mute()}catch(e){}});
-  document.querySelectorAll(".sound").forEach(b=>{b.setAttribute("aria-pressed",on);b.innerHTML=on?ic.vol:ic.mute});
+function deactivate(box){
+  if(box&&active!==box)return;
+  active=null;pending=null;stage.hidden=true;
+  try{P&&P.pauseVideo()}catch(e){}
 }
-// clipurile din feed pornesc când sunt cel puțin 60% pe ecran și se opresc când ies
+function onState(e){
+  const s=e.data;
+  if(s===1){stage.classList.remove("loading","paused");if(subsOn)applySubs();wake()}
+  if(s===2&&!userPaused&&active){
+    // browserul a blocat pornirea cu sunet: continuăm fără sunet
+    if(!P.isMuted()){P.mute();unlocked=false;showUnmute();P.playVideo();return}
+    stage.classList.add("paused");
+  }
+  if(s===2&&userPaused)stage.classList.add("paused");
+  if(s===0){if(activeShort){P.seekTo(0,true);P.playVideo()}else{stage.classList.add("paused");userPaused=true}}
+}
+function showUnmute(){
+  const muted=!unlocked;$("unmute").hidden=!muted;
+  $("c-snd").innerHTML=muted?ic.mute:ic.vol;
+  document.querySelectorAll(".sound").forEach(b=>{b.setAttribute("aria-pressed",!muted);b.innerHTML=muted?ic.mute:ic.vol});
+}
+function unlockSound(){unlocked=true;if(P){P.unMute();P.setVolume(100);P.playVideo()}showUnmute()}
+function togglePlay(){
+  if(!P||!active)return;
+  if(!unlocked){unlockSound();return}
+  if(P.getPlayerState()===1){userPaused=true;P.pauseVideo()}else{userPaused=false;P.playVideo()}
+  wake();
+}
+function applySubs(){
+  try{
+    P.loadModule("captions");
+    const list=P.getOption("captions","tracklist")||[];
+    const ro=list.find(t=>t.languageCode==="ro");
+    if(ro)P.setOption("captions","track",{languageCode:"ro"});
+    else if(list.length)P.setOption("captions","track",{languageCode:list[0].languageCode,translationLanguage:{languageCode:"ro"}});
+    else P.setOption("captions","track",{languageCode:"en"});
+  }catch(e){}
+}
+function setSubs(on){
+  subsOn=on;$("c-cc").setAttribute("aria-pressed",on);
+  if(!P)return;
+  if(on)applySubs();else{try{P.setOption("captions","track",{});P.unloadModule("captions")}catch(e){}}
+}
+function wake(){stage.classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(()=>{if(P&&P.getPlayerState&&P.getPlayerState()===1)stage.classList.add("idle")},2600)}
+// bara de progres
+let seeking=false;
+setInterval(()=>{
+  if(!P||!active||seeking||!P.getDuration)return;
+  const d=P.getDuration()||0,t=P.getCurrentTime()||0;
+  if(d){$("c-seek").value=Math.round(t/d*1000);$("c-time").textContent=`${fmt(t)} / ${fmt(d)}`}
+  $("c-play").innerHTML=P.getPlayerState()===1?ic.pause:ic.play;
+},300);
+$("c-seek").addEventListener("input",()=>{seeking=true;const d=P&&P.getDuration?P.getDuration():0;$("c-time").textContent=`${fmt($("c-seek").value/1000*d)} / ${fmt(d)}`;wake()});
+$("c-seek").addEventListener("change",()=>{const d=P.getDuration()||0;P.seekTo($("c-seek").value/1000*d,true);seeking=false;userPaused=false;P.playVideo();wake()});
+$("c-play").addEventListener("click",e=>{e.stopPropagation();togglePlay()});
+$("c-back").addEventListener("click",e=>{e.stopPropagation();if(P)P.seekTo(Math.max(0,P.getCurrentTime()-10),true);wake()});
+$("c-snd").addEventListener("click",e=>{e.stopPropagation();if(unlocked){unlocked=false;P&&P.mute();showUnmute()}else unlockSound()});
+$("c-cc").addEventListener("click",e=>{e.stopPropagation();setSubs(!subsOn);toast(subsOn?"Subtitrare pornită (română dacă există)":"Subtitrare oprită")});
+
+// clipurile din feed pornesc când sunt cel puțin 60% pe ecran
 const timers=new Map();
 const vio=new IntersectionObserver(es=>es.forEach(e=>{
   const b=e.target;
-  if(e.intersectionRatio>=.6){if(!timers.has(b))timers.set(b,setTimeout(()=>{timers.delete(b);mount(b)},350))}
-  else{clearTimeout(timers.get(b));timers.delete(b);if(e.intersectionRatio<.3)unmount(b)}
-}),{threshold:[0,.3,.6,1]});
+  if(e.intersectionRatio>=.6){if(!timers.has(b))timers.set(b,setTimeout(()=>{timers.delete(b);if(!$("v-shorts").hidden)return;activate(b)},250))}
+  else{clearTimeout(timers.get(b));timers.delete(b);if(e.intersectionRatio<.35)deactivate(b)}
+}),{threshold:[0,.35,.6,1]});
 function watchPlayers(root){root.querySelectorAll(".player:not([data-w])").forEach(b=>{b.dataset.w=1;vio.observe(b)})}
+function stopAll(){deactivate()}
 
-// Shorts pe ecran întreg; pornesc singure când ajung în centru
+// Shorts pe ecran întreg; fiecare pornește când ajunge în centru
 let shortsIO=null;
 function buildShorts(startId){
   const list=shuffle(vids().filter(v=>v.s));
@@ -348,14 +449,11 @@ function buildShorts(startId){
   const box=$("v-shorts");
   if(shortsIO)shortsIO.disconnect();
   if(!list.length){box.innerHTML=`<div class="short"><div class="empty" style="color:#aaa">Shorts apar aici după prima actualizare automată.</div></div>`;return}
-  box.innerHTML=list.map(s=>`<div class="short">
-    <div class="sframe" data-sid="${s.id}">${thumb(s.id)}${playBtn}</div>
-    <div class="sinfo"><b>${esc(s.ch)}</b><span>${esc(s.t)}</span></div>
-    <div class="sside"><button class="sound" aria-pressed="${soundOn}" aria-label="Sunet">${soundOn?ic.vol:ic.mute}</button><button data-a="save" data-id="${s.id}" aria-pressed="${S.saved.includes(s.id)}" aria-label="Salvează">${ic.heart}</button><button data-a="hide" data-id="${s.id}" aria-label="Nu-mi mai arăta">${ic.x}</button></div></div>`).join("");
+  box.innerHTML=list.map(s=>`<div class="short"><div class="sframe" data-sid="${s.id}">${thumb(s.id)}</div></div>`).join("");
   box.scrollTop=0;
   shortsIO=new IntersectionObserver(es=>es.forEach(e=>{
     const f=e.target.querySelector(".sframe");
-    if(e.isIntersecting)mount(f);else unmount(f);
+    if(e.isIntersecting)activate(f);else deactivate(f);
   }),{root:box,threshold:.7});
   box.querySelectorAll(".short").forEach(el=>shortsIO.observe(el));
 }
@@ -390,9 +488,9 @@ function toast(t){const d=document.createElement("div");d.className="toast";d.te
 
 document.addEventListener("click",async e=>{
   const snd=e.target.closest(".sound");
-  if(snd){setSound(!soundOn);toast(soundOn?"Sunet pornit":"Sunet oprit");return}
+  if(snd){if(unlocked){unlocked=false;P&&P.mute();showUnmute();toast("Sunet oprit")}else{unlockSound();toast("Sunet pornit")}return}
   const p=e.target.closest(".player,.sframe");
-  if(p&&!players.has(p)){mount(p);return}
+  if(p){if(active===p)togglePlay();else{activate(p);unlockSound()}return}
   const st=e.target.closest(".sthumb");
   if(st){switchTo("shorts",st.dataset.short);return}
   const ch=e.target.closest(".chip");
@@ -404,7 +502,10 @@ document.addEventListener("click",async e=>{
   if(a){
     const id=a.dataset.id;
     if(a.dataset.a==="save"){const on=!S.saved.includes(id);S.saved=on?[id,...S.saved]:S.saved.filter(x=>x!==id);a.setAttribute("aria-pressed",on);toast(on?"Salvat":"Scos din salvate")}
-    if(a.dataset.a==="hide"){S.clips=S.clips.filter(c=>c.id!==id);if(!S.hidden.includes(id))S.hidden.push(id);S.saved=S.saved.filter(x=>x!==id);const it=a.closest(".item,.short");if(it)it.remove();toast("Nu-ți mai arăt asta")}
+    if(a.dataset.a==="hide"){S.clips=S.clips.filter(c=>c.id!==id);if(!S.hidden.includes(id))S.hidden.push(id);S.saved=S.saved.filter(x=>x!==id);
+      let it=a.closest(".item,.short");
+      if(a.closest("#stage")&&active){it=active.closest(".short");const nx=it&&it.nextElementSibling;deactivate();if(nx)nx.scrollIntoView({behavior:"smooth"})}
+      if(it)it.remove();toast("Nu-ți mai arăt asta")}
     if(a.dataset.a==="copy"){const x=byId(id);const txt=x.k==="q"?`„${x.t}” — ${x.who}`:x.k==="t"?`${x.h} — ${x.who}\n\n${x.parts.map((p,i)=>`${i+1}. ${p}`).join("\n\n")}`:`${x.h}: ${x.t}`;try{await navigator.clipboard.writeText(txt);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
     save();if(!$("v-saved").hidden)renderSaved();return;
   }
