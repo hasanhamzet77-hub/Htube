@@ -115,7 +115,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10p
 #stage.full iframe{transform:none}
 #stage.full .ctl{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-left:calc(8px + env(safe-area-inset-left,0px));padding-right:calc(8px + env(safe-area-inset-right,0px))}
 #stage.full #touch{display:block}
-#stage.short #c-full{display:none}
+#stage.short #c-full,#stage.short #c-yt{display:none}
 #stage.short.ad #touch{display:none}
 .unmute{pointer-events:none}
 .big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.45);display:grid;place-items:center;opacity:0;transition:opacity .2s}
@@ -206,6 +206,16 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .addbook{aspect-ratio:2/3;border:1.5px dashed var(--line);border-radius:6px;display:grid;place-items:center;align-content:center;gap:4px;color:var(--muted);font-size:12.5px;text-align:center;padding:8px;cursor:pointer}
 .addbook b{font-size:26px;font-weight:400;line-height:1}
 
+.jl{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+.ji{display:block;width:100%;margin-bottom:6px;font:inherit;font-size:16px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical}
+.ji:focus{outline:2px solid var(--accent);outline-offset:0}
+.jpast{margin-top:18px}
+.jpast summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--accent);padding:6px 0}
+.jday{padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.jday b{display:block;font-size:12px;letter-spacing:.04em;text-transform:capitalize;color:var(--muted);margin-bottom:4px}
+.jday p{margin:2px 0}
+.jday i{font-style:normal;color:var(--muted)}
+
 /* cititor PDF pe ecran întreg */
 #reader{position:fixed;inset:0;z-index:10;background:var(--soft);display:flex;flex-direction:column}
 #reader[hidden]{display:none}
@@ -283,6 +293,20 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <button class="btn" id="md-start">Începe</button>
     </div>
 
+    <div class="sec" id="jr">
+      <div class="sec-h"><h3>Jurnal de seară</h3><span class="muted" id="jr-st"></span></div>
+      <p class="note" id="jr-hint"></p>
+      <label class="jl">3 lucruri pentru care sunt recunoscător azi</label>
+      <input class="ji" data-j="g0" placeholder="1." maxlength="160" autocomplete="off">
+      <input class="ji" data-j="g1" placeholder="2." maxlength="160" autocomplete="off">
+      <input class="ji" data-j="g2" placeholder="3." maxlength="160" autocomplete="off">
+      <label class="jl">Lecția zilei</label>
+      <textarea class="ji" data-j="l" rows="2" placeholder="Ce am învățat azi, despre mine sau despre oameni" maxlength="600"></textarea>
+      <label class="jl">Mâine fac mai bine</label>
+      <textarea class="ji" data-j="m" rows="2" placeholder="Un singur lucru concret" maxlength="400"></textarea>
+      <div id="jr-past"></div>
+    </div>
+
     <div class="sec">
       <div class="sec-h"><h3>Raft</h3><span class="muted" id="bk-count"></span><label class="link" for="bk-file">+ Adaugă PDF</label></div>
       <input type="file" id="bk-file" accept="application/pdf,.pdf" multiple hidden>
@@ -296,9 +320,9 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="stats"><div><b id="st-v">0</b><small>clipuri</small></div><div><b id="st-s">0</b><small>shorts</small></div><div><b id="st-q">0</b><small>citate și idei</small></div></div>
     <p class="note" id="st-u"></p>
 
-    <h2>YouTube Premium</h2>
-    <p class="note">Clipurile rulează în player-ul oficial YouTube. Dacă ești logat cu contul Premium în același browser, nu vezi reclame. Aplicația de pe ecranul iPhone-ului are browserul ei, așa că loghează-te o dată de aici:</p>
-    <a class="btn" href="https://accounts.google.com/ServiceLogin?service=youtube&amp;continue=https%3A%2F%2Fm.youtube.com%2F" target="_blank" rel="noopener">Conectează contul YouTube</a>
+    <h2>YouTube Premium și reclamele</h2>
+    <p class="note">Pe iPhone, player-ul YouTube din interiorul HTube nu poate vedea contul tău Premium: Apple blochează cookie-urile YouTube în aplicațiile web de pe ecran (protecția de urmărire din Safari). De aceea logarea de aici nu ajută și linkul te aruncă în aplicația YouTube.</p>
+    <p class="note">Ce poți face: la reclamă apeși <b>Skip</b>, sau la un clip lung apeși butonul <b>YouTube</b> din bara player-ului. Se deschide exact clipul, de la secunda la care erai, în aplicația YouTube, unde ești logat cu Premium și nu ai reclame.</p>
 
     <h2>Adaugă un clip</h2>
     <form id="addv">
@@ -329,6 +353,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <input type="range" id="c-seek" min="0" max="1000" value="0" aria-label="Derulează">
     <time id="c-time">0:00</time>
     <button id="c-snd" aria-label="Sunet"></button>
+    <button id="c-yt" aria-label="Deschide în aplicația YouTube"><svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></svg></button>
     <button id="c-full" aria-label="Ecran complet"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
 </div>
@@ -616,6 +641,7 @@ $("c-seek").addEventListener("change",()=>{const d=P.getDuration()||0;P.seekTo($
 $("c-play").addEventListener("click",e=>{e.stopPropagation();togglePlay()});
 $("c-back").addEventListener("click",e=>{e.stopPropagation();if(P)P.seekTo(Math.max(0,P.getCurrentTime()-10),true);wake()});
 $("c-full").addEventListener("click",e=>{e.stopPropagation();setFull(!isFull)});
+$("c-yt").addEventListener("click",e=>{e.stopPropagation();if(!active)return;const id=boxId(active);let t=0;try{t=Math.floor(P.getCurrentTime()||0)}catch(_){}try{P.pauseVideo()}catch(_){}userPaused=true;location.href=`https://www.youtube.com/watch?v=${id}${t>5?"&t="+t+"s":""}`});
 $("c-snd").addEventListener("click",e=>{e.stopPropagation();if(soundIsOn())muteByUser();else unlockSound()});
 
 // Shorts: swipe-ul îl gestionăm noi (player-ul stă deasupra listei și pe iPhone ar bloca derularea)
@@ -1032,6 +1058,34 @@ $("rd-del").addEventListener("click",async()=>{
 let rdResize=0;
 addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);rdResize=setTimeout(()=>RD&&layoutReader(RD.cur),250)});
 
+// ── jurnal de seară: se salvează singur, pe zile ──
+S.journal=S.journal||{};
+if(!S.jourHabit){S.jourHabit=1;if(!S.habits.some(h=>h.k==="jour"))S.habits.push({id:"hj",n:"Jurnal de seară",k:"jour"});save()}
+const jFilled=e=>e&&((e.g||[]).some(Boolean)||e.l||e.m);
+function renderJournal(){
+  const k=dk(),e=S.journal[k]||{},h=new Date().getHours();
+  document.querySelectorAll("#jr .ji").forEach(el=>{const f=el.dataset.j;if(document.activeElement!==el)el.value=f[0]==="g"?((e.g||[])[+f[1]]||""):(e[f]||"")});
+  $("jr-hint").textContent=jFilled(e)?"Salvat automat. Poți reveni oricând azi.":h<18?"Se completează seara, în 3 minute. Îl poți scrie și acum.":"Trei minute înainte de somn: ce a fost bun, ce ai învățat, ce faci mâine.";
+  jStreak();
+  const past=Object.keys(S.journal).filter(d=>d<k&&jFilled(S.journal[d])).sort().reverse();
+  $("jr-past").innerHTML=past.length?`<details class="jpast"><summary>Serile trecute (${past.length})</summary>${past.slice(0,60).map(d=>{const x=S.journal[d],dt=new Date(d+"T12:00:00");
+    return `<div class="jday"><b>${dt.toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long"})}</b>${(x.g||[]).filter(Boolean).map(g=>`<p>· ${esc(g)}</p>`).join("")}${x.l?`<p><i>Lecția:</i> ${esc(x.l)}</p>`:""}${x.m?`<p><i>Mâine:</i> ${esc(x.m)}</p>`:""}</div>`}).join("")}</details>`:"";
+}
+function jStreak(){
+  let n=0,i=jFilled(S.journal[dk()])?0:-1;while(jFilled(S.journal[dk(dayAt(i))])){n++;i--}
+  $("jr-st").textContent=n?n+(n===1?" seară":" seri")+" la rând":"";
+}
+let jT=0;
+$("jr").addEventListener("input",ev=>{
+  const el=ev.target.closest(".ji");if(!el)return;
+  const k=dk(),e=S.journal[k]||(S.journal[k]={g:["","",""],l:"",m:""}),f=el.dataset.j;
+  if(f[0]==="g"){e.g=e.g||["","",""];e.g[+f[1]]=el.value}else e[f]=el.value;
+  if(!jFilled(e))delete S.journal[k];
+  clearTimeout(jT);jT=setTimeout(()=>{save();jStreak();
+    const x=S.journal[k];if(x&&(x.g||[]).filter(s=>s.trim()).length>=3&&(x.l||"").trim())autoDone("jour");
+    $("jr-hint").textContent=jFilled(S.journal[k])?"Salvat automat. Poți reveni oricând azi.":$("jr-hint").textContent},600);
+});
+
 // ── pagina Azi ──
 function renderAzi(){
   const now=new Date(),h=now.getHours();
@@ -1041,7 +1095,7 @@ function renderAzi(){
     const d=Math.floor((now-now.getTimezoneOffset()*6e4)/864e5),q=quotes[(d*7919)%quotes.length];
     $("az-q").textContent=`„${q.t}”`;$("az-qs").innerHTML=`— <b>${esc(q.who)}</b>${q.src?", "+esc(q.src):""}`;
   }
-  renderHabits();renderMed();renderShelf();
+  renderHabits();renderMed();renderJournal();renderShelf();
 }
 $("v-azi").addEventListener("click",e=>{
   const h=e.target.closest("[data-h]");
