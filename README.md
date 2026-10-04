@@ -24,8 +24,9 @@ Player-ul e cel oficial YouTube. Pe iPhone, player-ul din HTube nu poate folosi 
 
 - **Feed**: clipuri, citate, idei și Shorts, amestecate; filtre pe categorii. Clipurile lungi pornesc doar când apeși pe ele. La fiecare refresh vine alt conținut: aplicația ține minte ce ți-a arătat deja și pune la final ce ai văzut recent; două clipuri de la aceeași persoană nu vin unul după altul.
 - **Shorts**: ecran întreg, derulezi în sus și pornesc singure.
-- **Azi**: citatul zilei, obiceiuri (bifezi zilnic, vezi seria de zile și ultima săptămână), timer de meditație (5/10/15/20 min, clopoțel, respirație ghidată, ecranul rămâne aprins) și raftul de cărți: încarci PDF-uri și le citești în aplicație, cu pagina la care ai rămas, zoom și mod noapte. Meditația, cititul de 10 minute și jurnalul completat bifează singure obiceiurile lor. Cărțile stau doar pe telefon.
+- **Azi**: citatul zilei, obiceiuri ca bandă orizontală (fiecare cu emoji-ul lui, un inel de 30 de puncte pentru ultimele 30 de zile și seria de zile dedesubt; atingi emoji-ul ca să bifezi; obicei nou = alegi un emoji de pe tastatură), timer de meditație (5/10/15/20 min, clopoțel, respirație ghidată, ecranul rămâne aprins).
+- **Raft**: cărțile tale PDF stau ca niște cotoare pe un raft; atingi un cotor, cartea iese de pe raft și se deschide. Sus vezi „Continuă lectura”. Cititorul ține minte pagina, are zoom și mod noapte. Meditația, cititul de 10 minute și jurnalul completat bifează singure obiceiurile lor. Cărțile stau doar pe telefon.
 - **Jurnal de seară** (pagina ascunsă din stânga): în Feed glisezi spre dreapta. Logo-ul HTube devine o carte, coperta se deschide, pagina se apropie de ecran și apare jurnalul: 3 lucruri pentru care ești recunoscător, lecția zilei, ce faci mâine mai bine. Se salvează singur; glisezi spre stânga sau apeși „Feed” ca să te întorci. Atingi în timpul animației ca să sari peste.
-- **Salvate**: tot ce ai marcat cu ♥.
+- **Salvate**: tot ce ai marcat cu ♥, ca folder în Setări → Colecții.
 - **Setări**: statistici, conectare YouTube, adaugi orice clip prin link, lista canalelor.
 - `data.js`: 185 de citate (Marcus Aurelius, Seneca, Epictet, Sun Tzu, Musashi, Lao Tzu, Confucius, Goggins și alții, plus proverbe din 15+ culturi) și 33 de idei scurte (Shi Heng Yi, Zeland, Dispenza, Huberman, Hormozi, Jeremy Miner, Chris Voss și alții).
