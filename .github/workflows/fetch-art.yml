@@ -1,9 +1,7 @@
 name: Adună arta pentru citate
 
 on:
-  workflow_dispatch: {}       # buton manual: Actions → Run workflow
-  schedule:
-    - cron: "41 4 1 * *"      # o dată pe lună completează ce lipsește
+  workflow_dispatch: {}       # doar manual: muzeele blochează serverele GitHub; colecția de bază e în art/
 
 permissions:
   contents: write

@@ -1,4 +1,4 @@
-# VIRTUS
+# IMPERIUM
 
 *Minte · Corp · Disciplină* — ecosistemul personal de dezvoltare al lui HT (fost HTube).
 
@@ -9,7 +9,7 @@ Deschide-l în Safari → Share → **Add to Home Screen**.
 
 ## Deschiderea
 
-La pornire: bustul stoicului cu coroană (`brand/intro.jpg`) apare peste scene de luptă care se derulează rapid în roșu, apoi devine emblema alb-negru și apare numele VIRTUS. Atingi ca să sari. Emblema și iconițele sunt în `brand/`.
+La pornire: bustul stoicului cu coroană (`brand/intro.jpg`) apare peste scene de luptă care se derulează rapid în roșu, apoi devine emblema alb-negru și apare numele IMPERIUM. Atingi ca să sari. Emblema și iconițele sunt în `brand/`.
 
 ## Cum se actualizează
 
@@ -28,7 +28,7 @@ Player-ul e cel oficial YouTube. Pe iPhone, player-ul din HTube nu poate folosi 
 
 ## Ce e în aplicație
 
-- **Feed**: clipuri, citate, idei și Shorts, amestecate. Fiecare citat are dedesubt o operă de artă clasică din domeniul public (The Met Open Access): statui romane și busturi de stoici, soldați și războinici, pictură italiană religioasă, mitologie, gravuri japoneze; imaginea se apropie lent cât e pe ecran. Arta se adună automat (`scripts/fetch_art.py`, workflow „Adună arta pentru citate”); până atunci apare un peisaj desenat în aplicație; butonul ⬇ o salvează ca imagine 1080×1350 de trimis mai departe; filtre pe categorii. Clipurile lungi pornesc doar când apeși pe ele. La fiecare refresh vine alt conținut: aplicația ține minte ce ți-a arătat deja și pune la final ce ai văzut recent; două clipuri de la aceeași persoană nu vin unul după altul.
+- **Feed**: clipuri, citate, idei și Shorts, amestecate. Fiecare citat are dedesubt o imagine din colecția `art/` (statui stoice, arhangheli, fresce, samurai, bătălii, furtuni), alese după autor și temă; fiecare imagine are 3 variante (decupaj și ton: alb-negru, auriu, roșu). Imaginea se apropie lent cât e pe ecran; butonul ⬇ o salvează ca imagine 1080×1350 de trimis mai departe; filtre pe categorii. Clipurile lungi pornesc doar când apeși pe ele. La fiecare refresh vine alt conținut: aplicația ține minte ce ți-a arătat deja și pune la final ce ai văzut recent; două clipuri de la aceeași persoană nu vin unul după altul.
 - **Shorts**: ecran întreg, derulezi în sus și pornesc singure.
 - **Azi**: citatul zilei, obiceiuri ca bandă orizontală (fiecare cu emoji-ul lui, un inel de 30 de puncte pentru ultimele 30 de zile și seria de zile dedesubt; atingi emoji-ul ca să bifezi; obicei nou = alegi un emoji de pe tastatură), timer de meditație (5/10/15/20 min, clopoțel, respirație ghidată, ecranul rămâne aprins).
 - **Sport** (între Azi și Raft): programul tău de luni până duminică (un mușchi pe zi, 3 exerciții × 3 serii). Sus vezi ziua și exercițiile, la mijloc un corp 3D musculos (ca o statuie de marmură) care face exercițiul; mușchii lucrați se aprind în roșu (principali) și roșu deschis (secundari). Îl rotești cu degetul. „Începe antrenamentul” pornește cronometrul: numărul de repetări urmează ritmul modelului, „Serie gata” pornește pauza cu numărătoare inversă și clopoțel, la final se bifează obiceiul „Mișcare / sport”.
