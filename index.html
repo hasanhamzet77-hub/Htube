@@ -1432,7 +1432,20 @@ document.addEventListener("visibilitychange",()=>{
 chips();loadFeed();requestAnimationFrame(moveInd);if(document.fonts)document.fonts.ready.then(moveInd);
 setInterval(()=>{if(!document.hidden)loadFeed()},10*60*1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadFeed()});
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+// actualizări: verificăm la fiecare deschidere; când vine o versiune nouă, aplicația se reîncarcă singură
+if("serviceWorker" in navigator){
+  const hadSW=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{
+    r.update().catch(()=>{});
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update().catch(()=>{})});
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadSW||reloaded)return;
+    const busy=jrOpen||!$("reader").hidden||!$("medov").hidden||(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName));
+    if(busy)return;   // nu te întrerupem; versiunea nouă vine la următoarea deschidere
+    reloaded=true;location.reload();
+  });
+}
 </script>
 </body>
 </html>
