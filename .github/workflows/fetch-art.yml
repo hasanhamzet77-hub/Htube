@@ -1,0 +1,41 @@
+name: Adună arta pentru citate
+
+on:
+  workflow_dispatch: {}       # buton manual: Actions → Run workflow
+  schedule:
+    - cron: "41 4 1 * *"      # o dată pe lună completează ce lipsește
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feed
+  cancel-in-progress: false
+
+jobs:
+  art:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 20
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Descarcă operele (The Met, domeniu public)
+        run: |
+          pip install pillow
+          python scripts/fetch_art.py
+      - name: Salvează
+        run: |
+          git config user.name "htube-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art art.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Artă pentru citate $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            sleep 3
+          done
+          exit 1
