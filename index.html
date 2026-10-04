@@ -56,6 +56,8 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10p
 .meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);min-width:0}
 .cat{width:8px;height:8px;border-radius:50%;flex:none}
 .who{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.via{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.sound[aria-pressed="true"]{color:var(--accent)}
 .new{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--live);text-transform:uppercase}
 .ago{margin-left:auto;white-space:nowrap}
 .quote{font-family:var(--serif);font-size:23px;line-height:1.32;font-weight:500;text-wrap:pretty;margin:0;letter-spacing:-.005em}
@@ -133,6 +135,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="bar">
       <div class="logo">H<i>Tube</i></div>
       <div class="live"><span class="dot"></span><span id="upd">live</span></div>
+      <button class="refresh sound" aria-pressed="false" aria-label="Sunet"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg></button>
       <button class="refresh" id="refresh" aria-label="Reîmprospătează"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
     </div>
     <div class="chips" id="chips" role="toolbar" aria-label="Categorii"></div>
@@ -159,8 +162,8 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <button class="btn" type="submit">Adaugă în feed</button>
     </form>
 
-    <h2>Canale urmărite</h2>
-    <p class="note">Clipurile noi de pe aceste canale apar automat, la fiecare 2 ore.</p>
+    <h2>Persoane urmărite</h2>
+    <p class="note">La fiecare 2 ore aduc automat clipurile noi de pe canalele lor oficiale, plus Shorts și podcasturi cu ei de pe alte conturi.</p>
     <div id="chans"></div>
   </section>
 </main>
@@ -183,7 +186,9 @@ const ic={
   heart:'<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
   copy:'<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  play:'<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg>'
+  play:'<svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg>',
+  mute:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>',
+  vol:'<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>'
 };
 const playBtn=`<span class="pb"><span class="pbtn">${ic.play}</span></span>`;
 
@@ -256,7 +261,7 @@ function render(x){
     <div class="meta">${dotc(x.c)}<span class="who">${esc(x.who)}</span><span class="ago">${CATS[x.c]||""}</span></div>
     <h3>${esc(x.h)}</h3><p>${esc(x.t)}</p><div class="qsrc">${esc(x.s)}</div>${actions(x,true)}</article>`;
   return `<article class="item">
-    <div class="meta">${dotc(x.c)}<span class="who">${esc(x.ch)}</span>${isNew(x.p)?'<span class="new">nou</span>':""}<span class="ago">${ago(x.p)}</span></div>
+    <div class="meta">${dotc(x.c)}<span class="who">${esc(x.who||x.ch)}</span>${x.who&&x.ch&&x.ch!==x.who&&!x.o?`<span class="via">via ${esc(x.ch)}</span>`:""}${isNew(x.p)?'<span class="new">nou</span>':""}<span class="ago">${ago(x.p)}</span></div>
     <button class="player" data-vid="${x.id}" aria-label="Pornește clipul">${thumb(x.id)}${playBtn}</button>
     <p class="vtitle">${esc(x.t)}</p>${actions(x)}</article>`;
 }
@@ -267,6 +272,7 @@ function more(){
   if(!batch.length){$("feed").innerHTML=`<div class="empty">Nimic în categoria asta încă.</div>`;$("sentinel").hidden=true;return}
   $("sentinel").hidden=false;
   $("feed").insertAdjacentHTML("beforeend",batch.map(render).join(""));
+  watchPlayers($("feed"));
 }
 new IntersectionObserver(e=>{if(e[0].isIntersecting&&gen&&!$("v-feed").hidden)more()},{rootMargin:"900px"}).observe($("sentinel"));
 
@@ -274,14 +280,52 @@ function chips(){
   $("chips").innerHTML=[["all","Toate"],...Object.entries(CATS)].map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
 }
 
-// player YouTube standard (fără „nocookie”, ca să funcționeze contul Premium)
-const embed=(id,short)=>`<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&rel=0&modestbranding=1${short?"&loop=1&playlist="+id:""}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Clip"></iframe>`;
-function stopAll(except){
-  document.querySelectorAll(".player iframe,.sframe iframe").forEach(f=>{
-    const box=f.parentElement;if(box===except)return;
-    box.innerHTML=thumb(box.dataset.vid||box.dataset.sid)+playBtn;
-  });
+// ── player YouTube oficial (contul Premium funcționează), pornire automată când clipul e pe ecran
+// Browserele pornesc singure doar clipurile fără sunet; butonul de sunet le deblochează.
+let soundOn=false, ytReady=false;
+const players=new Map();
+window.onYouTubeIframeAPIReady=()=>{ytReady=true};
+(()=>{const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s)})();
+const embed=(id,short)=>`<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=${soundOn?0:1}&playsinline=1&rel=0&modestbranding=1${short?"&loop=1&playlist="+id:""}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Clip"></iframe>`;
+const boxId=b=>b.dataset.vid||b.dataset.sid;
+function mount(box){
+  if(players.has(box)||!box.isConnected)return;
+  stopAll(box);
+  const id=boxId(box), short=!!box.dataset.sid;
+  if(!ytReady||!window.YT||!YT.Player){box.innerHTML=embed(id,short);players.set(box,null);return}
+  const div=document.createElement("div");box.innerHTML="";box.appendChild(div);
+  const vars={autoplay:1,mute:1,playsinline:1,rel:0,modestbranding:1,controls:1};
+  if(short){vars.loop=1;vars.playlist=id}
+  const started=Date.now();
+  const p=new YT.Player(div,{videoId:id,width:"100%",height:"100%",playerVars:vars,events:{
+    onReady:e=>{e.target.mute();e.target.playVideo();if(soundOn){e.target.unMute();e.target.setVolume(100)}},
+    onStateChange:e=>{
+      // dacă browserul a blocat pornirea cu sunet, o reluăm fără sunet
+      if(e.data===2&&soundOn&&Date.now()-started<2500){e.target.mute();e.target.playVideo()}
+      if(e.data===0&&short){e.target.seekTo(0);e.target.playVideo()}
+    }}});
+  players.set(box,p);
 }
+function unmount(box){
+  if(!players.has(box))return;
+  const p=players.get(box);try{p&&p.destroy()}catch(e){}
+  players.delete(box);
+  box.innerHTML=thumb(boxId(box))+playBtn;
+}
+function stopAll(except){[...players.keys()].forEach(b=>{if(b!==except)unmount(b)})}
+function setSound(on){
+  soundOn=on;
+  players.forEach(p=>{try{if(!p)return;on?(p.unMute(),p.setVolume(100),p.playVideo()):p.mute()}catch(e){}});
+  document.querySelectorAll(".sound").forEach(b=>{b.setAttribute("aria-pressed",on);b.innerHTML=on?ic.vol:ic.mute});
+}
+// clipurile din feed pornesc când sunt cel puțin 60% pe ecran și se opresc când ies
+const timers=new Map();
+const vio=new IntersectionObserver(es=>es.forEach(e=>{
+  const b=e.target;
+  if(e.intersectionRatio>=.6){if(!timers.has(b))timers.set(b,setTimeout(()=>{timers.delete(b);mount(b)},350))}
+  else{clearTimeout(timers.get(b));timers.delete(b);if(e.intersectionRatio<.3)unmount(b)}
+}),{threshold:[0,.3,.6,1]});
+function watchPlayers(root){root.querySelectorAll(".player:not([data-w])").forEach(b=>{b.dataset.w=1;vio.observe(b)})}
 
 // Shorts pe ecran întreg; pornesc singure când ajung în centru
 let shortsIO=null;
@@ -294,11 +338,11 @@ function buildShorts(startId){
   box.innerHTML=list.map(s=>`<div class="short">
     <div class="sframe" data-sid="${s.id}">${thumb(s.id)}${playBtn}</div>
     <div class="sinfo"><b>${esc(s.ch)}</b><span>${esc(s.t)}</span></div>
-    <div class="sside"><button data-a="save" data-id="${s.id}" aria-pressed="${S.saved.includes(s.id)}" aria-label="Salvează">${ic.heart}</button><button data-a="hide" data-id="${s.id}" aria-label="Nu-mi mai arăta">${ic.x}</button></div></div>`).join("");
+    <div class="sside"><button class="sound" aria-pressed="${soundOn}" aria-label="Sunet">${soundOn?ic.vol:ic.mute}</button><button data-a="save" data-id="${s.id}" aria-pressed="${S.saved.includes(s.id)}" aria-label="Salvează">${ic.heart}</button><button data-a="hide" data-id="${s.id}" aria-label="Nu-mi mai arăta">${ic.x}</button></div></div>`).join("");
   box.scrollTop=0;
   shortsIO=new IntersectionObserver(es=>es.forEach(e=>{
     const f=e.target.querySelector(".sframe");
-    if(e.isIntersecting){stopAll(f);if(!f.querySelector("iframe"))f.innerHTML=embed(f.dataset.sid,true)}
+    if(e.isIntersecting)mount(f);else unmount(f);
   }),{root:box,threshold:.7});
   box.querySelectorAll(".short").forEach(el=>shortsIO.observe(el));
 }
@@ -309,8 +353,8 @@ function settings(){
   $("st-u").textContent=FEED.updated?"Ultima actualizare automată: "+new Date(FEED.updated).toLocaleString("ro-RO"):"";
   $("vcat").innerHTML=Object.entries(CATS).map(([k,x])=>`<option value="${k}">${x}</option>`).join("");
   fetch("channels.json?t="+Date.now()).then(r=>r.json()).then(cfg=>{
-    $("chans").innerHTML=cfg.channels.map(c=>{const n=FEED.items.filter(i=>i.ch===c.name).length;
-      return `<div class="row">${dotc(c.c)}<div><b>${esc(c.name)}</b><small>${CATS[c.c]}</small></div><span class="n">${n} clipuri</span></div>`}).join("");
+    $("chans").innerHTML=(cfg.persons||[]).map(c=>{const mine=FEED.items.filter(i=>i.who===c.name);
+      return `<div class="row">${dotc(c.c)}<div><b>${esc(c.name)}</b><small>${CATS[c.c]}</small></div><span class="n">${mine.filter(i=>!i.s).length} clipuri · ${mine.filter(i=>i.s).length} shorts</span></div>`}).join("");
   }).catch(()=>{});
 }
 
@@ -332,10 +376,10 @@ async function loadFeed(user){
 function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
 
 document.addEventListener("click",async e=>{
-  const p=e.target.closest(".player");
-  if(p&&!p.querySelector("iframe")){stopAll(p);p.innerHTML=embed(p.dataset.vid);return}
-  const sf=e.target.closest(".sframe");
-  if(sf&&!sf.querySelector("iframe")){stopAll(sf);sf.innerHTML=embed(sf.dataset.sid,true);return}
+  const snd=e.target.closest(".sound");
+  if(snd){setSound(!soundOn);toast(soundOn?"Sunet pornit":"Sunet oprit");return}
+  const p=e.target.closest(".player,.sframe");
+  if(p&&!players.has(p)){mount(p);return}
   const st=e.target.closest(".sthumb");
   if(st){switchTo("shorts",st.dataset.short);return}
   const ch=e.target.closest(".chip");
@@ -366,6 +410,7 @@ function switchTo(v,startShort){
 function renderSaved(){
   const list=S.saved.map(byId).filter(Boolean).map(x=>x.k?x:{k:"v",...x});
   $("saved").innerHTML=list.length?list.map(render).join(""):`<div class="empty">Apasă inimioara pe un citat sau un clip ca să-l găsești aici.</div>`;
+  watchPlayers($("saved"));
 }
 $("addv").addEventListener("submit",e=>{
   e.preventDefault();

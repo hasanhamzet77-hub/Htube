@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""HTube — aduce clipurile noi (video + Shorts) de pe canalele din channels.json și scrie feed.json.
-Rulează automat pe GitHub Actions. Fără chei API: folosește fluxurile RSS publice YouTube."""
-import json, re, sys, time, urllib.request, xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+"""HTube — aduce clipurile noi pentru persoanele din channels.json și scrie feed.json.
+1) canalele oficiale, prin fluxurile RSS publice YouTube (video + Shorts separat);
+2) căutări pe tot YouTube-ul (Shorts și podcasturi de pe alte conturi), filtrate după nume.
+Rulează automat pe GitHub Actions. Fără chei API."""
+import json, re, sys, time, urllib.parse, urllib.request, xml.etree.ElementTree as ET
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CFG = json.loads((ROOT / "channels.json").read_text(encoding="utf-8"))
 FEED = ROOT / "feed.json"
 IDS = ROOT / "channel_ids.json"
-MAX_ITEMS = 1500
-UA = {"User-Agent": "Mozilla/5.0 (HTube feed bot)", "Accept-Language": "en-US,en;q=0.8",
-      "Cookie": "CONSENT=YES+1; SOCS=CAI"}
+MAX_ITEMS = 2500
+NOW = datetime.now(timezone.utc)
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.8", "Cookie": "CONSENT=YES+1; SOCS=CAI; PREF=hl=en&gl=US"}
 NS = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015",
       "media": "http://search.yahoo.com/mrss/"}
 
 
 def get(url, tries=2):
-    for i in range(tries):
+    err = None
+    for _ in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=20) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=25) as r:
                 return r.read().decode("utf-8", "replace")
         except Exception as e:
             err = e
@@ -27,75 +31,167 @@ def get(url, tries=2):
     raise err
 
 
-def resolve(ch, cache):
-    if ch.get("id"):
-        return ch["id"]
-    h = ch["handle"]
-    if h in cache:
-        return cache[h]
-    html = get("https://www.youtube.com/" + h)
+def resolve(ref, cache):
+    if ref.startswith("UC"):
+        return ref
+    if ref in cache:
+        return cache[ref]
+    html = get("https://www.youtube.com/" + ref)
     for pat in (r'"externalId":"(UC[\w-]{22})"', r'<meta itemprop="identifier" content="(UC[\w-]{22})"',
-                r'channel/(UC[\w-]{22})"', r'"channelId":"(UC[\w-]{22})"'):
+                r'"channelId":"(UC[\w-]{22})"'):
         m = re.search(pat, html)
         if m:
-            cache[h] = m.group(1)
+            cache[ref] = m.group(1)
             return m.group(1)
-    raise RuntimeError("nu am găsit ID pentru " + h)
+    raise RuntimeError("nu am găsit ID pentru " + ref)
 
 
-def parse(xml, ch, short):
+def rss(xml, person, short):
     out = []
-    root = ET.fromstring(xml)
-    for e in root.findall("a:entry", NS):
+    for e in ET.fromstring(xml).findall("a:entry", NS):
         vid = e.findtext("yt:videoId", namespaces=NS)
-        title = e.findtext("a:title", namespaces=NS) or ""
-        pub = e.findtext("a:published", namespaces=NS) or ""
-        views = 0
-        st = e.find("media:group/media:community/media:statistics", NS)
-        if st is not None:
-            views = int(st.get("views") or 0)
         if not vid:
             continue
-        if short is None:
-            short = "#shorts" in title.lower()
-        out.append({"id": vid, "t": title, "ch": ch["name"], "c": ch["c"], "p": pub, "s": bool(short), "v": views})
+        title = e.findtext("a:title", namespaces=NS) or ""
+        ch = e.findtext("a:author/a:name", namespaces=NS) or person["name"]
+        out.append({"id": vid, "t": title, "who": person["name"], "ch": ch, "c": person["c"],
+                    "p": e.findtext("a:published", namespaces=NS) or NOW.isoformat(),
+                    "s": short if short is not None else "#shorts" in title.lower(), "o": 1})
     return out
+
+
+def walk(node, found):
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in ("videoRenderer", "reelItemRenderer", "shortsLockupViewModel"):
+                found.append((k, v))
+            else:
+                walk(v, found)
+    elif isinstance(node, list):
+        for v in node:
+            walk(v, found)
+
+
+def text(x):
+    if not x:
+        return ""
+    if "simpleText" in x:
+        return x["simpleText"]
+    if "runs" in x:
+        return "".join(r.get("text", "") for r in x["runs"])
+    return x.get("content", "")
+
+
+def rel_date(s):
+    m = re.search(r"(\d+)\s+(second|minute|hour|day|week|month|year)", s or "")
+    if not m:
+        return NOW
+    n, u = int(m.group(1)), m.group(2)
+    days = {"second": 1 / 86400, "minute": 1 / 1440, "hour": 1 / 24, "day": 1, "week": 7, "month": 30, "year": 365}[u]
+    return NOW - timedelta(days=n * days)
+
+
+def secs(s):
+    p = [int(x) for x in re.findall(r"\d+", s or "")]
+    t = 0
+    for x in p:
+        t = t * 60 + x
+    return t
+
+
+def search(q, person):
+    html = get("https://www.youtube.com/results?" + urllib.parse.urlencode({"search_query": q, "hl": "en", "gl": "US"}))
+    m = re.search(r"var ytInitialData\s*=\s*(\{.*?\});\s*</script>", html, re.S)
+    if not m:
+        return []
+    found = []
+    walk(json.loads(m.group(1)), found)
+    out = []
+    for kind, v in found:
+        if kind == "videoRenderer":
+            vid, title = v.get("videoId"), text(v.get("title"))
+            ch = text(v.get("ownerText")) or text(v.get("longBylineText"))
+            dur = secs(text(v.get("lengthText")))
+            if not dur:  # live sau fără durată
+                continue
+            short = dur <= 75 or "#short" in title.lower()
+            pub = rel_date(text(v.get("publishedTimeText")))
+        elif kind == "reelItemRenderer":
+            vid, title, ch, short, pub = v.get("videoId"), text(v.get("headline")), "", True, NOW
+        else:
+            try:
+                vid = v["onTap"]["innertubeCommand"]["reelWatchEndpoint"]["videoId"]
+            except Exception:
+                continue
+            title = (v.get("overlayMetadata", {}).get("primaryText", {}) or {}).get("content", "")
+            ch, short, pub = "", True, NOW
+        if vid and title:
+            out.append({"id": vid, "t": title, "who": person["name"], "ch": ch or "YouTube", "c": person["c"],
+                        "p": pub.isoformat(timespec="seconds"), "s": short, "o": 0})
+    return out
+
+
+def keep(item, person, block):
+    t = item["t"].lower()
+    if any(w in t for w in block):
+        return False
+    if item["o"]:  # canal oficial
+        return not any(w in t for w in person.get("block", []))
+    if not any(w in t for w in person.get("must", [person["name"].lower()])):
+        return False
+    if any(w in t for w in person.get("block", [])):
+        return False
+    if person.get("allow") and not any(w in t for w in person["allow"]):
+        return False
+    return True
 
 
 def main():
     cache = json.loads(IDS.read_text()) if IDS.exists() else {}
     old = json.loads(FEED.read_text()).get("items", []) if FEED.exists() else []
-    found, ok, failed = [], [], []
-    for ch in CFG["channels"]:
-        try:
-            cid = resolve(ch, cache)
-            got = []
-            for prefix, short in (("UULF", False), ("UUSH", True)):
-                try:
-                    got += parse(get(f"https://www.youtube.com/feeds/videos.xml?playlist_id={prefix}{cid[2:]}"), ch, short)
-                except Exception:
-                    pass
-            if not got:
-                got = parse(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}"), ch, None)
-            found += got
-            ok.append(f"{ch['name']}: {len(got)}")
-        except Exception as e:
-            failed.append(f"{ch['name']}: {e}")
+    names = {p["name"] for p in CFG["persons"]}
     block = [w.lower() for w in CFG.get("block_words", [])]
-    merged = {i["id"]: i for i in old}
-    for i in found:
-        if any(w in i["t"].lower() for w in block):
-            continue
-        merged[i["id"]] = i
+    merged = {i["id"]: i for i in old if i.get("who") in names}
+    log = []
+    for person in CFG["persons"]:
+        got = []
+        for ref in person.get("channels", []):
+            try:
+                cid = resolve(ref, cache)
+                part = []
+                for prefix, short in (("UULF", False), ("UUSH", True)):
+                    try:
+                        part += rss(get(f"https://www.youtube.com/feeds/videos.xml?playlist_id={prefix}{cid[2:]}"), person, short)
+                    except Exception:
+                        pass
+                if not part:
+                    part = rss(get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}"), person, None)
+                got += part
+            except Exception as e:
+                log.append(f"  ! {person['name']} {ref}: {e}")
+        for q in person.get("search", []):
+            try:
+                got += search(q, person)
+                time.sleep(1)
+            except Exception as e:
+                log.append(f"  ! {person['name']} căutare '{q}': {e}")
+        n = 0
+        for it in got:
+            if not keep(it, person, block):
+                continue
+            prev = merged.get(it["id"])
+            if prev and not it["o"]:
+                it["p"] = prev["p"]  # păstrăm data primei apariții pentru clipurile găsite prin căutare
+            merged[it["id"]] = it
+            n += 1
+        log.append(f"{person['name']}: {n} clipuri ({sum(1 for i in got if i['s'])} shorts găsite)")
     items = sorted(merged.values(), key=lambda x: x["p"], reverse=True)[:MAX_ITEMS]
-    FEED.write_text(json.dumps({"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                                "items": items}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    FEED.write_text(json.dumps({"updated": NOW.isoformat(timespec="seconds"), "items": items},
+                               ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     IDS.write_text(json.dumps(cache, indent=1))
-    print("OK:", *ok, sep="\n  ")
-    if failed:
-        print("EȘUAT:", *failed, sep="\n  ")
-    print(f"Total în feed: {len(items)}")
-    if not found and not old:
+    print("\n".join(log))
+    print(f"Total în feed: {len(items)} (shorts: {sum(1 for i in items if i['s'])})")
+    if not items:
         sys.exit(1)
 
 

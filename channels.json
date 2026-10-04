@@ -1,18 +1,68 @@
 {
-  "_info": "Canalele din care HTube aduce automat clipuri. Poți folosi @handle sau ID-ul canalului (UC...). Categorii: mot, dev, biz, soc, san.",
-  "channels": [
-    {"name": "Andrew Huberman", "handle": "@hubermanlab", "c": "san"},
-    {"name": "Huberman Lab Clips", "handle": "@HubermanLabClips", "c": "san"},
-    {"name": "Peter Attia MD", "handle": "@PeterAttiaMD", "c": "san"},
-    {"name": "Shi Heng Yi", "id": "UCRRtZjnxd5N6Vvq-jU9uoOw", "handle": "@ShiHengYiOnline", "c": "dev"},
-    {"name": "HealthyGamerGG (Dr. K)", "handle": "@HealthyGamerGG", "c": "dev"},
-    {"name": "Daily Stoic", "handle": "@DailyStoic", "c": "dev"},
-    {"name": "David Goggins", "id": "UCb38juXPhVW34F-B2fVBtlA", "c": "mot"},
-    {"name": "Motiversity", "handle": "@Motiversity", "c": "mot"},
-    {"name": "Mel Robbins", "handle": "@melrobbins", "c": "mot"},
-    {"name": "Brian Tracy", "handle": "@BrianTracyOfficial", "c": "dev"},
-    {"name": "Alex Hormozi", "handle": "@AlexHormozi", "c": "biz"},
-    {"name": "Jeremy Miner", "handle": "@JeremyMiner", "c": "biz"}
+  "_info": "Persoanele urmărite de HTube. Pentru fiecare: canalele oficiale (@handle sau ID UC...) și căutări pe tot YouTube-ul (Shorts și podcasturi de pe alte conturi). 'must' = cuvinte care trebuie să apară în titlu ca să intre un clip găsit prin căutare. Categorii: mot, dev, biz, san.",
+  "persons": [
+    {
+      "name": "Shi Heng Yi", "c": "dev",
+      "channels": ["UCRRtZjnxd5N6Vvq-jU9uoOw"],
+      "search": ["Shi Heng Yi shorts", "Shi Heng Yi podcast", "Shi Heng Yi interview"],
+      "must": ["heng yi", "shaolin"]
+    },
+    {
+      "name": "Andrew Huberman", "c": "san",
+      "channels": ["@hubermanlab", "@HubermanLabClips"],
+      "search": ["Andrew Huberman shorts", "Andrew Huberman podcast interview"],
+      "must": ["huberman"]
+    },
+    {
+      "name": "David Goggins", "c": "mot",
+      "channels": [],
+      "search": ["David Goggins motivation shorts", "David Goggins shorts", "David Goggins podcast interview", "David Goggins speech"],
+      "must": ["goggins"]
+    },
+    {
+      "name": "Brian Tracy", "c": "dev",
+      "channels": ["@BrianTracyOfficial"],
+      "search": ["Brian Tracy shorts", "Brian Tracy interview success"],
+      "must": ["brian tracy", "tracy"]
+    },
+    {
+      "name": "Andrew Tate", "c": "mot",
+      "channels": [],
+      "search": ["Andrew Tate motivation shorts", "Andrew Tate discipline motivation", "Andrew Tate motivational speech"],
+      "must": ["tate"],
+      "allow": ["motivat", "disciplin", "mindset", "hard work", "work", "weak", "strong", "focus", "success", "train", "pain", "purpose", "goal", "grind", "winner", "champion", "excuse", "lazy", "sacrifice", "effort", "hustle", "rich", "money", "fight", "war", "escape", "mentality", "comfort", "speech", "advice"],
+      "block": ["women", "woman", "girl", "female", "wife", "feminis", "dating", "date ", "relationship", "police", "prison", "jail", "arrest", "court", "trial", "charge", "romania", "rape", "traffick", "tristan", "porn", "onlyfans", "gay", "lgbt", "islam", "muslim", "jew", "politic", "piers", "debate", "exposed", "destroy", "reaction", "vs "]
+    },
+    {
+      "name": "Alex Hormozi", "c": "biz",
+      "channels": ["@AlexHormozi"],
+      "search": ["Alex Hormozi shorts", "Alex Hormozi podcast interview"],
+      "must": ["hormozi"]
+    },
+    {
+      "name": "Grant Cardone", "c": "biz",
+      "channels": ["@GrantCardone"],
+      "search": ["Grant Cardone sales shorts", "Grant Cardone car sales training"],
+      "must": ["cardone"]
+    },
+    {
+      "name": "Jeremy Miner", "c": "biz",
+      "channels": ["@JeremyMiner"],
+      "search": ["Jeremy Miner sales shorts"],
+      "must": ["miner", "nepq"]
+    },
+    {
+      "name": "Ray Dalio", "c": "biz",
+      "channels": ["@principlesbyraydalio"],
+      "search": ["Ray Dalio shorts", "Ray Dalio interview investing"],
+      "must": ["dalio"]
+    },
+    {
+      "name": "Benjamin Cowen", "c": "biz",
+      "channels": ["@benjaminjcowen"],
+      "search": ["Benjamin Cowen bitcoin interview"],
+      "must": ["cowen"]
+    }
   ],
-  "block_words": ["news", "breaking", "știri", "stiri", "election", "trump", "biden", "politics", "war update", "nachrichten"]
+  "block_words": ["news", "breaking", "știri", "stiri", "election", "trump", "biden", "politics", "nachrichten", "reacts", "reaction"]
 }
