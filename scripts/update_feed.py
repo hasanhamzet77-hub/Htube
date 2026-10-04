@@ -185,9 +185,11 @@ def main():
                 it["p"] = prev["p"]  # păstrăm data primei apariții pentru clipurile găsite prin căutare
             merged[it["id"]] = it
             n += 1
-        log.append(f"{person['name']}: {n} clipuri ({sum(1 for i in got if i['s'])} shorts găsite)")
+        sh = [i for i in got if i["s"]]
+        log.append(f"{person['name']}: {n} păstrate din {len(got)} găsite; shorts găsite {len(sh)}, păstrate {sum(1 for i in sh if keep(i, person, block))}"
+                   + (f"; ex. respins: {[i['t'][:50] for i in sh if not keep(i, person, block)][:3]}" if sh else ""))
     items = sorted(merged.values(), key=lambda x: x["p"], reverse=True)[:MAX_ITEMS]
-    FEED.write_text(json.dumps({"updated": NOW.isoformat(timespec="seconds"), "items": items},
+    FEED.write_text(json.dumps({"updated": NOW.isoformat(timespec="seconds"), "log": log, "items": items},
                                ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     IDS.write_text(json.dumps(cache, indent=1))
     print("\n".join(log))
