@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: feed
+  group: art
   cancel-in-progress: false
 
 jobs:

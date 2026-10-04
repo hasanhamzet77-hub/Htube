@@ -1259,14 +1259,15 @@ const MANTRAS=[
  {n:"Semnul",l:["Divinitate, îți mulțumesc că mi-ai mai dat o zi.","Îți mulțumesc pentru familia mea, pentru tot ce am și pentru tot ce vine.","Îi las în grija Ta pe ai mei; păzește-ne pașii, drumurile și casa.","Dacă m-ai auzit, trimite-mi astăzi un semn pe care să-l recunosc.","Îl voi primi cu ochii deschiși și cu inima deschisă."]},
  {n:"Conștientizare",l:["Mulțumesc pentru această dimineață și pentru respirația care îmi dă viață.","Mulțumesc pentru familia mea; ține-ne sănătoși, uniți și în siguranță.","Astăzi aleg să fiu conștient de gândurile, cuvintele și faptele mele.","Nu reacționez din frică. Aleg din liniște.","Tot ce fac azi, fac cu atenție, cu răbdare și cu iubire.","Eu creez ziua de azi, iar Tu ești cu mine."]},
  {n:"Ca și cum s-ar fi întâmplat deja",l:["Îți mulțumesc, Doamne, ca și cum tot ce cer s-ar fi întâmplat deja.","Mulțumesc că familia mea este sănătoasă, unită și ocrotită.","Mulțumesc pentru ziua bună care mă așteaptă.","Mulțumesc pentru semnul pe care mi-l vei arăta astăzi; îl aștept cu încredere.","Primesc această zi cu recunoștință."]},
- {n:"Scurtă, de repetat de 3 ori",l:["Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent.","Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent.","Mulțumesc pentru încă o zi.","Ocrotește-mă pe mine și familia mea.","Arată-mi semnul Tău, și voi fi atent."]}
+ {n:"Mantra mea · de 3 ori",l:["Doamne, mulțumesc pentru încă o zi.", "Ocrotește-mă pe mine și pe familia mea.", "Ce e în controlul nostru, luminează-ne și îndrumă-ne pe calea cea bună.", "Ce nu e în controlul nostru, ocrotește-ne, Doamne.", "Arată-mi, Doamne, semnul Tău, să-l simt și să știu cu certitudine că este de la Tine.", "Doamne, mulțumesc pentru încă o zi.", "Ocrotește-mă pe mine și pe familia mea.", "Ce e în controlul nostru, luminează-ne și îndrumă-ne pe calea cea bună.", "Ce nu e în controlul nostru, ocrotește-ne, Doamne.", "Arată-mi, Doamne, semnul Tău, să-l simt și să știu cu certitudine că este de la Tine.", "Doamne, mulțumesc pentru încă o zi.", "Ocrotește-mă pe mine și pe familia mea.", "Ce e în controlul nostru, luminează-ne și îndrumă-ne pe calea cea bună.", "Ce nu e în controlul nostru, ocrotește-ne, Doamne.", "Arată-mi, Doamne, semnul Tău, să-l simt și să știu cu certitudine că este de la Tine."]}
 ];
 const MAN_LINE=7;   // secunde pe rând: timp să-l spui încet și să-l simți
+const curMantra=()=>Math.min(S.med.mantra??4,MANTRAS.length-1);   // implicit: mantra ta
 function renderMantraSet(){
-  const on=S.med.mantraOn!==false,i=Math.min(S.med.mantra||0,MANTRAS.length-1);
+  const on=S.med.mantraOn!==false,i=curMantra();
   $("md-mon").checked=on;$("md-mopt").hidden=!on;$("md-voice").checked=!!S.med.voice;
   $("md-msel").innerHTML=MANTRAS.map((m,k)=>`<option value="${k}"${k===i?" selected":""}>${esc(m.n)}</option>`).join("");
-  $("md-mprev").textContent=MANTRAS[i].l.slice(0,i===4?3:6).join("\n");
+  $("md-mprev").textContent=MANTRAS[i].l.slice(0,i===4?5:6).join("\n")+(i===4?"\n(de 3 ori)":"");
 }
 $("md-mon").addEventListener("change",e=>{S.med.mantraOn=e.target.checked;save();renderMantraSet()});
 $("md-msel").addEventListener("change",e=>{S.med.mantra=+e.target.value;save();renderMantraSet()});
@@ -1282,10 +1283,10 @@ function speak(t){
 function mantraTick(){
   const ov=$("medov"),box=$("md-mt");
   if(S.med.mantraOn===false||!md){ov.classList.remove("mantra");return}
-  const M=MANTRAS[Math.min(S.med.mantra||0,MANTRAS.length-1)],start=Math.min(M.l.length*MAN_LINE+4,md.dur*.6);
+  const M=MANTRAS[curMantra()],durs=M.l.map(t=>Math.max(MAN_LINE,t.length*.12)),total=durs.reduce((a,b)=>a+b,0)+4,start=Math.min(total,md.dur*.75);
   if(md.left>start){ov.classList.remove("mantra");return}
   if(!md.mOn){md.mOn=true;md.mi=-1;ov.classList.add("mantra");box.innerHTML=M.l.map(t=>`<p>${esc(t)}</p>`).join("");bell(.12)}
-  const idx=Math.min(M.l.length-1,Math.floor((start-md.left)/MAN_LINE));
+  let el=start-md.left,idx=0;while(idx<M.l.length-1&&el>=durs[idx]){el-=durs[idx];idx++}
   if(idx!==md.mi&&md.run){
     md.mi=idx;
     box.querySelectorAll("p").forEach((p,k)=>{p.className=k<idx?"v":k===idx?"on":"";p.hidden=k>idx+0||k<idx-2});
