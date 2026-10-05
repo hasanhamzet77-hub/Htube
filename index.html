@@ -387,6 +387,27 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .logo span{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:17px;letter-spacing:.16em;color:var(--ink)}
 .ja-logo span{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:32px;letter-spacing:.2em}
 
+/* ── Muzică ── */
+#mpbox{position:fixed;right:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;overflow:hidden;z-index:-1}
+#mpbox iframe{width:200px;height:200px}
+.musbtn{position:relative}
+.musbtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2}
+.musbtn.on{color:var(--accent)}
+.musbtn .eq{position:absolute;right:3px;bottom:4px;display:none;gap:1.5px;align-items:flex-end;height:8px}
+.musbtn.live .eq{display:flex}
+.musbtn .eq i{width:2px;background:currentColor;border-radius:1px;animation:eq 1s ease-in-out infinite}
+.musbtn .eq i:nth-child(2){animation-delay:.25s}.musbtn .eq i:nth-child(3){animation-delay:.5s}
+@keyframes eq{0%,100%{height:2px}50%{height:8px}}
+.musf{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:14px;z-index:8;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:var(--glass);border:1px solid var(--glass-b);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:var(--muted);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.musf.on{color:var(--accent)}
+#v-raft .ptop,#v-sport .ptop{padding-right:52px}
+.rbar .musbtn{color:var(--ink)}.rbar .musbtn.on{color:var(--accent)}
+.mdmus{position:absolute!important;top:calc(12px + env(safe-area-inset-top,0px));left:12px;width:44px;height:44px;display:grid;place-items:center;color:#8d8f98}
+.mdmus.on{color:#a5b4ff}
+.in-tap{position:absolute;left:0;right:0;bottom:calc(46px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#bbb;opacity:0;animation:inEm .6s ease .35s forwards,pulseT 1.6s ease-in-out 1s infinite}
+@keyframes pulseT{50%{opacity:.45}}
+
 /* ── Sport ── */
 .spkick{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--accent);margin-bottom:2px}
 #v-sport .ptitle{font-size:26px}
@@ -544,7 +565,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="bar">
       <div class="logo"><img src="brand/emblem-96.png" alt=""><span>IMPERIUM</span></div>
       <div class="live"><span class="dot"></span><span id="upd">live</span></div>
-      <button class="refresh sound" aria-pressed="false" aria-label="Sunet"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg></button>
+      <button class="refresh musbtn" id="mus-h" aria-label="Muzică"></button>
       <button class="refresh" id="refresh" aria-label="Reîmprospătează"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
     </div>
     <div class="chips" id="chips" role="toolbar" aria-label="Categorii"></div>
@@ -622,6 +643,14 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="stats"><div><b id="st-v">0</b><small>clipuri</small></div><div><b id="st-s">0</b><small>shorts</small></div><div><b id="st-q">0</b><small>citate și idei</small></div></div>
     <p class="note" id="st-u"></p>
 
+    <h2>Muzică</h2>
+    <p class="note">Cinematic în Feed, frecvențe de meditație în Azi, muzică de sală când pornești antrenamentul și muzică liniștită când citești. Se oprește singură când deschizi un clip. Boxa din colț o pornește și o oprește; ține apăsat pe ea pentru melodia următoare.</p>
+    <label class="tog"><input type="checkbox" id="mus-on"> Muzică de fundal</label>
+    <label class="tog"><input type="checkbox" id="mus-intro"> Sunet la deschidere (atinge ecranul în timpul intro-ului)</label>
+    <label class="tog" style="gap:12px">Volum <input type="range" id="mus-vol" min="20" max="100" style="flex:1;accent-color:var(--accent);padding:0;background:none;border:0"></label>
+    <p class="note" id="mus-now"></p>
+    <div class="hadd-b"><button class="btn ghost" id="mus-next">Melodia următoare</button><button class="btn ghost" id="mus-test">Ascultă intro-ul</button></div>
+
     <h2>Copie de siguranță</h2>
     <p class="note">Salvează într-un fișier obiceiurile, jurnalul, starea, meditațiile, antrenamentele și setările. Cărțile PDF nu intră (le adaugi din nou).</p>
     <div class="hadd-b"><button class="btn" id="bkp-exp">Exportă</button><label class="btn ghost" for="bkp-imp">Importă</label></div>
@@ -678,6 +707,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="rt"><b id="rd-t"></b><small><span id="rd-pg"></span><span id="rd-tm"></span></small></div><i id="rd-tbar"></i>
     <button id="rd-zo" aria-label="Micșorează"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
     <button id="rd-zi" aria-label="Mărește"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
+    <button class="musbtn" id="mus-r" aria-label="Muzică"></button>
     <button id="rd-night" aria-pressed="false" aria-label="Mod noapte"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
     <button id="rd-del" aria-label="Șterge cartea"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
   </div>
@@ -713,6 +743,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 </section>
 
 <div id="medov" hidden>
+  <button class="musbtn mdmus" id="mus-m" aria-label="Muzică"></button>
   <button id="md-x" aria-label="Oprește meditația"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div id="md-run">
     <div class="mring" id="md-ring">
@@ -726,6 +757,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
   <div class="mdone" id="md-done" hidden><p id="md-msg"></p><button class="btn" id="md-ok">Închide</button></div>
 </div>
 
+<button class="musbtn musf" id="mus-f" aria-label="Muzică" hidden></button>
 <div id="mood" hidden role="dialog" aria-modal="true" aria-labelledby="mood-q">
   <div class="mdcard">
     <small id="mood-d"></small>
@@ -1218,7 +1250,9 @@ function switchTo(v,startShort){
   $("nav").classList.toggle("dark",v==="shorts");
   if(v==="shorts")buildShorts(startShort);else if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}
   if(v==="saved")renderSaved();
-  if(v==="set")settings();
+  if(v==="set"){settings();window.Music&&Music.settingsUI()}
+  $("mus-f").hidden=v==="feed"||v==="shorts";
+  window.Music&&setTimeout(Music.refresh,50);
   if(v!=="shorts")window.scrollTo(0,0);
 }
 $("open-saved").addEventListener("click",()=>switchTo("saved"));
@@ -1357,7 +1391,7 @@ function mantraTick(){
   if(S.med.mantraOn===false||!md){ov.classList.remove("mantra");return}
   const M=MANTRAS[curMantra()],durs=M.l.map(t=>Math.max(MAN_LINE,t.length*.12)),total=durs.reduce((a,b)=>a+b,0)+4,start=Math.min(total,md.dur*.75);
   if(md.left>start){ov.classList.remove("mantra");return}
-  if(!md.mOn){md.mOn=true;md.mi=-1;ov.classList.add("mantra");box.innerHTML=M.l.map(t=>`<p>${esc(t)}</p>`).join("");bell(.12)}
+  if(!md.mOn){md.mOn=true;md.mi=-1;window.Music&&Music.duck(true);ov.classList.add("mantra");box.innerHTML=M.l.map(t=>`<p>${esc(t)}</p>`).join("");bell(.12)}
   let el=start-md.left,idx=0;while(idx<M.l.length-1&&el>=durs[idx]){el-=durs[idx];idx++}
   if(idx!==md.mi&&md.run){
     md.mi=idx;
@@ -1431,6 +1465,7 @@ function finishMed(full){
   $("medov").classList.remove("mantra");
 }
 function closeMed(){
+  window.Music&&Music.duck(false);
   clearInterval(mdInt);unlockWake();md=null;try{speechSynthesis.cancel()}catch(e){}$("medov").classList.remove("mantra");$("medov").hidden=true;
   renderMed();renderHabits();
 }
@@ -1797,6 +1832,8 @@ setInterval(()=>{if(!document.hidden)checkMood()},5*60*1000);
 let introOn=!!$("intro");
 (()=>{
   const el=$("intro");if(!el)return;
+  window.__introT0=performance.now();
+  if((S.music||{}).intro!==false){const h=document.createElement("div");h.className="in-tap";h.textContent="Atinge pentru sunet";el.appendChild(h)}
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   // scântei
   if(!reduce){const em=$("in-embers");em.innerHTML=Array.from({length:26},()=>`<i style="left:${Math.random()*100}%;--dx:${(Math.random()*60-30).toFixed(0)}px;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s;animation-delay:${(Math.random()*.9).toFixed(2)}s"></i>`).join("")}
@@ -1812,7 +1849,11 @@ let introOn=!!$("intro");
       a.classList.add("on");b.classList.remove("on")},85);
   });
   const done=()=>{if(!introOn)return;introOn=false;clearInterval(flip);el.classList.add("out");setTimeout(()=>{el.remove();checkMood()},520)};
-  el.addEventListener("click",done);
+  el.addEventListener("click",()=>{
+    const h=el.querySelector(".in-tap");
+    if(h&&!el._tapped){el._tapped=true;h.remove();return}   // prima atingere: doar pornește sunetul
+    done();
+  });
   setTimeout(done,reduce?1400:2750);
 })();
 setTimeout(()=>{if(!introOn)checkMood()},1200);
@@ -1872,5 +1913,6 @@ if("serviceWorker" in navigator){
 }
 </script>
 <script src="sport.js"></script>
+<script src="music.js"></script>
 </body>
 </html>

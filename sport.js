@@ -394,7 +394,7 @@ function wakeOff(){try{wl&&wl.release()}catch(e){}wl=null}
 function startWorkout(){
   try{audioUnlock()}catch(e){}
   Object.assign(sess,{state:"set",ex:0,set:0,start:now(),paused:0,pauseAt:0,done:{}});
-  beginSet();wakeOn();
+  beginSet();wakeOn();window.Music&&Music.workout(true);
   clearInterval(tick);tick=setInterval(renderLive,250);
 }
 function beginSet(){
@@ -414,7 +414,7 @@ function setDone(){
   render();
 }
 function finish(){
-  sess.state="done";anim.on=false;clearInterval(tick);wakeOff();
+  sess.state="done";anim.on=false;clearInterval(tick);wakeOff();window.Music&&Music.workout(false);
   const dur=Math.round(elapsed()/1000);
   S.wlog=S.wlog||{};S.wlog[dk()]={d:sel,dur};save();
   try{bell(.4);setTimeout(()=>bell(.3),2600)}catch(e){}
@@ -424,7 +424,7 @@ function finish(){
 }
 function stopWorkout(){
   if(sess.state!=="done"&&!confirm("Oprești antrenamentul?"))return;
-  Object.assign(sess,{state:"idle",start:0,pauseAt:0});anim.on=false;clearInterval(tick);wakeOff();
+  Object.assign(sess,{state:"idle",start:0,pauseAt:0});anim.on=false;clearInterval(tick);wakeOff();window.Music&&Music.workout(false);
   setExercise(day().ex[exSel].a);render();
 }
 function togglePause(){
