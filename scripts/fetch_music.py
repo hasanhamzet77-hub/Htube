@@ -16,7 +16,25 @@ MAXLEN = 360
 
 BAD = ["humor", "silly", "comed", "funny", "medieval", "ren faire", "polka", "holiday", "christmas", "children", "circus",
        "horror", "creepy", "scary", "country", "bluegrass", "vaudeville", "tango", "lounge", "8-bit", "chiptune", "cartoon",
-       "zany", "goofy", "quirky", "disco", "carnival", "kids", "spooky", "halloween", "ragtime", "tavern", "latin", "reggae", "swing"]
+       "zany", "goofy", "quirky", "disco", "carnival", "kids", "spooky", "halloween", "ragtime", "tavern", "latin", "reggae", "swing",
+       "waltz", "americana", "western", "funk", "surf", "mariachi", "hawaii", "elevator", "cheesy", "sexy", "romantic", "kiss", "love"]
+# piese cunoscute din biblioteca lui Kevin MacLeod care se potrivesc foarte bine (au prioritate dacă există)
+PREF = {
+    "feed": ["Heroic Age", "Five Armies", "Crusade", "Achilles", "Lord of the Land", "Clash Defiant", "Strength of the Titans",
+             "Long Road Ahead", "Noble Race", "Eternal Hope", "Rites", "Prelude and Action", "The Descent", "Unwritten Return",
+             "Interloper", "Dark Times", "Final Battle of the Dark Wizards", "Inspired", "Majestic Hills", "Egmont Overture"],
+    "sport": ["Volatile Reaction", "Movement Proposition", "Take the Lead", "Metalmania", "Exhilarate", "Ouroboros",
+              "Raving Energy", "Rocket", "Sneaky Adventure", "Malicious", "Pump", "Power Restored", "Clash Defiant"],
+    "azi": ["Meditation Impromptu 01", "Meditation Impromptu 02", "Meditation Impromptu 03", "That Zen Moment", "Healing",
+            "Ethereal Relaxation", "Dreamer", "Tranquility", "Tranquility Base", "Ascending the Vale", "Ripples", "Floating Cities"],
+    "raft": ["Gymnopedie No 1", "Gymnopedie No. 1", "Gymnopedie No 2", "Gymnopedie No. 2", "Gymnopedie No 3", "Clear Air",
+             "At Rest", "Lasting Hope", "Peaceful Desolation", "Bittersweet", "Autumn Day", "Reawakening", "Study And Relax",
+             "Trio for Piano, Cello, and Clarinet", "Prelude No. 1", "Danse Morialta", "Wholesome"],
+}
+NEED = {"feed": ["epic", "heroic", "cinematic", "orchestra", "majestic", "triumph", "inspir", "uplift", "noble", "grand"],
+        "sport": ["driving", "action", "aggress", "intense", "energetic", "rock", "electronic", "dubstep", "metal", "heavy", "pumped"],
+        "azi": ["calm", "relax", "meditat", "zen", "ambient", "drone", "bowl", "ethereal", "healing", "tranquil", "peaceful", "mystical"],
+        "raft": ["piano", "guitar", "strings", "cello", "harp", "calm", "relax", "gentle", "reflective", "contemplat"]}
 ZONES = {
     "sport": {"n": 9, "lufs": -15, "min": 120, "bpm": 112,
               "plus": {"driving": 3, "action": 3, "aggress": 4, "intense": 3, "energetic": 3, "pumped": 4, "rock": 3, "electronic": 2,
@@ -73,14 +91,19 @@ def main():
         sys.exit(f"nu am putut citi lista incompetech: {e}")
     log.append(f"{len(pieces)} piese în bibliotecă")
     used, chosen = set(), {}
-    for zone, z in ZONES.items():
+    order = ["feed", "sport", "azi", "raft"]
+    for zone in order:
+        z = ZONES[zone]
         scored = []
         for p in pieces:
             hay = " ".join(str(p.get(k) or "") for k in ("title", "description", "feel", "instruments")).lower()
             d = secs(p.get("length"))
-            if p["filename"] in used or d < z["min"] or any(b in hay for b in BAD):
+            if d < z["min"] or any(b in hay for b in BAD):
                 continue
-            s = sum(w for k, w in z["plus"].items() if k in hay) - sum(6 for k in z["minus"] if k in hay)
+            pref = p["title"].strip().lower() in [x.lower() for x in PREF.get(zone, [])]
+            if not pref and not any(k in hay for k in NEED[zone]):
+                continue
+            s = sum(w for k, w in z["plus"].items() if k in hay) - sum(6 for k in z["minus"] if k in hay) + (25 if pref else 0)
             try:
                 bpm = int(p.get("bpm") or 0)
             except ValueError:
@@ -90,21 +113,27 @@ def main():
             if s >= 5:
                 scored.append((s, p))
         scored.sort(key=lambda x: -x[0])
-        chosen[zone] = [p for _, p in scored[: z["n"]]]
-        used |= {p["filename"] for p in chosen[zone]}
-        log.append(f"{zone}: {len(scored)} candidate, aleg {len(chosen[zone])}: " + "; ".join(p["title"] for p in chosen[zone]))
+        chosen[zone] = [p for _, p in scored[: z["n"] * 3]]      # rezerve, dacă unele nu se descarcă
+        log.append(f"{zone}: {len(scored)} candidate")
     out = {"credit": "Muzică: Kevin MacLeod (incompetech.com) · Licență Creative Commons: By Attribution 4.0 · creativecommons.org/licenses/by/4.0/"}
     keep = set()
-    for zone, lst in chosen.items():
-        z = ZONES[zone]
+    for zone in order:
+        lst, z = chosen[zone], ZONES[zone]
         items = []
         for p in lst:
+            if len(items) >= z["n"]:
+                break
+            if p["filename"] in used:
+                continue
             name = f"km-{slug(p['title'])}.m4a"
             dst = OUT / name
             if not dst.exists():
                 try:
                     src = OUT / "tmp.mp3"
-                    src.write_bytes(get(BASE + "mp3-royaltyfree/" + urllib.parse.quote(p["filename"])))
+                    data = get(BASE + "mp3-royaltyfree/" + urllib.parse.quote(p["filename"]))
+                    if len(data) < 100000 or data[:15].lower().startswith((b"<!doctype", b"<html")):
+                        raise ValueError(f"nu e mp3 ({len(data)} octeți)")
+                    src.write_bytes(data)
                     d = secs(p.get("length"))
                     af = f"loudnorm=I={z['lufs']}:TP=-1.5:LRA=11"
                     if d > MAXLEN:
@@ -113,10 +142,14 @@ def main():
                                     "-ac", "1", "-ar", "44100", "-c:a", "aac", "-b:a", "64k", "-movflags", "+faststart", str(dst)], check=True)
                     src.unlink()
                 except Exception as e:
-                    log.append(f"  ! {p['title']}: {e}")
+                    log.append(f"  ! {p['title']}: {str(e)[:120]}")
+                    (OUT / "tmp.mp3").unlink(missing_ok=True)
+                    dst.unlink(missing_ok=True)
                     continue
             keep.add(name)
+            used.add(p["filename"])
             items.append({"f": "music/" + name, "t": p["title"], "a": "Kevin MacLeod", "d": min(secs(p.get("length")), MAXLEN)})
+        log.append(f"  {zone} → " + "; ".join(i["t"] for i in items))
         for f, t, d in LOCAL.get(zone, []):
             if (OUT / f).exists():
                 keep.add(f)
