@@ -1,5 +1,5 @@
 // IMPERIUM · Muzică de fundal, fără reclame: fișierele sunt în aplicație (music/), listele în music.json.
-// feed → cinematic/epic · sport → sală (doar cât rulează antrenamentul) · azi/meditație/jurnal → meditație și frecvențe · cititor → muzică de citit
+// citat deschis → coloană sonoră cinematică · sport → sală (doar cât rulează antrenamentul) · azi/meditație/jurnal → meditație și frecvențe · cititor → muzică de citit
 // Se oprește singură când pornește un clip, în Shorts, Salvate, Setări, pe Raft și când ieși din aplicație.
 (()=>{
 "use strict";
@@ -7,7 +7,7 @@ const $m=id=>document.getElementById(id);
 S.music=Object.assign({on:true,intro:true,vol:.8,last:{}},S.music||{});
 delete S.music.bad;
 const GAIN={feed:.8,sport:1,azi:.85,raft:.75};          // piesele sunt deja aduse la volume potrivite pe zone
-const NAME={feed:"Cinematic",sport:"Sală",azi:"Meditație",raft:"Citit"};
+const NAME={feed:"Coloană sonoră",sport:"Sală",azi:"Meditație",raft:"Citit"};
 const SILENT="data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
 let LIST=null,unlocked=false,cur=null,curScene=null,workout=false,duckVoice=false,lastTitle="",bad=new Set();
 const el=new Audio();el.preload="auto";el.setAttribute("playsinline","");el.setAttribute("webkit-playsinline","");
@@ -20,7 +20,7 @@ const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="M
 let ctx=null,gain=null,useGain=false;
 function setupGain(){
   if(ctx||useGain===null)return;
-  if(isIOS&&!("audioSession" in navigator)){useGain=null;return}
+  if(isIOS){useGain=null;return}       // pe iPhone, Web Audio poate tăia sunetul (silențios, alte sunete); redăm direct
   try{
     if(navigator.audioSession)navigator.audioSession.type="playback";   // sună și cu butonul de silențios pornit
     ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -40,12 +40,12 @@ function sceneNow(){
   if(typeof introOn!=="undefined"&&introOn)return null;
   if(typeof active!=="undefined"&&active)return null;                  // rulează un clip
   let sc=null;
-  if(vis("reader"))sc="raft";
+  if(vis("qpop"))sc="feed";                                            // citat deschis pe tot ecranul
+  else if(vis("reader"))sc="raft";
   else if(vis("medov")||(typeof jrOpen!=="undefined"&&jrOpen))sc="azi";
   else if(vis("v-sport"))sc=workout?"sport":null;
   else if(vis("v-azi"))sc="azi";
-  else if(vis("v-feed"))sc="feed";
-  return sc&&pool(sc).length?sc:null;                                   // Shorts, Salvate, Setări, Raft: liniște
+  return sc&&pool(sc).length?sc:null;                                   // Feed, Shorts, Salvate, Setări, Raft: liniște
 }
 function pool(sc){return (LIST&&LIST[sc]||[]).filter(t=>!bad.has(t.f))}
 const order={};
@@ -75,11 +75,18 @@ function refresh(){
   if(sc!==curScene||!cur){remember();if(!load(sc))return;want=false}
   if(!want||el.paused){
     want=true;
-    const p=el.play();if(p&&p.catch)p.catch(()=>{});
+    tryPlay();
     setVol(level(),900);
   }else setVol(level(),300);
   paint();
 }
+let blocked=false;
+function tryPlay(){
+  const p=el.play();
+  if(p&&p.then)p.then(()=>{blocked=false}).catch(err=>{if(err&&err.name==="NotAllowedError")blocked=true});
+}
+// dacă iPhone-ul a refuzat redarea, o pornim la următoarea atingere (atunci are voie)
+["touchend","click"].forEach(ev=>addEventListener(ev,()=>{if(unlocked&&want&&el.paused&&!document.hidden)tryPlay()},{capture:true,passive:true}));
 function next(){
   const sc=sceneNow()||curScene;if(!sc)return;
   delete S.music.last[sc];lastTitle="";
@@ -109,8 +116,8 @@ function unlock(fromIntro){
   if(typeof introOn!=="undefined"&&introOn&&e.target&&e.target.closest&&e.target.closest("#intro")&&S.music.intro)return;   // îl deblochează intro-ul
   unlock();
 },{capture:true,passive:true}));
-function introStart(){           // apelat din atingerea de pe ecranul de intro
-  if(S.music.intro){try{hit.currentTime=0;hit.muted=false;const p=hit.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+function introStart(elapsed){    // apelat din atingerea de pe ecranul de intro
+  if(S.music.intro){try{hit.currentTime=Math.max(0,Math.min(1.42,elapsed||0));hit.muted=false;const p=hit.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
   unlock(true);
 }
 
@@ -129,7 +136,7 @@ function paint(){
 function toggle(){
   S.music.on=!S.music.on;save();
   if(!S.music.on){remember();want=false;setVol(0,350);setTimeout(()=>el.pause(),380);toast("Muzica oprită")}
-  else{lastTitle="";if(!unlocked)unlock();refresh();if(!sceneNow())toast("Muzica pornește în Feed, Azi, la citit și la antrenament")}
+  else{lastTitle="";if(!unlocked)unlock();refresh();if(!sceneNow())toast("Muzica pornește când deschizi un citat, în Azi, la citit și la antrenament")}
   paint();
 }
 document.addEventListener("pointerdown",e=>{
@@ -148,7 +155,7 @@ function settingsUI(){
   if(v){v.value=Math.round(S.music.vol*100);v.oninput=()=>{S.music.vol=v.value/100;save();if(want)setVol(level(),150)}}
   if(i){i.checked=!!S.music.intro;i.onchange=()=>{S.music.intro=i.checked;save()}}
   if(o){o.checked=!!S.music.on;o.onchange=()=>{if(o.checked!==S.music.on)toggle()}}
-  const n=$m("mus-next");if(n)n.onclick=()=>{if(!S.music.on){toast("Pornește muzica întâi");return}if(!sceneNow()){toast("Muzica merge în Feed, Azi, la citit și la antrenament");return}next()};
+  const n=$m("mus-next");if(n)n.onclick=()=>{if(!S.music.on){toast("Pornește muzica întâi");return}if(!sceneNow()){toast("Muzica merge la citate, în Azi, la citit și la antrenament");return}next()};
   const p=$m("mus-test");if(p)p.onclick=()=>{try{hit.currentTime=0;hit.play()}catch(e){}};
   const c=$m("mus-credit");if(c)c.textContent=LIST&&LIST.credit?LIST.credit:"";
   paint();

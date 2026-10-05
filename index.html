@@ -406,11 +406,51 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .mdmus{position:absolute!important;top:calc(12px + env(safe-area-inset-top,0px));left:12px;width:44px;height:44px;display:grid;place-items:center;color:#8d8f98}
 .mdmus.on{color:#a5b4ff}
 .in-tap{position:absolute;left:0;right:0;bottom:calc(46px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#d6d6d6;opacity:0;animation:inEm .6s ease .5s forwards,pulseT 1.8s ease-in-out 1.2s infinite}
-#intro:not(.gate) .in-tap{display:none}
+.in-snd{position:absolute;left:50%;bottom:calc(40px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:34px;height:34px;opacity:0;animation:inEm .5s ease .3s forwards,pulseT 1.6s ease-in-out .9s infinite}
+.in-snd svg{width:100%;height:100%;fill:none;stroke:#cfcfcf;stroke-width:1.6}
 #intro.gate .in-wall,#intro.gate .in-embers,#intro.gate .in-em,#intro.gate .in-logo b,#intro.gate .in-logo small{animation-play-state:paused}
 #intro.gate .in-bust{animation:inGate 1.2s ease forwards}
 @keyframes inGate{from{opacity:0;transform:translate(-50%,-50%) scale(1.14)}to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}}
 @keyframes pulseT{50%{opacity:.45}}
+
+/* ── Citatul pe tot ecranul, cu margini de sticlă sablată ── */
+#qpop{position:fixed;inset:0;z-index:11;display:block;opacity:0;transition:opacity .45s ease}
+#qpop.in{opacity:1}
+.qp-bg{position:absolute;inset:-8%;background:#050505 center/cover no-repeat;filter:blur(26px) brightness(.62) saturate(1.25);transform:scale(1.1)}
+.qp-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 45%,rgba(0,0,0,0),rgba(0,0,0,.45))}
+.qp-card{position:absolute;margin:0;left:12px;right:12px;top:calc(62px + env(safe-area-inset-top,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));
+  border-radius:30px;overflow:hidden;transform:scale(.94) translateY(14px);transition:transform .6s cubic-bezier(.2,.9,.25,1);box-shadow:0 30px 80px rgba(0,0,0,.45);isolation:isolate}
+#qpop.in .qp-card{transform:none}
+.qp-card{background:transparent}
+.qp-art{position:absolute;inset:0;background:#111 center/cover no-repeat;animation:kb 30s ease-in-out infinite alternate;
+  -webkit-mask-image:radial-gradient(118% 92% at 50% 42%,#000 52%,rgba(0,0,0,.35) 80%,transparent 100%);mask-image:radial-gradient(118% 92% at 50% 42%,#000 52%,rgba(0,0,0,.35) 80%,transparent 100%)}
+.qp-art svg{position:absolute;inset:0;width:100%;height:100%}
+/* marginea: sticlă sablată, transparentă, care se pierde spre centru */
+.qp-rim{position:absolute;inset:0;border-radius:30px;pointer-events:none;
+  background:radial-gradient(118% 92% at 50% 42%,transparent 60%,rgba(255,255,255,.07) 85%,rgba(255,255,255,.13) 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),inset 0 0 40px rgba(255,255,255,.06)}
+.qp-card{-webkit-backdrop-filter:blur(22px) saturate(1.25);backdrop-filter:blur(22px) saturate(1.25)}
+.qp-card .qcat{z-index:2}
+.qp-card figcaption{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;padding:20px 20px 18px;border-radius:22px;color:#fff;
+  background:rgba(10,10,14,.5);-webkit-backdrop-filter:blur(20px) saturate(1.2);backdrop-filter:blur(20px) saturate(1.2);border:1px solid rgba(255,255,255,.14)}
+.qp-t{font-family:var(--serif);font-weight:500;font-size:clamp(23px,6.6vw,30px);line-height:1.3;margin:0 0 12px;text-wrap:pretty;letter-spacing:-.005em}
+.qp-t.l{font-size:clamp(20px,5.6vw,25px)}
+.qp-t i{font-style:normal;opacity:0;display:inline-block;transform:translateY(6px);filter:blur(4px);animation:qw .7s ease forwards}
+@keyframes qw{to{opacity:1;transform:none;filter:none}}
+.qp-who{font-size:13.5px;opacity:.88}
+.qp-x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16)}
+.qp-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2}
+.qp-mus{position:absolute!important;top:calc(12px + env(safe-area-inset-top,0px));left:14px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#ddd;
+  background:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16)}
+.qp-mus.on{color:#fff}
+.qp-acts{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:16px}
+.qp-acts button{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16)}
+.qp-acts svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9}
+.qp-acts button[aria-pressed="true"] svg{fill:#ff5a5f;stroke:#ff5a5f}
+.qcard[data-q]{cursor:pointer}
+@media (prefers-reduced-motion:reduce){.qp-art{animation:none}.qp-t i{animation:none;opacity:1;transform:none;filter:none}}
 
 /* ── Sport ── */
 .spkick{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--accent);margin-bottom:2px}
@@ -648,9 +688,9 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <p class="note" id="st-u"></p>
 
     <h2>Muzică</h2>
-    <p class="note">Fără reclame: piesele sunt în aplicație. Cinematic în Feed, meditație și frecvențe în Azi, muzică de sală când pornești antrenamentul și muzică liniștită când citești. Se oprește singură când deschizi un clip. Boxa din colț o pornește și o oprește; ține apăsat pe ea pentru piesa următoare.</p>
+    <p class="note">Fără reclame: piesele sunt în aplicație. Coloană sonoră cinematică când deschizi un citat, meditație și frecvențe în Azi, muzică de sală când pornești antrenamentul și muzică liniștită când citești. Boxa din colț o pornește și o oprește; ține apăsat pe ea pentru piesa următoare.</p>
     <label class="tog"><input type="checkbox" id="mus-on"> Muzică de fundal</label>
-    <label class="tog"><input type="checkbox" id="mus-intro"> Intro cu sunet (atingi ecranul ca să intri)</label>
+    <label class="tog"><input type="checkbox" id="mus-intro"> Sunet la intro (atinge ecranul în timpul lui)</label>
     <label class="tog" style="gap:12px">Volum <input type="range" id="mus-vol" min="20" max="100" style="flex:1;accent-color:var(--accent);padding:0;background:none;border:0"></label>
     <p class="note" id="mus-now"></p>
     <div class="hadd-b"><button class="btn ghost" id="mus-next">Piesa următoare</button><button class="btn ghost" id="mus-test">Ascultă intro-ul</button></div>
@@ -763,6 +803,22 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 </div>
 
 <button class="musbtn musf" id="mus-f" aria-label="Muzică" hidden></button>
+<div id="qpop" hidden role="dialog" aria-modal="true" aria-label="Citat">
+  <div class="qp-bg" id="qp-bg"></div>
+  <figure class="qp-card" id="qp-card">
+    <div class="qp-art" id="qp-art"></div>
+    <div class="qp-rim"></div>
+    <span class="qcat" id="qp-cat"></span>
+    <figcaption><p class="qp-t" id="qp-t"></p><span class="qp-who" id="qp-who"></span></figcaption>
+  </figure>
+  <button class="musbtn qp-mus" id="mus-q" aria-label="Muzică"></button>
+  <button class="qp-x" id="qp-x" aria-label="Închide"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="qp-acts">
+    <button data-qa="save" aria-label="Salvează"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button>
+    <button data-qa="copy" aria-label="Copiază"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
+    <button data-qa="img" aria-label="Salvează imaginea"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg></button>
+  </div>
+</div>
 <div id="mood" hidden role="dialog" aria-modal="true" aria-labelledby="mood-q">
   <div class="mdcard">
     <small id="mood-d"></small>
@@ -944,6 +1000,45 @@ function qCredit(x){const a=artFor(x);return a&&a.src!=="HT"?`<small class="qcre
 // imaginile „prind viață” (se apropie încet) doar cât sunt pe ecran
 const qio=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle("live",e.isIntersecting)),{threshold:.25});
 function watchQuotes(root){root.querySelectorAll(".qcard:not([data-w])").forEach(c=>{c.dataset.w=1;qio.observe(c)})}
+// ── pop-up cu citatul pe tot ecranul, cu coloană sonoră cinematică ──
+let qpId=null;
+function openQuote(id){
+  const x=byId(id);if(!x)return;
+  qpId=id;stopAll();
+  const a=artFor(x),url=a?`art/${a.f}`:"";
+  $("qp-bg").style.backgroundImage=url?`url("${url}")`:"";
+  $("qp-art").style.backgroundImage=url?`url("${url}")`:"";$("qp-art").innerHTML=url?"":qArt(x);
+  $("qp-cat").textContent=CATS[x.c]||"";
+  const words=("„"+x.t+"”").split(" ");
+  $("qp-t").className="qp-t"+(x.t.length>90?" l":"");
+  $("qp-t").innerHTML=words.map((w,i)=>`<i style="animation-delay:${(.35+i*.07).toFixed(2)}s">${esc(w)}</i>`).join(" ");
+  $("qp-who").innerHTML=`— <b>${esc(x.who)}</b>${x.src?", "+esc(x.src):""}`;
+  $("qpop").querySelector('[data-qa="save"]').setAttribute("aria-pressed",S.saved.includes(id));
+  const el=$("qpop");el.hidden=false;void el.offsetWidth;el.classList.add("in");
+  window.Music&&Music.refresh();        // pornește coloana sonoră chiar din atingere
+}
+function closeQuote(){
+  const el=$("qpop");if(el.hidden)return;
+  el.classList.remove("in");qpId=null;
+  setTimeout(()=>{el.hidden=true;window.Music&&Music.refresh()},420);
+  window.Music&&setTimeout(Music.refresh,30);
+}
+$("qp-x").addEventListener("click",closeQuote);
+$("qp-bg").addEventListener("click",closeQuote);
+$("qpop").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-qa]");if(!b||!qpId)return;
+  const x=byId(qpId);
+  if(b.dataset.qa==="save"){const on=!S.saved.includes(qpId);S.saved=on?[qpId,...S.saved]:S.saved.filter(i=>i!==qpId);save();b.setAttribute("aria-pressed",on);toast(on?"Salvat":"Scos din salvate")}
+  if(b.dataset.qa==="copy"){try{await navigator.clipboard.writeText(`„${x.t}” — ${x.who}`);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
+  if(b.dataset.qa==="img")quoteImage(x).catch(()=>toast("Nu am putut crea imaginea"));
+});
+// glisezi în jos ca să închizi
+(()=>{let y0=null;const c=$("qp-card");
+  c.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
+  c.addEventListener("touchmove",e=>{if(y0===null)return;const d=Math.max(0,e.touches[0].clientY-y0);c.style.transition="none";c.style.transform=`translateY(${d*.6}px) scale(${1-d/3000})`},{passive:true});
+  c.addEventListener("touchend",e=>{if(y0===null)return;const d=e.changedTouches[0].clientY-y0;y0=null;c.style.transition="";c.style.transform="";if(d>110)closeQuote()});
+})();
+addEventListener("keydown",e=>{if(e.key==="Escape"&&qpId)closeQuote()});
 // salvează citatul ca imagine 1080×1350 (pentru WhatsApp, Instagram, fundal)
 async function quoteImage(x){
   const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
@@ -984,7 +1079,7 @@ const thumb=id=>`<img loading="lazy" src="https://i.ytimg.com/vi/${id}/hqdefault
 function render(x){
   if(x.k==="strip")return `<div class="strip"><h4>Shorts</h4><div class="srow">${x.row.map(s=>`<button class="sthumb" data-short="${s.id}">${thumb(s.id)}<span>${esc(s.t)}</span></button>`).join("")}</div></div>`;
   if(x.k==="q")return `<article class="item qitem">
-    <figure class="qcard">${qVisual(x)}<span class="qcat">${CATS[x.c]||""}</span>
+    <figure class="qcard" data-q="${esc(x.id)}">${qVisual(x)}<span class="qcat">${CATS[x.c]||""}</span>
       <figcaption><p class="qt${x.t.length>80?" l":x.t.length>50?" m":""}">„${esc(x.t)}”</p><span>— <b>${esc(x.who)}</b>${x.src?", "+esc(x.src):""}</span>${qCredit(x)}</figcaption></figure>
     ${actions(x,true).replace('</div>',`<button class="act" data-a="img" data-id="${esc(x.id)}" aria-label="Salvează imaginea"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg></button></div>`)}</article>`;
   if(x.k==="t")return `<article class="item thread">
@@ -1208,6 +1303,8 @@ async function loadFeed(user){
 function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
 
 document.addEventListener("click",async e=>{
+  const qc=e.target.closest(".qcard[data-q]");
+  if(qc&&!e.target.closest("#qpop")){openQuote(qc.dataset.q);return}
   const snd=e.target.closest(".sound");
   if(snd){if(soundIsOn()){muteByUser();toast("Sunet oprit")}else{unlockSound();toast("Sunet pornit")}return}
   const p=e.target.closest(".player,.sframe");
@@ -1257,7 +1354,7 @@ function switchTo(v,startShort){
   if(v==="saved")renderSaved();
   if(v==="set"){settings();window.Music&&Music.settingsUI()}
   $("mus-f").hidden=v==="feed"||v==="shorts";
-  window.Music&&setTimeout(Music.refresh,50);
+  window.Music&&Music.refresh();
   if(v!=="shorts")window.scrollTo(0,0);
 }
 $("open-saved").addEventListener("click",()=>switchTo("saved"));
@@ -1441,6 +1538,7 @@ function startMed(){
   ov.classList.remove("mantra");$("md-mt").innerHTML="";
   if(S.med.voice&&window.speechSynthesis){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
   clearInterval(mdInt);mdInt=setInterval(medTick,250);medTick();
+  window.Music&&Music.refresh();
 }
 function setMedRun(on){
   md.run=on;$("medov").classList.toggle("run",on);
@@ -1574,6 +1672,7 @@ async function openBook(id){
   const b=BOOKS.find(x=>x.id===id);if(!b)return;
   stopAll();
   $("reader").hidden=false;$("rd-t").textContent=b.t;$("rd-pg").textContent="Se deschide…";$("rd-pages").innerHTML="";
+  window.Music&&Music.refresh();
   $("reader").classList.toggle("night",!!S.night);$("rd-night").setAttribute("aria-pressed",!!S.night);
   try{
     const [lib,buf]=await Promise.all([loadPdfjs(),bk.file(id)]);
@@ -1859,14 +1958,12 @@ let introOn=!!$("intro");
     });
     setTimeout(done,reduce?1400:2750);
   }
-  if(gate){
-    el.classList.add("gate");
-    const h=document.createElement("div");h.className="in-tap";h.textContent="Atinge pentru a intra";el.appendChild(h);
-    // atingerea pornește animația și sunetul în același timp (sunetul e sincronizat cu apariția emblemei)
-    el.addEventListener("click",()=>{if(!started){window.Music&&Music.introStart();begin()}else done()});
-  }else{
-    el.addEventListener("click",done);begin();
-  }
+  begin();
+  if(gate){const h=document.createElement("div");h.className="in-snd";h.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>';el.appendChild(h)}
+  el.addEventListener("click",()=>{
+    if(gate&&!el._snd){el._snd=true;const h=el.querySelector(".in-snd");if(h)h.remove();window.Music&&Music.introStart((performance.now()-window.__introT0)/1000);return}
+    done();
+  });
 })();
 setTimeout(()=>{if(!introOn)checkMood()},1200);
 
@@ -1877,7 +1974,7 @@ function renderAzi(){
   $("az-hi").textContent=h<5?"Noapte bună":h<11?"Bună dimineața":h<18?"Bună ziua":"Bună seara";
   if(quotes.length){
     const d=Math.floor((now-now.getTimezoneOffset()*6e4)/864e5),q=quotes[(d*7919)%quotes.length];
-    $("az-card").innerHTML=`<figure class="qcard azq">${qVisual(q)}<span class="qcat">Citatul zilei</span><figcaption><p class="qt${q.t.length>80?" l":q.t.length>50?" m":""}">„${esc(q.t)}”</p><span>— <b>${esc(q.who)}</b>${q.src?", "+esc(q.src):""}</span></figcaption></figure>`;
+    $("az-card").innerHTML=`<figure class="qcard azq" data-q="${esc(q.id)}">${qVisual(q)}<span class="qcat">Citatul zilei</span><figcaption><p class="qt${q.t.length>80?" l":q.t.length>50?" m":""}">„${esc(q.t)}”</p><span>— <b>${esc(q.who)}</b>${q.src?", "+esc(q.src):""}</span></figcaption></figure>`;
     watchQuotes($("az-card"));
   }
   renderMoodStats();renderHabits();renderMed();
