@@ -1,5 +1,5 @@
 // HTube: aplicația merge și fără internet; feed-ul se ia mereu proaspăt când există conexiune
-const CACHE = "imperium-v6";
+const CACHE = "imperium-v7";
 const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./sport.js", "./music.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./brand/intro.jpg", "./brand/emblem.png", "./brand/emblem-96.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" }))))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

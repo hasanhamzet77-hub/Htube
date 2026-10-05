@@ -40,7 +40,7 @@ function sceneNow(){
   if(typeof introOn!=="undefined"&&introOn)return null;
   if(typeof active!=="undefined"&&active)return null;                  // rulează un clip
   let sc=null;
-  if(vis("qpop"))sc="feed";                                            // citat deschis pe tot ecranul
+  if(vis("qpop"))sc=(S.music.qsrc!=="local"&&!window.__spFail)?null:"feed";   // citat deschis: Spotify sau piesele noastre
   else if(vis("reader"))sc="raft";
   else if(vis("medov")||(typeof jrOpen!=="undefined"&&jrOpen))sc="azi";
   else if(vis("v-sport"))sc=workout?"sport":null;
@@ -135,6 +135,7 @@ function paint(){
 }
 function toggle(){
   S.music.on=!S.music.on;save();
+  document.dispatchEvent(new CustomEvent("musictoggle"));
   if(!S.music.on){remember();want=false;setVol(0,350);setTimeout(()=>el.pause(),380);toast("Muzica oprită")}
   else{lastTitle="";if(!unlocked)unlock();refresh();if(!sceneNow())toast("Muzica pornește când deschizi un citat, în Azi, la citit și la antrenament")}
   paint();
@@ -157,6 +158,13 @@ function settingsUI(){
   if(o){o.checked=!!S.music.on;o.onchange=()=>{if(o.checked!==S.music.on)toggle()}}
   const n=$m("mus-next");if(n)n.onclick=()=>{if(!S.music.on){toast("Pornește muzica întâi");return}if(!sceneNow()){toast("Muzica merge la citate, în Azi, la citit și la antrenament");return}next()};
   const p=$m("mus-test");if(p)p.onclick=()=>{try{hit.currentTime=0;hit.play()}catch(e){}};
+  document.querySelectorAll('input[name="qsrc"]').forEach(r=>{r.checked=(S.music.qsrc||"spotify")===r.value;r.onchange=()=>{S.music.qsrc=r.value;save();toast(r.value==="local"?"Citatele folosesc piesele din aplicație":"Citatele folosesc Spotify")}});
+  const own=$m("sp-own");
+  if(own){own.value=S.music.spList?"open.spotify.com/"+S.music.spList.split(":").slice(1).join("/"):"";
+    own.onchange=()=>{const m=own.value.match(/(playlist|album|track|artist)[\/:]([A-Za-z0-9]{10,})/);
+      if(!own.value.trim()){delete S.music.spList;save();toast("Folosesc playlisturile alese de IMPERIUM");document.dispatchEvent(new CustomEvent("spotifylist"));return}
+      if(!m){toast("Linkul nu pare de Spotify");return}
+      S.music.spList=`spotify:${m[1]}:${m[2]}`;save();toast("Playlist salvat");document.dispatchEvent(new CustomEvent("spotifylist"))}}
   const c=$m("mus-credit");if(c)c.textContent=LIST&&LIST.credit?LIST.credit:"";
   paint();
 }

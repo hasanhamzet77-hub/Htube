@@ -450,6 +450,11 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .qp-acts svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9}
 .qp-acts button[aria-pressed="true"] svg{fill:#ff5a5f;stroke:#ff5a5f}
 .qcard[data-q]{cursor:pointer}
+/* Spotify: playerul oficial, sub citat */
+.qp-sp{position:absolute;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom,0px));height:80px;border-radius:14px;overflow:hidden;display:none;background:rgba(0,0,0,.25)}
+#qpop.sp .qp-sp{display:block}
+#qpop.sp .qp-card{bottom:calc(178px + env(safe-area-inset-bottom,0px))}
+.qp-sp iframe{width:100%;height:80px;border:0;display:block}
 @media (prefers-reduced-motion:reduce){.qp-art{animation:none}.qp-t i{animation:none;opacity:1;transform:none;filter:none}}
 
 /* ── Sport ── */
@@ -691,6 +696,10 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <p class="note">Fără reclame: piesele sunt în aplicație. Coloană sonoră cinematică când deschizi un citat, meditație și frecvențe în Azi, muzică de sală când pornești antrenamentul și muzică liniștită când citești. Boxa din colț o pornește și o oprește; ține apăsat pe ea pentru piesa următoare.</p>
     <label class="tog"><input type="checkbox" id="mus-on"> Muzică de fundal</label>
     <label class="tog"><input type="checkbox" id="mus-intro"> Sunet la intro (atinge ecranul în timpul lui)</label>
+    <p class="note" style="margin:10px 0 4px"><b>Muzica de la citate</b></p>
+    <label class="tog"><input type="radio" name="qsrc" value="spotify"> Spotify: previzualizări de 30 s din playlisturi mari</label>
+    <label class="tog"><input type="radio" name="qsrc" value="local"> Piesele din aplicație (complete, fără Spotify)</label>
+    <input id="sp-own" placeholder="Playlistul tău Spotify (lipește linkul, opțional)" autocomplete="off" style="margin:4px 0 10px">
     <label class="tog" style="gap:12px">Volum <input type="range" id="mus-vol" min="20" max="100" style="flex:1;accent-color:var(--accent);padding:0;background:none;border:0"></label>
     <p class="note" id="mus-now"></p>
     <div class="hadd-b"><button class="btn ghost" id="mus-next">Piesa următoare</button><button class="btn ghost" id="mus-test">Ascultă intro-ul</button></div>
@@ -811,6 +820,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <span class="qcat" id="qp-cat"></span>
     <figcaption><p class="qp-t" id="qp-t"></p><span class="qp-who" id="qp-who"></span></figcaption>
   </figure>
+  <div class="qp-sp" id="qp-sp"><div id="sp-embed"></div></div>
   <button class="musbtn qp-mus" id="mus-q" aria-label="Muzică"></button>
   <button class="qp-x" id="qp-x" aria-label="Închide"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="qp-acts">
@@ -1014,12 +1024,13 @@ function openQuote(id){
   $("qp-t").innerHTML=words.map((w,i)=>`<i style="animation-delay:${(.35+i*.07).toFixed(2)}s">${esc(w)}</i>`).join(" ");
   $("qp-who").innerHTML=`— <b>${esc(x.who)}</b>${x.src?", "+esc(x.src):""}`;
   $("qpop").querySelector('[data-qa="save"]').setAttribute("aria-pressed",S.saved.includes(id));
-  const el=$("qpop");el.hidden=false;void el.offsetWidth;el.classList.add("in");
-  window.Music&&Music.refresh();        // pornește coloana sonoră chiar din atingere
+  const el=$("qpop");el.classList.toggle("sp",spMode());el.hidden=false;void el.offsetWidth;el.classList.add("in");
+  if(spMode())spStart();                 // Spotify: previzualizări de 30 s dintr-un playlist mare
+  window.Music&&Music.refresh();        // altfel: coloana sonoră din aplicație, pornită chiar din atingere
 }
 function closeQuote(){
   const el=$("qpop");if(el.hidden)return;
-  el.classList.remove("in");qpId=null;
+  el.classList.remove("in");qpId=null;spStop();
   setTimeout(()=>{el.hidden=true;window.Music&&Music.refresh()},420);
   window.Music&&setTimeout(Music.refresh,30);
 }
@@ -1032,6 +1043,41 @@ $("qpop").addEventListener("click",async e=>{
   if(b.dataset.qa==="copy"){try{await navigator.clipboard.writeText(`„${x.t}” — ${x.who}`);toast("Copiat")}catch(err){toast("Nu am putut copia")}}
   if(b.dataset.qa==="img")quoteImage(x).catch(()=>toast("Nu am putut crea imaginea"));
 });
+// ── Spotify (playerul oficial): fără cont redă previzualizări de 30 s, una după alta, din playlist ──
+const SP_LISTS=["37i9dQZF1DZ06evO0vZLy0","5pQa7Hz2W2st8hrlwKsIak","5Wm2CelOeqEeNdE6sUfFnc","58XeYrchKRT19Mv2TQbSoO","4fqN4CqC5YJfv44EwtDKdg","7rkMlxHmCrctg866Ti8w4F","5POtdjLkskZcGGNjPWK2GC"];
+let spCtl=null,spLoadP=null,spWant=false,spStarted=false,spIdx=Math.floor(Math.random()*SP_LISTS.length);
+window.__spFail=false;
+function spMode(){return (S.music||{}).qsrc!=="local"&&!window.__spFail&&(S.music||{}).on!==false}
+function spUri(){return (S.music||{}).spList||("spotify:playlist:"+SP_LISTS[spIdx%SP_LISTS.length])}
+function spLoad(){
+  if(spLoadP)return spLoadP;
+  spLoadP=new Promise((res,rej)=>{
+    window.onSpotifyIframeApiReady=api=>res(api);
+    const s=document.createElement("script");s.src="https://open.spotify.com/embed/iframe-api/v1";s.async=true;s.onerror=()=>rej(new Error("spotify"));document.head.appendChild(s);
+    setTimeout(()=>rej(new Error("timeout")),9000);
+  }).then(api=>new Promise(res=>{
+    api.createController($("sp-embed"),{uri:spUri(),width:"100%",height:80},c=>{
+      spCtl=c;
+      c.addListener("playback_update",e=>{
+        const d=e.data||{};
+        // s-a terminat tot playlistul: trecem la următorul
+        if(spWant&&d.isPaused&&d.duration&&d.position>=d.duration-900&&!(S.music||{}).spList){spIdx++;c.loadUri(spUri());setTimeout(()=>spWant&&c.play(),900)}
+      });
+      res(c);
+    });
+  })).catch(err=>{window.__spFail=true;spLoadP=null;$("qpop").classList.remove("sp");window.Music&&Music.refresh();throw err});
+  return spLoadP;
+}
+function spStart(){
+  spWant=true;
+  if(spCtl){try{spStarted?spCtl.resume():spCtl.play();spStarted=true}catch(e){}return}   // chiar din atingere
+  spLoad().then(c=>{if(spWant){c.play();spStarted=true}}).catch(()=>{});
+}
+function spStop(){spWant=false;try{spCtl&&spCtl.pause()}catch(e){}}
+document.addEventListener("musictoggle",()=>{if(qpId){if((S.music||{}).on===false)spStop();else if(spMode()){$("qpop").classList.add("sp");spStart()}}});
+document.addEventListener("spotifylist",()=>{if(spCtl){spStarted=false;spCtl.loadUri(spUri())}});
+// îl pregătim din timp, ca primul citat să pornească imediat
+setTimeout(()=>{if(spMode())spLoad().catch(()=>{})},5000);
 // glisezi în jos ca să închizi
 (()=>{let y0=null;const c=$("qp-card");
   c.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
