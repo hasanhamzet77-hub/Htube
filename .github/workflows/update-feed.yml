@@ -26,11 +26,14 @@ jobs:
           python-version: "3.12"
       - name: Adu clipurile noi
         run: python scripts/update_feed.py
+      - name: Adu muzica de fundal (o dată pe zi)
+        run: python scripts/update_music.py || echo "muzica nu s-a actualizat de data asta"
       - name: Salvează feed-ul
         run: |
           git config user.name "htube-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add feed.json channel_ids.json
+          if [ -f music.json ]; then git add music.json; fi
           git diff --cached --quiet && exit 0
           git commit -m "Feed actualizat $(date -u +%Y-%m-%dT%H:%MZ)"
           # dacă între timp a apărut alt commit (o modificare a aplicației), îl luăm și încercăm din nou
