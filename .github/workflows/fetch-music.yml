@@ -1,22 +1,21 @@
-name: Actualizează feed-ul HTube
+name: Muzică de fundal (fără reclame)
 
 on:
-  schedule:
-    - cron: "17 */2 * * *"   # la fiecare 2 ore
-  workflow_dispatch: {}       # buton manual: Actions → Run workflow
+  workflow_dispatch: {}
   push:
-    paths: ["channels.json", "scripts/**"]  # imediat ce schimbi persoanele sau colectorul
+    paths: ["scripts/fetch_music.py"]
 
 permissions:
   contents: write
 
 concurrency:
-  group: feed
+  group: music
   cancel-in-progress: false
 
 jobs:
-  update:
+  music:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
         with:
@@ -24,16 +23,17 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Adu clipurile noi
-        run: python scripts/update_feed.py
-      - name: Salvează feed-ul
+      - name: Instalează ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Descarcă și pregătește muzica (Kevin MacLeod, CC BY 4.0)
+        run: python scripts/fetch_music.py
+      - name: Salvează
         run: |
           git config user.name "htube-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add feed.json channel_ids.json
+          git add -A music music.json music_log.txt
           git diff --cached --quiet && exit 0
-          git commit -m "Feed actualizat $(date -u +%Y-%m-%dT%H:%MZ)"
-          # dacă între timp a apărut alt commit (o modificare a aplicației), îl luăm și încercăm din nou
+          git commit -m "Muzică de fundal $(date -u +%Y-%m-%d)"
           for i in 1 2 3; do
             git push && exit 0
             git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
