@@ -326,6 +326,17 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .pg span{position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font-size:13px}
 #reader.night .pg{background:#111}
 #reader.night .pg canvas{filter:invert(.92) hue-rotate(180deg)}
+.rbar button{width:36px!important}
+#rd-mode[aria-pressed="true"]{color:var(--accent)}
+#reader.textmode #rd-pages{background:#f6f1e7;padding:0 0 calc(40px + env(safe-area-inset-bottom,0px))}
+#reader.textmode.night #rd-pages{background:#121212}
+.txp{padding:22px 22px 10px;max-width:680px;margin:0 auto;font-family:var(--serif);color:#2a241c;font-size:var(--fs,20px);line-height:1.62;min-height:60vh}
+#reader.night .txp{color:#d8d4cc}
+.txp p{margin:0 0 .85em;text-wrap:pretty;hyphens:auto;-webkit-hyphens:auto}
+.txp h6{margin:0 0 14px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#a39a8c;display:flex;align-items:center;gap:10px}
+.txp h6::after{content:"";flex:1;height:1px;background:currentColor;opacity:.3}
+.txp.wait p{opacity:.35}
+.txp canvas{width:100%;height:auto;display:block;border-radius:4px}
 
 /* meditație pe ecran întreg */
 #medov{position:fixed;inset:0;z-index:10;background:#0b0c0f;color:#ecebe7;display:grid;place-items:center;text-align:center;padding:env(safe-area-inset-top,0px) 24px env(safe-area-inset-bottom,0px)}
@@ -410,6 +421,7 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .in-snd svg{width:100%;height:100%;fill:none;stroke:#cfcfcf;stroke-width:1.6}
 #intro.gate .in-wall,#intro.gate .in-embers,#intro.gate .in-em,#intro.gate .in-logo b,#intro.gate .in-logo small{animation-play-state:paused}
 #intro.gate .in-bust{animation:inGate 1.2s ease forwards}
+#intro:not(.gate) .in-tap{display:none}
 @keyframes inGate{from{opacity:0;transform:translate(-50%,-50%) scale(1.14)}to{opacity:1;transform:translate(-50%,-50%) scale(1.12)}}
 @keyframes pulseT{50%{opacity:.45}}
 
@@ -695,15 +707,21 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <h2>Muzică</h2>
     <p class="note">Fără reclame: piesele sunt în aplicație. Coloană sonoră cinematică când deschizi un citat, meditație și frecvențe în Azi, muzică de sală când pornești antrenamentul și muzică liniștită când citești. Boxa din colț o pornește și o oprește; ține apăsat pe ea pentru piesa următoare.</p>
     <label class="tog"><input type="checkbox" id="mus-on"> Muzică de fundal</label>
-    <label class="tog"><input type="checkbox" id="mus-intro"> Sunet la intro (atinge ecranul în timpul lui)</label>
+    <label class="tog"><input type="checkbox" id="mus-intro"> Intro cu sunet (atingi ecranul ca să intri)</label>
     <p class="note" style="margin:10px 0 4px"><b>Muzica de la citate</b></p>
     <label class="tog"><input type="radio" name="qsrc" value="spotify"> Spotify: previzualizări de 30 s din playlisturi mari</label>
-    <label class="tog"><input type="radio" name="qsrc" value="local"> Piesele din aplicație (complete, fără Spotify)</label>
+    <label class="tog"><input type="radio" name="qsrc" value="local"> Muzica ta sau piesele din aplicație (fără Spotify)</label>
     <input id="sp-own" placeholder="Playlistul tău Spotify (lipește linkul, opțional)" autocomplete="off" style="margin:4px 0 10px">
     <label class="tog" style="gap:12px">Volum <input type="range" id="mus-vol" min="20" max="100" style="flex:1;accent-color:var(--accent);padding:0;background:none;border:0"></label>
     <p class="note" id="mus-now"></p>
     <div class="hadd-b"><button class="btn ghost" id="mus-next">Piesa următoare</button><button class="btn ghost" id="mus-test">Ascultă intro-ul</button></div>
     <p class="note" id="mus-credit" style="font-size:11.5px;opacity:.75"></p>
+
+    <h2>Muzica ta</h2>
+    <p class="note">Fișierele tale audio rămân doar pe telefon, nu se urcă nicăieri. Numele decide unde se aud: <b>citate-…</b> la citate, <b>meditatie-…</b> la meditație și în Azi, <b>citit-…</b> la citit, <b>sala-…</b> la antrenament. Când o zonă are muzica ta, se aude doar aceea.</p>
+    <div id="my-mus"></div>
+    <label class="btn" for="my-mus-in">Adaugă fișiere audio</label>
+    <input type="file" id="my-mus-in" accept="audio/*,.m4a,.mp3,.aac,.wav" multiple hidden>
 
     <h2>Copie de siguranță</h2>
     <p class="note">Salvează într-un fișier obiceiurile, jurnalul, starea, meditațiile, antrenamentele și setările. Cărțile PDF nu intră (le adaugi din nou).</p>
@@ -759,6 +777,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
   <div class="rbar">
     <button id="rd-back" aria-label="Înapoi la raft"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="rt"><b id="rd-t"></b><small><span id="rd-pg"></span><span id="rd-tm"></span></small></div><i id="rd-tbar"></i>
+    <button id="rd-mode" aria-pressed="false" aria-label="Mod text (litere mari)"><b style="font-family:var(--serif);font-size:17px;font-weight:600">Aa</b></button>
     <button id="rd-zo" aria-label="Micșorează"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
     <button id="rd-zi" aria-label="Mărește"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
     <button class="musbtn" id="mus-r" aria-label="Muzică"></button>
@@ -1642,8 +1661,12 @@ function loadPdfjs(){
 let dbP=null;
 function db(){
   return dbP||(dbP=new Promise((res,rej)=>{
-    const r=indexedDB.open("htube-books",1);
-    r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore("books",{keyPath:"id"});d.createObjectStore("files")};
+    const r=indexedDB.open("htube-books",2);
+    r.onupgradeneeded=()=>{const d=r.result;
+      if(!d.objectStoreNames.contains("books"))d.createObjectStore("books",{keyPath:"id"});
+      if(!d.objectStoreNames.contains("files"))d.createObjectStore("files");
+      if(!d.objectStoreNames.contains("tracks"))d.createObjectStore("tracks",{keyPath:"id"});   // muzica ta: doar pe telefon
+      if(!d.objectStoreNames.contains("tfiles"))d.createObjectStore("tfiles")};
     r.onsuccess=()=>res(r.result);r.onerror=()=>{dbP=null;rej(r.error)};
   }));
 }
@@ -1726,17 +1749,44 @@ async function openBook(id){
     const doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
     if($("reader").hidden){doc.destroy();return}
     const v=(await doc.getPage(1)).getViewport({scale:1});
-    RD={b,doc,z:S.zoom||1,ratio:v.height/v.width,cur:b.pg||1,t0:Date.now()};
+    RD={b,doc,z:S.zoom||1,ratio:v.height/v.width,cur:b.pg||1,t0:Date.now(),mode:S.rdMode==="text"?"text":"page"};
+    RD.crop=b.crop||await findCrop(doc);            // marginile albe ale cărții, tăiate automat
+    if(!b.crop){b.crop=RD.crop}
+    RD.ratio=v.height*RD.crop.h/(v.width*RD.crop.w);
     b.last=Date.now();bk.put(b).catch(()=>{});
+    $("rd-mode").setAttribute("aria-pressed",RD.mode==="text");$("reader").classList.toggle("textmode",RD.mode==="text");
     layoutReader(RD.cur);
     clearInterval(rdTimerInt);rdTimerInt=setInterval(rdTimerTick,1000);rdTimerTick();
   }catch(e){toast(String(e).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu pot deschide cartea");closeReader()}
+}
+// găsește zona cu conținut a paginilor (fără marginile albe), din câteva pagini-mostră
+async function findCrop(doc){
+  const N=doc.numPages,sample=N<=6?[...Array(N)].map((_,i)=>i+1):[3,4,5,Math.floor(N/2),Math.floor(N/2)+1,Math.min(N,Math.floor(N*.75))];
+  let x0=1,y0=1,x1=0,y1=0,any=false;
+  for(const n of sample){
+    try{
+      const pg=await doc.getPage(n),v1=pg.getViewport({scale:1}),sc=220/v1.width,v=pg.getViewport({scale:sc});
+      const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;const g=c.getContext("2d",{willReadFrequently:true});
+      g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:g,viewport:v}).promise;
+      const d=g.getImageData(0,0,c.width,c.height).data,W=c.width,H=c.height;
+      let a=W,b=H,e=-1,f=-1;
+      for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=(y*W+x)*4;if(d[k]+d[k+1]+d[k+2]<660){if(x<a)a=x;if(x>e)e=x;if(y<b)b=y;if(y>f)f=y}}
+      c.width=c.height=0;
+      if(e<0)continue;any=true;
+      x0=Math.min(x0,a/W);y0=Math.min(y0,b/H);x1=Math.max(x1,(e+1)/W);y1=Math.max(y1,(f+1)/H);
+    }catch(err){}
+  }
+  if(!any)return {x:0,y:0,w:1,h:1};
+  const p=.018;x0=Math.max(0,x0-p);y0=Math.max(0,y0-p);x1=Math.min(1,x1+p);y1=Math.min(1,y1+p);
+  if(x1-x0>.96&&y1-y0>.96)return {x:0,y:0,w:1,h:1};
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
 }
 function layoutReader(goTo){
   const box=$("rd-pages");
   if(RD.io)RD.io.disconnect();
   if(RD.pages)RD.pages.forEach(unDraw);
-  RD.w=Math.round(Math.min(box.clientWidth-16,860)*RD.z);
+  if(RD.mode==="text"){layoutText(goTo);return}
+  RD.w=Math.round(Math.min(box.clientWidth-6,900)*RD.z);
   box.innerHTML=Array.from({length:RD.doc.numPages},(_,i)=>`<div class="pg" data-n="${i+1}" style="width:${RD.w}px;height:${Math.round(RD.w*RD.ratio)}px"><span>${i+1}</span></div>`).join("");
   RD.pages=[...box.children];
   RD.io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting?drawPage(e.target):unDraw(e.target)),{root:box,rootMargin:"120% 0px"});
@@ -1752,12 +1802,13 @@ async function drawPage(el){
   try{
     const pg=await R.doc.getPage(n);
     if(RD!==R||!el.dataset.st)return;
-    const v1=pg.getViewport({scale:1});
-    el.style.height=Math.round(R.w*v1.height/v1.width)+"px";
-    let sc=R.w/v1.width*Math.min(window.devicePixelRatio||1,2.5);
-    const maxPx=5e6;if(v1.width*v1.height*sc*sc>maxPx)sc=Math.sqrt(maxPx/(v1.width*v1.height));
-    const v=pg.getViewport({scale:sc});
-    const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;
+    const v1=pg.getViewport({scale:1}),C=R.crop||{x:0,y:0,w:1,h:1};
+    const cw=v1.width*C.w,ch=v1.height*C.h;
+    el.style.height=Math.round(R.w*ch/cw)+"px";
+    let sc=R.w/cw*Math.min(window.devicePixelRatio||1,2.5);
+    const maxPx=5e6;if(cw*ch*sc*sc>maxPx)sc=Math.sqrt(maxPx/(cw*ch));
+    const v=pg.getViewport({scale:sc,offsetX:-v1.width*C.x*sc,offsetY:-v1.height*C.y*sc});
+    const c=document.createElement("canvas");c.width=Math.round(cw*sc);c.height=Math.round(ch*sc);
     const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);
     el._task=pg.render({canvasContext:ctx,viewport:v});
     await el._task.promise;el._task=null;
@@ -1765,7 +1816,66 @@ async function drawPage(el){
     el.innerHTML="";el.appendChild(c);
   }catch(e){if(el.dataset.st&&RD===R)delete el.dataset.st}
 }
+// ── modul text: cartea așezată ca o carte electronică, cu litere mari ──
+function layoutText(goTo){
+  const box=$("rd-pages");
+  box.style.setProperty("--fs",(S.rdFont||20)+"px");
+  box.innerHTML=Array.from({length:RD.doc.numPages},(_,i)=>`<section class="txp wait" data-n="${i+1}"><h6>Pagina ${i+1}</h6><p>…</p></section>`).join("");
+  RD.pages=[...box.children];
+  RD.io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)fillText(e.target)}),{root:box,rootMargin:"150% 0px"});
+  RD.pages.forEach(el=>RD.io.observe(el));
+  const t=RD.pages[Math.min(RD.pages.length,goTo||1)-1];
+  if(t){fillText(t).then(()=>{box.scrollTop=t.offsetTop})}
+  updPage();
+}
+async function fillText(sec){
+  if(sec.dataset.st)return;sec.dataset.st="1";
+  const R=RD,n=+sec.dataset.n,box=$("rd-pages");
+  try{
+    const pg=await R.doc.getPage(n),tc=await pg.getTextContent();
+    if(RD!==R)return;
+    const paras=textToParas(tc.items);
+    const before=sec.offsetHeight,above=sec.offsetTop+before<=box.scrollTop+4;
+    if(paras.length){sec.innerHTML=`<h6>Pagina ${n}</h6>`+paras.map(p=>`<p>${esc(p)}</p>`).join("")}
+    else{   // pagină scanată (fără text): o arătăm ca imagine
+      const v1=pg.getViewport({scale:1}),sc=Math.min(2.5,(box.clientWidth*Math.min(devicePixelRatio||1,2))/v1.width),v=pg.getViewport({scale:sc});
+      const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);
+      await pg.render({canvasContext:g,viewport:v}).promise;sec.innerHTML=`<h6>Pagina ${n}</h6>`;sec.appendChild(c);
+    }
+    sec.classList.remove("wait");
+    if(above)box.scrollTop+=sec.offsetHeight-before;     // păstrăm locul când se completează paginile de deasupra
+  }catch(e){delete sec.dataset.st}
+}
+function textToParas(items){
+  const lines=[];let cur=null,prevEnd=null;
+  for(const it of items){
+    if(typeof it.str!=="string")continue;
+    const tr=it.transform||[1,0,0,1,0,0],x=tr[4],y=tr[5],h=Math.max(4,Math.hypot(tr[2],tr[3])||it.height||10);
+    if(!cur||Math.abs(cur.y-y)>h*.55){cur={y,x,h,t:"",xe:x};lines.push(cur);prevEnd=null}
+    if(it.str){
+      if(cur.t&&!/\s$/.test(cur.t)&&!/^\s/.test(it.str)&&prevEnd!==null&&x-prevEnd>h*.18)cur.t+=" ";
+      cur.t+=it.str;prevEnd=x+(it.width||0);cur.xe=Math.max(cur.xe,prevEnd);
+    }
+    if(it.hasEOL){cur=null}
+  }
+  const L=lines.map(l=>({...l,t:l.t.replace(/\s+/g," ").trim()})).filter(l=>l.t&&!/^\d{1,4}$/.test(l.t));
+  if(!L.length)return [];
+  const gaps=[];for(let i=1;i<L.length;i++){const g=Math.abs(L[i-1].y-L[i].y);if(g>0)gaps.push(g)}
+  gaps.sort((a,b)=>a-b);const med=gaps[Math.floor(gaps.length/2)]||L[0].h*1.2;
+  const minX=Math.min(...L.map(l=>l.x)),maxXe=Math.max(...L.map(l=>l.xe));
+  const out=[];let p="";
+  L.forEach((l,i)=>{
+    const prev=L[i-1];
+    const newPara=!prev||Math.abs(prev.y-l.y)>med*1.45||(l.x-minX>l.h*1.2&&l.x-minX<(maxXe-minX)*.3)||(prev&&prev.xe<maxXe-(maxXe-minX)*.18&&/[.!?:”»"…]$/.test(prev.t));
+    if(newPara&&p){out.push(p);p=""}
+    if(p.endsWith("-")&&/^[a-zăâîșțşţ]/.test(l.t))p=p.slice(0,-1)+l.t;
+    else p+=(p?" ":"")+l.t;
+  });
+  if(p)out.push(p);
+  return out;
+}
 function unDraw(el){
+  if(el.tagName==="SECTION")return;
   if(!el.dataset.st)return;delete el.dataset.st;
   try{el._task&&el._task.cancel()}catch(e){}
   const c=el.querySelector("canvas");if(c){c.width=c.height=0}
@@ -1814,11 +1924,18 @@ function closeReader(){
   renderShelf();renderHabits();
 }
 function zoom(f){
-  if(!RD)return;const nz=Math.min(3,Math.max(.6,Math.round(RD.z*f*100)/100));
+  if(!RD)return;
+  if(RD.mode==="text"){const fs=Math.max(15,Math.min(32,Math.round((S.rdFont||20)+(f>1?2:-2))));S.rdFont=fs;save();$("rd-pages").style.setProperty("--fs",fs+"px");toast(`Litere ${fs}`);return}const nz=Math.min(3,Math.max(.6,Math.round(RD.z*f*100)/100));
   if(nz===RD.z)return;RD.z=nz;S.zoom=nz;save();layoutReader(RD.cur);
 }
 $("rd-pages").addEventListener("scroll",()=>{if(!rdRaf)rdRaf=requestAnimationFrame(()=>{rdRaf=0;updPage()})},{passive:true});
 $("rd-back").addEventListener("click",closeReader);
+$("rd-mode").addEventListener("click",()=>{
+  if(!RD)return;
+  RD.mode=RD.mode==="text"?"page":"text";S.rdMode=RD.mode;save();
+  $("rd-mode").setAttribute("aria-pressed",RD.mode==="text");$("reader").classList.toggle("textmode",RD.mode==="text");
+  layoutReader(RD.cur);toast(RD.mode==="text"?"Mod text: litere mari, le reglezi cu − și +":"Mod pagină");
+});
 $("rd-zi").addEventListener("click",()=>zoom(1.25));
 $("rd-zo").addEventListener("click",()=>zoom(.8));
 $("rd-night").addEventListener("click",()=>{S.night=!S.night;save();$("reader").classList.toggle("night",S.night);$("rd-night").setAttribute("aria-pressed",S.night)});
@@ -2004,12 +2121,14 @@ let introOn=!!$("intro");
     });
     setTimeout(done,reduce?1400:2750);
   }
-  begin();
-  if(gate){const h=document.createElement("div");h.className="in-snd";h.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>';el.appendChild(h)}
-  el.addEventListener("click",()=>{
-    if(gate&&!el._snd){el._snd=true;const h=el.querySelector(".in-snd");if(h)h.remove();window.Music&&Music.introStart((performance.now()-window.__introT0)/1000);return}
-    done();
-  });
+  if(gate){
+    // bustul așteaptă pe ecran; atingerea pornește animația și sunetul în același timp
+    el.classList.add("gate");
+    const h=document.createElement("div");h.className="in-tap";h.textContent="Atinge pentru a intra";el.appendChild(h);
+    el.addEventListener("click",()=>{if(!started){window.Music&&Music.introStart(0);begin()}else done()});
+  }else{
+    begin();el.addEventListener("click",done);
+  }
 })();
 setTimeout(()=>{if(!introOn)checkMood()},1200);
 

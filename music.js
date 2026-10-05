@@ -13,6 +13,67 @@ let LIST=null,unlocked=false,cur=null,curScene=null,workout=false,duckVoice=fals
 const el=new Audio();el.preload="auto";el.setAttribute("playsinline","");el.setAttribute("webkit-playsinline","");
 const hit=new Audio("brand/intro-hit.m4a");hit.preload="auto";
 
+// ── muzica ta: fișiere păstrate în telefon (IndexedDB), au prioritate în zona lor ──
+let MINE={feed:[],sport:[],azi:[],raft:[]};const urls=new Map();
+const ZONE_OF=n=>{n=n.toLowerCase();return /^(citat|epic|quote)/.test(n)?"feed":/^(medit|432|528|frecv)/.test(n)?"azi":/^(citi|read|lectur)/.test(n)?"raft":/^(sala|gym|sport|antren)/.test(n)?"sport":null};
+async function loadMine(){
+  try{
+    const all=await idb("tracks","readonly",t=>t.objectStore("tracks").getAll());
+    const m={feed:[],sport:[],azi:[],raft:[]};
+    (all||[]).sort((a,b)=>a.n.localeCompare(b.n,undefined,{numeric:true})).forEach(r=>{if(m[r.z])m[r.z].push({f:"mine:"+r.id,t:r.n.replace(/\.[a-z0-9]+$/i,""),a:"Muzica ta",d:r.d||0,mine:true,id:r.id})});
+    MINE=m;
+    // pregătim adresele din timp, ca piesa să pornească imediat la atingere
+    Object.values(m).flat().forEach(t=>{if(!urls.has(t.id))srcOf(t).catch(()=>{})});
+  }catch(e){}
+  renderMine();refresh();
+}
+async function srcOf(t){
+  if(!t.mine)return t.f;
+  if(urls.has(t.id))return urls.get(t.id);
+  const blob=await idb("tfiles","readonly",x=>x.objectStore("tfiles").get(t.id));
+  if(!blob)throw new Error("lipsă");
+  const u=URL.createObjectURL(blob);urls.set(t.id,u);return u;
+}
+async function addMine(files){
+  let ok=0,skip=0;
+  for(const f of files){
+    const z=ZONE_OF(f.name);if(!z){skip++;continue}
+    const id="t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    try{
+      const buf=await f.arrayBuffer();
+      const blob=new Blob([buf],{type:f.type||"audio/mp4"});
+      await idb(["tracks","tfiles"],"readwrite",t=>{t.objectStore("tfiles").put(blob,id);return t.objectStore("tracks").put({id,z,n:f.name,s:f.size,add:Date.now()})});
+      ok++;
+    }catch(e){skip++}
+  }
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  if(ok&&MINE.feed.length===0&&files.some(f=>ZONE_OF(f.name)==="feed")){S.music.qsrc="local";save()}
+  toast(ok?`${ok} piese adăugate`+(skip?` · ${skip} sărite (nume nerecunoscut)`:""):"Niciun fișier recunoscut. Numele trebuie să înceapă cu citate-, meditatie-, citit- sau sala-");
+  await loadMine();
+  if(MINE.feed.length&&S.music.qsrc!=="local"){S.music.qsrc="local";save();settingsUI()}
+}
+async function delZone(z){
+  const ids=MINE[z].map(t=>t.id);
+  await idb(["tracks","tfiles"],"readwrite",t=>{ids.forEach(id=>{t.objectStore("tracks").delete(id);t.objectStore("tfiles").delete(id)})});
+  ids.forEach(id=>{if(urls.has(id)){URL.revokeObjectURL(urls.get(id));urls.delete(id)}});
+  if(cur&&cur.mine&&cur.f.startsWith("mine:")&&ids.includes(cur.id)){el.pause();cur=null;curScene=null;want=false}
+  await loadMine();
+}
+const ZNAME={feed:"Citate",azi:"Meditație",raft:"Citit",sport:"Sală"};
+function renderMine(){
+  const box=$m("my-mus");if(!box)return;
+  const rows=Object.keys(ZNAME).filter(z=>MINE[z].length).map(z=>{
+    return `<div class="row"><div><b>${ZNAME[z]}</b><small>${MINE[z].length} piese</small></div><button class="link" data-delz="${z}">Șterge</button></div>`}).join("");
+  box.innerHTML=rows||'<p class="note">Încă nu ai adăugat muzică.</p>';
+}
+document.addEventListener("click",async e=>{
+  const d=e.target.closest("[data-delz]");if(!d)return;
+  if(!confirm(`Ștergi muzica ta de la ${ZNAME[d.dataset.delz]}?`))return;
+  await delZone(d.dataset.delz);toast("Șters");
+});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="my-mus-in"){const fs=[...e.target.files];e.target.value="";if(fs.length){toast("Se adaugă…");addMine(fs)}}});
+setTimeout(loadMine,300);
+
 fetch("music.json?h="+Math.floor(Date.now()/36e5)).then(r=>r.ok?r.json():null).then(j=>{if(j){LIST=j;refresh();settingsUI()}}).catch(()=>{});
 
 // ── volum: prin Web Audio (fade-uri reale); pe iPhone-uri vechi, direct (acolo merge și cu butonul de silențios pornit) ──
@@ -47,7 +108,7 @@ function sceneNow(){
   else if(vis("v-azi"))sc="azi";
   return sc&&pool(sc).length?sc:null;                                   // Feed, Shorts, Salvate, Setări, Raft: liniște
 }
-function pool(sc){return (LIST&&LIST[sc]||[]).filter(t=>!bad.has(t.f))}
+function pool(sc){if(MINE[sc]&&MINE[sc].length)return MINE[sc].filter(t=>!bad.has(t.f));return (LIST&&LIST[sc]||[]).filter(t=>!bad.has(t.f))}
 const order={};
 function pick(sc){
   const L=pool(sc);if(!L.length)return null;
@@ -57,17 +118,22 @@ function pick(sc){
 
 let pauseT=0,want=false;
 function load(sc,fresh){
-  const r=!fresh&&S.music.last[sc];
+  const segs=sc==="feed"&&MINE.feed.length;                 // bucățile tale de 45 s: alta la fiecare citat
+  const r=!fresh&&!segs&&S.music.last[sc];
   const t=(r&&pool(sc).find(x=>x.f===r.f))||pick(sc);if(!t)return false;
   cur=t;curScene=sc;
-  el.src=t.f+(r&&r.f===t.f&&r.at>3?"#t="+Math.floor(r.at):"");
+  if(t.mine){
+    if(urls.has(t.id))el.src=urls.get(t.id)+(r&&r.f===t.f&&r.at>3?"#t="+Math.floor(r.at):"");
+    else{el.removeAttribute("src");srcOf(t).then(u=>{if(cur===t){el.src=u+(r&&r.f===t.f&&r.at>3?"#t="+Math.floor(r.at):"");if(want)tryPlay()}}).catch(()=>{bad.add(t.f);next()})}
+  }else el.src=t.f+(r&&r.f===t.f&&r.at>3?"#t="+Math.floor(r.at):"");
   setVol(0,0);
   return true;
 }
-function remember(){if(cur&&curScene&&el.currentTime>0){S.music.last[curScene]={f:cur.f,at:Math.floor(el.currentTime)};save()}}
+function remember(){if(cur&&curScene&&!(cur.mine&&curScene==="feed")&&el.currentTime>0){S.music.last[curScene]={f:cur.f,at:Math.floor(el.currentTime)};save()}}
 function refresh(){
   const sc=sceneNow();
   if(!sc){
+    if(want&&curScene==="feed"&&MINE.feed.length){cur=null}
     if(want){want=false;remember();setVol(0,500);clearTimeout(pauseT);pauseT=setTimeout(()=>{if(!want)el.pause()},520)}
     paint();return;
   }
