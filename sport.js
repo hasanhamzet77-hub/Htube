@@ -80,130 +80,51 @@ const loadThree=()=>threeP||(threeP=new Promise((res,rej)=>{
 
 // ── scena 3D ──
 let G=null;   // tot ce ține de scenă
-function buildScene(THREE,canvas){
+async function buildScene(THREE,canvas){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
   const scene=new THREE.Scene();
   const cam=new THREE.PerspectiveCamera(32,1,.05,40);
-  // lumină de studio, ca la o sculptură: lumină puternică de sus, contur alb din spate
-  scene.add(new THREE.HemisphereLight(0xffffff,0x16161c,.32));
-  const key=new THREE.DirectionalLight(0xffffff,.95);key.position.set(1.6,4.2,2.6);scene.add(key);
-  const rim=new THREE.DirectionalLight(0xffffff,.7);rim.position.set(-2.8,2.4,-2.6);scene.add(rim);
-  const rim2=new THREE.DirectionalLight(0xdfe4ff,.35);rim2.position.set(3,1.5,-2);scene.add(rim2);
-  const fill=new THREE.DirectionalLight(0xbfd2ff,.16);fill.position.set(-2,.8,3);scene.add(fill);
+  // lumină de studio ca la fotografiile de culturism: lumină caldă de sus-stânga, contururi din spate, reflexii de softbox
+  BodyLib.lights(THREE,scene,renderer);
   const plat=new THREE.Mesh(new THREE.CircleGeometry(1.45,72),new THREE.MeshBasicMaterial({color:0x9a9aa8,transparent:true,opacity:.07}));
   plat.rotation.x=-Math.PI/2;scene.add(plat);
   [1.45,1.0,.55].forEach((r,i)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r-.012,r,128),new THREE.MeshBasicMaterial({color:0xb4b4c4,transparent:true,opacity:i?.14:.42,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.y=.002+i*.001;scene.add(m)});
-  // textura de fibre musculare (în relief), generată pe loc
-  const fc=document.createElement("canvas");fc.width=fc.height=256;const fx=fc.getContext("2d");
-  const img=fx.createImageData(256,256);
-  for(let y=0;y<256;y++)for(let x=0;x<256;x++){const v=128+30*Math.sin(x*.55+Math.sin(y*.045+x*.07)*2.2)+((x*7919+y*104729)%23-11);const k=(y*256+x)*4;img.data[k]=img.data[k+1]=img.data[k+2]=v;img.data[k+3]=255}
-  fx.putImageData(img,0,0);
-  const fiber=new THREE.CanvasTexture(fc);fiber.wrapS=fiber.wrapT=THREE.RepeatWrapping;fiber.repeat.set(7,1);
   const M={
-    body:new THREE.MeshStandardMaterial({color:0x7d7e84,roughness:.62,metalness:.04,bumpMap:fiber,bumpScale:.12}),
-    core:new THREE.MeshStandardMaterial({color:0x55565b,roughness:.72,metalness:.03}),
-    skin:new THREE.MeshStandardMaterial({color:0x7a7b80,roughness:.58,metalness:.03}),
-    hot:new THREE.MeshStandardMaterial({color:0xd0170f,roughness:.42,metalness:.04,emissive:0xff1000,emissiveIntensity:.42,bumpMap:fiber,bumpScale:.12}),
-    sec:new THREE.MeshStandardMaterial({color:0xc4695c,roughness:.5,metalness:.04,emissive:0x6a1208,emissiveIntensity:.2,bumpMap:fiber,bumpScale:.12}),
     metal:new THREE.MeshStandardMaterial({color:0x9aa0b8,roughness:.25,metalness:.85}),
     plate:new THREE.MeshStandardMaterial({color:0x22242f,roughness:.55,metalness:.4}),
     pad:new THREE.MeshStandardMaterial({color:0x2c2f40,roughness:.7,metalness:.1}),
     frame:new THREE.MeshStandardMaterial({color:0x4b5066,roughness:.4,metalness:.7})
   };
-  const cap=(r,l)=>new THREE.CapsuleGeometry(r,l,6,16);
-  const SPH=new THREE.SphereGeometry(1,30,22);
-  const body={meshes:{}};
-  // un mușchi = un elipsoid cu fibre; cheia spune grupa (ca să-l putem aprinde în roșu)
-  const mus=(parent,key,rx,ry,rz,x,y,z,rotZ=0,rotX=0,rotY=0)=>{
-    const m=new THREE.Mesh(SPH,M.body);m.scale.set(rx,ry,rz);m.position.set(x,y,z);m.rotation.set(rotX,rotY,rotZ);
-    parent.add(m);(body.meshes[key]=body.meshes[key]||[]).push(m);return m};
-  const part=(parent,mat,rx,ry,rz,x,y,z,rotZ=0,rotX=0)=>{const m=new THREE.Mesh(SPH,mat);m.scale.set(rx,ry,rz);m.position.set(x,y,z);m.rotation.set(rotX,0,rotZ);parent.add(m);return m};
-  const bone=(parent,r,l,y,sx=1,sz=1)=>{const m=new THREE.Mesh(cap(r,l),M.core);m.position.y=y;m.scale.set(sx,1,sz);parent.add(m);return m};
-  const rod=(parent,mat,r,l,x,y,z,rotZ=0,rotX=0)=>{const m=new THREE.Mesh(cap(r,l),mat);m.position.set(x,y,z);m.rotation.set(rotX,0,rotZ);parent.add(m);return m};
+  // corpul: plasă anatomică cu piele, legată de un schelet simplu (bazin, trunchi, brațe, picioare)
+  const B=await BodyLib.load(THREE,"body/body",{skinned:true,ns:1.3});
+  const RG=B.meta.rig,V=a=>new THREE.Vector3(...a),len=(a,b)=>V(a).distanceTo(V(b));
   const root=new THREE.Group();scene.add(root);
-  const pelvis=new THREE.Group();root.add(pelvis);
-  const pm=new THREE.Mesh(cap(.085,.15),M.core);pm.rotation.z=Math.PI/2;pm.scale.set(1,1,.8);pelvis.add(pm);
-  for(const s of [-1,1])mus(pelvis,"abs",.04,.07,.04,s*.06,.0,.06,s*.35);                 // flexorii șoldului / „V”-ul
-  const torso=new THREE.Group();torso.position.y=.04;pelvis.add(torso);
-  bone(torso,.098,.22,.2,1.3,.86);
-  part(torso,M.core,.172,.16,.122,0,.37,0);
-  for(const s of [-1,1]){
-    mus(pelvis,"glutes",.083,.09,.066,s*.072,-.04,-.074);
-    mus(pelvis,"glutes",.03,.062,.032,s*.114,-.03,.01,s*.15);                       // tensor fascia lata
-    // piept: partea de jos și partea de sus (claviculară)
-    mus(torso,"pecs",.099,.063,.043,s*.083,.392,.088,s*.18);
-    mus(torso,"pecs",.086,.042,.036,s*.078,.446,.078,s*.36);
-    // dinții de fierăstrău, oblicii, abdomenul
-    for(let k=0;k<3;k++)mus(torso,"abs",.022,.03,.02,s*(.128-k*.004),.335-k*.038,.07-k*.01,s*.5);
-    mus(torso,"abs",.042,.085,.05,s*.108,.165,.047,-s*.15);
-    mus(torso,"abs",.034,.05,.04,s*.118,.25,.062,-s*.1);
-    [[.316,.03],[.256,.03],[.196,.03],[.136,.031]].forEach(([y,ry],r)=>mus(torso,"abs",.032,ry,.021,s*.034,y,.101-r*.002));
-    // spate: dorsali, rotatori, erectori
-    mus(torso,"lats",.068,.168,.07,s*.13,.3,-.032,s*.3);
-    mus(torso,"back",.056,.046,.03,s*.1,.405,-.086,s*.2);
-    mus(torso,"back",.035,.16,.032,s*.035,.24,-.09);
-    mus(torso,"traps",.06,.035,.045,s*.09,.505,-.018,-s*.45);
-    // claviculă și gât
-    rod(torso,M.skin,.012,.14,s*.09,.478,.072,s*(Math.PI/2-.16));
-    rod(torso,M.skin,.014,.1,s*.026,.578,.03,s*.32,.25);
-    part(torso,M.skin,.012,.022,.012,s*.088,.697,0);                                 // urechi
-  }
-  mus(torso,"abs",.058,.05,.026,0,.072,.092);                                          // abdomenul de jos
-  mus(torso,"traps",.12,.05,.06,0,.49,-.03);
-  mus(torso,"traps",.07,.06,.03,0,.37,-.096);
-  bone(torso,.046,.07,.575);
-  // capul: craniu, maxilar, arcade, nas
-  part(torso,M.skin,.088,.105,.1,0,.705,0);
-  part(torso,M.skin,.058,.05,.062,0,.648,.018);
-  part(torso,M.skin,.011,.02,.014,0,.686,.094);
-  const arms={},legs={};
-  for(const s of [-1,1]){
-    const k=s<0?"R":"L";
-    const sh=new THREE.Group();sh.position.set(s*.205,.47,0);torso.add(sh);
-    mus(sh,"deltF",.05,.08,.05,s*.008,-.035,.04);
-    mus(sh,"deltS",.055,.086,.056,s*.028,-.03,0);
-    mus(sh,"deltR",.05,.08,.05,s*.01,-.035,-.04);
-    const ua=new THREE.Group();sh.add(ua);
-    bone(ua,.032,.2,-.145);
-    mus(ua,"biceps",.042,.1,.045,0,-.15,.03);
-    mus(ua,"biceps",.03,.06,.03,s*.03,-.205,.012);                                    // brahial
-    mus(ua,"triceps",.04,.112,.04,-s*.01,-.12,-.03);
-    mus(ua,"triceps",.035,.08,.035,s*.022,-.1,-.022);
-    const el=new THREE.Group();el.position.y=-.29;ua.add(el);
-    mus(el,"forearm",.036,.1,.034,s*.012,-.07,.012);
-    mus(el,"forearm",.034,.1,.03,-s*.012,-.1,.008);
-    mus(el,"forearm",.03,.09,.028,s*.012,-.11,-.012);
-    bone(el,.025,.12,-.19);
-    // mâna: palmă, degete, degetul mare
-    part(el,M.skin,.034,.045,.016,0,-.3,0);
-    for(let f=0;f<4;f++)rod(el,M.skin,.0085,.045,(f-1.5)*.0155,-.36,0);
-    rod(el,M.skin,.009,.035,s*.031,-.305,.014,s*.6);
-    arms[k]={ua,el};
-    const hip=new THREE.Group();hip.position.set(s*.1,-.02,0);pelvis.add(hip);
-    bone(hip,.046,.3,-.215);
-    mus(hip,"quads",.04,.17,.04,0,-.2,.05);                                            // drept femural
-    mus(hip,"quads",.05,.17,.05,s*.035,-.22,.012);                                     // vast lateral
-    mus(hip,"quads",.045,.07,.045,-s*.03,-.35,.03);                                    // vast medial („lacrima”)
-    (body.meshes.quads=body.meshes.quads||[]).push(rod(hip,M.body,.012,.36,0,-.2,.047,-s*.25));   // croitor
-    mus(hip,"adduct",.045,.14,.045,-s*.035,-.13,0);
-    mus(hip,"hams",.05,.17,.05,s*.012,-.22,-.035);
-    mus(hip,"hams",.045,.16,.045,-s*.02,-.22,-.03);
-    const kn=new THREE.Group();kn.position.y=-.43;hip.add(kn);
-    part(kn,M.skin,.034,.034,.026,0,.01,.04);                                          // rotula
-    part(kn,M.core,.05,.06,.05,0,0,0);
-    bone(kn,.033,.36,-.23);
-    part(kn,M.skin,.03,.04,.032,0,-.41,0);                                             // gleznă
-    mus(kn,"calves",.04,.1,.042,-s*.018,-.11,-.032);
-    mus(kn,"calves",.036,.09,.038,s*.02,-.1,-.03);
-    mus(kn,"calves",.042,.08,.035,0,-.2,-.025);
-    mus(kn,"calves",.022,.12,.022,s*.02,-.15,.03);
-    const an=new THREE.Group();an.position.y=-.42;kn.add(an);
-    part(an,M.skin,.045,.03,.11,0,-.03,.05);
-    part(an,M.skin,.042,.016,.03,0,-.045,.15);
+  const bone=(parent,pos)=>{const b=new THREE.Bone();b.position.copy(pos);parent.add(b);return b};
+  const pelvis=bone(root,new THREE.Vector3());
+  const torso=bone(pelvis,V(RG.spine));
+  const arms={},legs={},grip={};
+  for(const k of ["R","L"]){
+    const sh=bone(torso,V(RG["sh"+k]).sub(V(RG.spine)));
+    const ua=bone(sh,new THREE.Vector3());
+    const el=bone(ua,new THREE.Vector3(0,-len(RG["sh"+k],RG["el"+k]),0));
+    arms[k]={sh,ua,el};
+    const hip=bone(pelvis,V(RG["hip"+k]));
+    const kn=bone(hip,new THREE.Vector3(0,-len(RG["hip"+k],RG["kn"+k]),0));
+    const an=bone(kn,new THREE.Vector3(0,-len(RG["kn"+k],RG["an"+k]),0));
     legs[k]={hip,kn,an};
   }
+  // poza în care a fost modelată plasa (brațe în „A”, coate ușor îndoite)
+  const dir=(a,b)=>{const d=V(RG[b]).sub(V(RG[a])).normalize();return [d.x,d.y,d.z]};
+  const BIND={torso:[0,1,0],ua:dir("shL","elL"),fa:dir("elL","wrL"),th:dir("hipL","knL"),sh:dir("knL","anL")};
+  const body={mesh:B.mesh,lib:B};
+  G={THREE,renderer,scene,cam,root,pelvis,torso,arms,legs,body,M,grip,yaw:.7,pitch:.22,target:new THREE.Vector3(0,.85,0),dist:4.2};
+  applyPose(full(BIND),{});root.updateMatrixWorld(true);
+  for(const k of ["R","L"])grip[k]=arms[k].el.worldToLocal(V(RG["grip"+k]));
+  const bones=[pelvis,torso,arms.R.ua,arms.R.el,arms.L.ua,arms.L.el,legs.R.hip,legs.R.kn,legs.R.an,legs.L.hip,legs.L.kn,legs.L.an];
+  scene.add(B.mesh);B.mesh.bind(new THREE.Skeleton(bones),new THREE.Matrix4());
   // echipament
   const barbell=new THREE.Group();
   {const bar=new THREE.Mesh(new THREE.CylinderGeometry(.014,.014,1.7,12),M.metal);bar.rotation.z=Math.PI/2;barbell.add(bar);
@@ -215,7 +136,7 @@ function buildScene(THREE,canvas){
     scene.add(g);return g};
   const dbs={R:mkDb(),L:mkDb(),C:mkDb()};
   const props=new THREE.Group();scene.add(props);
-  G={THREE,renderer,scene,cam,root,pelvis,torso,arms,legs,body,M,barbell,dbs,props,yaw:.7,pitch:.22,target:new THREE.Vector3(0,.85,0),dist:4.2};
+  Object.assign(G,{barbell,dbs,props});
   setupDrag(canvas);
 }
 
@@ -244,26 +165,32 @@ function mixPose(A,B,t){const o={};for(const k in A)o[k]=mixArr(A[k],B[k],t);ret
 function mirror(p){const o={torso:p.torso};for(const k of ["ua","fa","th","sh"]){o[k+"R"]=p[k+"L"];o[k+"L"]=p[k+"R"]}return o}
 
 const ORIENT={
-  stand:{pos:[0,.95,0],target:[0,.82,0],dist:4.1,yaw:.75},
+  stand:{pos:[0,.95,0],target:[0,.86,0],dist:4.5,yaw:.75},
   lie:{pos:[0,.56,.28],target:[0,.55,-.05],dist:3.6,yaw:1.15},
   incline:{pos:[0,.56,.3],target:[0,.7,0],dist:3.7,yaw:1.05},
   seat:{pos:[0,.56,0],target:[0,.85,0],dist:3.9,yaw:.7}
 };
 function applyPose(p,an){
-  const T=G.THREE,DOWN=new T.Vector3(0,-1,0),UP=new T.Vector3(0,1,0);
-  const tq=quatTo(UP,vec(p.torso,1));G.torso.quaternion.copy(tq);
+  const T=G.THREE,DOWN=new T.Vector3(0,-1,0),UP=new T.Vector3(0,1,0),I=new T.Quaternion();
+  const tq=quatTo(UP,vec(p.torso,1));
+  // bazinul urmează trunchiul în mare parte (balama din șold), restul îndoirii e în talie
+  const pq=I.clone().slerp(tq,.7),pinv=pq.clone().invert();
+  G.pelvis.quaternion.copy(pq);G.torso.quaternion.copy(pinv.clone().multiply(tq));
   const inv=tq.clone().invert();
   for(const [k,s] of [["R",-1],["L",1]]){
     const qa=quatTo(DOWN,vec(p["ua"+k],s)),qf=quatTo(DOWN,vec(p["fa"+k],s));
     G.arms[k].ua.quaternion.copy(an.rel?qa:inv.clone().multiply(qa));
     G.arms[k].el.quaternion.copy(qa.clone().invert().multiply(qf));
     const qt=quatTo(DOWN,vec(p["th"+k],s)),qs=quatTo(DOWN,vec(p["sh"+k],s));
-    G.legs[k].hip.quaternion.copy(qt);
+    G.legs[k].hip.quaternion.copy(pinv.clone().multiply(qt));
     G.legs[k].kn.quaternion.copy(qt.clone().invert().multiply(qs));
+    // laba rămâne pe podea; când gamba e aproape orizontală (fandare), o urmează
+    const f=Math.min(1,Math.max(0,(qs.angleTo(I)-.7)/.6));
+    G.legs[k].an.quaternion.copy(qs.clone().invert().multiply(I.clone().slerp(qs,f)));
   }
 }
 const wpos=(obj,y=0)=>obj.localToWorld(new G.THREE.Vector3(0,y,0));
-const handPos=k=>wpos(G.arms[k].el,-.29);
+const handPos=k=>G.arms[k].el.localToWorld(G.grip[k].clone());
 const anklePos=k=>wpos(G.legs[k].an,0);
 
 // ── recuzita (bancă, paralele) ──
@@ -288,6 +215,7 @@ function setExercise(key){
   const A=full(an.A),B=full(an.B);
   cur={key,an,A,B,cycle:an.t.reduce((a,b)=>a+b,0),phase:0,rep:0,mir:false};
   G.root.position.set(...o.pos);G.target.set(...o.target);G.dist=o.dist;G.yaw=o.yaw;G.pitch=.22;
+  if(an.props==="bars"){G.target.y+=.32;G.dist+=.35}
   // calibrare: unde stau mâinile/gleznele în poza A
   applyPose(A,an);G.root.updateMatrixWorld(true);
   if(an.pin==="feet"){const y=Math.min(anklePos("R").y,anklePos("L").y);G.root.position.y+=.075-y}
@@ -295,10 +223,10 @@ function setExercise(key){
   if(an.props==="bars"){const h=handPos("R");G.barX=Math.abs(h.x)}
   if(an.props==="rowbench")G.benchHand=handPos("L");
   if(an.pin==="ankleL"){cur.pinT={L:anklePos("L"),R:anklePos("R")}}
-  for(const m of Object.values(G.body.meshes).flat())m.material=G.M.body;
-  const mu=MUS[key]||{p:[],s:[]};
-  for(const h of mu.s)for(const m of G.body.meshes[h]||[])m.material=G.M.sec;
-  for(const h of mu.p)for(const m of G.body.meshes[h]||[])m.material=G.M.hot;
+  const mu=MUS[key]||{p:[],s:[]},hot={};
+  for(const h of mu.s)hot[h]=-.55;
+  for(const h of mu.p)hot[h]=1;
+  G.body.lib.setHeat(hot);
   buildProps(an);
   G.barbell.visible=an.eq==="bb"||an.eq==="bbBack";
   G.dbs.R.visible=an.eq==="db2"||an.eq==="dbR";G.dbs.L.visible=an.eq==="db2";G.dbs.C.visible=an.eq==="db1";
@@ -335,14 +263,14 @@ function place(){
   G.root.updateMatrixWorld(true);
   const hR=handPos("R"),hL=handPos("L");
   if(G.barbell.visible){
-    if(an.eq==="bbBack"){const n=wpos(G.torso,.47),bk=new T.Vector3(0,0,-.12).applyQuaternion(G.torso.quaternion);G.barbell.position.copy(n.add(bk));}
+    if(an.eq==="bbBack"){const n=wpos(G.torso,.395),bk=new T.Vector3(0,0,-.11).applyQuaternion(G.torso.getWorldQuaternion(new T.Quaternion()));G.barbell.position.copy(n.add(bk));}
     else G.barbell.position.copy(hR.clone().add(hL).multiplyScalar(.5));
     G.barbell.quaternion.identity();
   }
   const orient=(db,k,pos)=>{
     db.position.copy(pos);
     const X=new T.Vector3(1,0,0);let axis;
-    const fa=wpos(G.arms[k].el,-.29).sub(wpos(G.arms[k].el,0)).normalize();
+    const fa=handPos(k).sub(wpos(G.arms[k].el,0)).normalize();
     if(an.ax==="z")axis=new T.Vector3(0,0,1);
     else if(an.ax==="y")axis=new T.Vector3(0,1,0);
     else if(an.ax==="arm")axis=fa;
@@ -533,7 +461,7 @@ async function show(){
     inited=true;
     try{
       const T=await loadThree();
-      buildScene(T,$s("sp-cv"));
+      await buildScene(T,$s("sp-cv"));
       new ResizeObserver(resize).observe($s("sp-stage"));resize();
       setExercise(exNow().a);$s("sp-load").hidden=true;
       // o demonstrație scurtă la prima deschidere

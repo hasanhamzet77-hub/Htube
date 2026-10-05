@@ -1,6 +1,6 @@
 // HTube: aplicația merge și fără internet; feed-ul se ia mereu proaspăt când există conexiune
-const CACHE = "imperium-v10";
-const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./sport.js", "./music.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./brand/intro.jpg", "./brand/emblem.png", "./brand/emblem-96.png"];
+const CACHE = "imperium-v11";
+const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./body.js", "./sport.js", "./music.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./brand/intro.jpg", "./brand/emblem.png", "./brand/emblem-96.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" }))))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x)))));
@@ -15,6 +15,11 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (u.origin !== location.origin) return;
+  // corpul 3D (câțiva MB) se descarcă o singură dată pe versiune
+  if (u.pathname.includes("/body/")) {
+    e.respondWith(caches.match(u.origin + u.pathname).then(m => m || fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(u.origin + u.pathname, c)); return r; })));
+    return;
+  }
   const key = new Request(u.origin + u.pathname);
   // ocolim cache-ul browserului (GitHub ține fișierele 10 minute), ca modificările să apară imediat
   e.respondWith(fetch(e.request, { cache: "no-store" }).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(key, c)); return r; })
