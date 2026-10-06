@@ -960,7 +960,7 @@ function makeGen(){
     const pl=pools[k],j=idx[k];
     for(let m=j;m<Math.min(pl.length,j+10);m++){if((pl[m].who||pl[m].ch)!==last[k]){[pl[j],pl[m]]=[pl[m],pl[j]];break}}
     const x=pl[idx[k]++];last[k]=x.who||x.ch;return x};
-  const pattern=cat==="video"?["v"]:["q","t","q","s","i","q","S","q","t","q","s","i","q","s"];
+  const pattern=cat==="video"?["v"]:["q","t","q","i","q","t","q","i"];
   const starts=pattern.map((k,i)=>k==="S"?-1:i).filter(i=>i>=0);
   let step=starts[Math.random()*starts.length|0];   // fiecare refresh începe în alt punct
   return n=>{
