@@ -2014,13 +2014,14 @@ async function fillText(sec){
     const paras=textToParas(tc.items);
     const before=sec.offsetHeight,above=sec.offsetTop+before<=box.scrollTop+4;
     if(paras.length){sec.innerHTML=`<h6>Pagina ${n}</h6>`+paras.map(p=>`<p>${esc(p)}</p>`).join("")}
-    else if(R.b.ocr&&R.b.ocr[n]&&R.b.ocr[n].length){   // pagină scanată, deja transformată în text
+    else if(R.b.ocrv===2&&R.b.ocr&&R.b.ocr[n]&&R.b.ocr[n].length){   // pagină scanată, deja transformată în text
       sec.innerHTML=`<h6>Pagina ${n}</h6>`+R.b.ocr[n].map(p=>`<p>${esc(p)}</p>`).join("");
     }else{   // pagină scanată (fără text): o arătăm ca imagine, apoi o „citim” (OCR) și o înlocuim cu text mare
       const v1=pg.getViewport({scale:1}),sc=Math.min(2.5,(box.clientWidth*Math.min(devicePixelRatio||1,2))/v1.width),v=pg.getViewport({scale:sc});
       const c=document.createElement("canvas");c.width=v.width|0;c.height=v.height|0;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);
       await pg.render({canvasContext:g,viewport:v}).promise;sec.innerHTML=`<h6>Pagina ${n}</h6><div class="ocrst">Transform pagina în text…</div>`;sec.appendChild(c);
-      if(!(R.b.ocr&&R.b.ocr[n]))ocrScanned(R,n,pg,sec);
+      if(R.b.ocrv!==2){R.b.ocr={};R.b.ocrv=2}
+      if(!R.b.ocr[n])ocrScanned(R,n,pg,sec);
     }
     sec.classList.remove("wait");
     if(above)box.scrollTop+=sec.offsetHeight-before;     // păstrăm locul când se completează paginile de deasupra
@@ -2042,16 +2043,21 @@ function ocrScanned(R,n,pg,sec){
     if(!sec.closest("#rd-pages"))return;
     const box=$("rd-pages"),r=sec.getBoundingClientRect(),bb=box.getBoundingClientRect();
     if(r.bottom<bb.top-bb.height*2.5||r.top>bb.bottom+bb.height*2.5){delete sec.dataset.st;return}   // ai trecut de ea: o lăsăm pe mai târziu
-    const v1=pg.getViewport({scale:1}),C=R.crop||{x:0,y:0,w:1,h:1},sc=Math.min(3,1700/(v1.width*C.w));
+    // randăm pagina la rezoluția scanării (~300 dpi), fără margini
+    const v1=pg.getViewport({scale:1}),C=R.crop||{x:0,y:0,w:1,h:1};
+    const spread=v1.width*C.w>v1.height*C.h*1.15;                  // două pagini scanate una lângă alta
+    let sc=300/72;const maxPx=spread?9e6:6e6;if(v1.width*C.w*v1.height*C.h*sc*sc>maxPx)sc=Math.sqrt(maxPx/(v1.width*C.w*v1.height*C.h));
     const v=pg.getViewport({scale:sc,offsetX:-v1.width*C.x*sc,offsetY:-v1.height*C.y*sc});
     const c=document.createElement("canvas");c.width=Math.round(v1.width*C.w*sc);c.height=Math.round(v1.height*C.h*sc);
-    const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);
+    const g=c.getContext("2d",{willReadFrequently:true});g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);
     await pg.render({canvasContext:g,viewport:v}).promise;
-    const w=await ocrWorker();
-    const {data}=await w.recognize(c,{},{text:true,blocks:true,hocr:false,tsv:false});
+    const parts=ocrPrep(c,sc*72/300);
     c.width=c.height=0;
+    const w=await ocrWorker();
+    const data={blocks:[]};
+    for(const p of parts){const r=await w.recognize(p,{},{text:true,blocks:true,hocr:false,tsv:false});data.blocks.push(...(r.data.blocks||[]));p.width=p.height=0}
     const paras=ocrParas(data);
-    R.b.ocr=R.b.ocr||{};R.b.ocr[n]=paras;
+    R.b.ocr=R.b.ocr||{};R.b.ocrv=2;R.b.ocr[n]=paras;
     clearTimeout(ocrSaveT);ocrSaveT=setTimeout(()=>bk.put(R.b).catch(()=>{}),1500);
     if(RD!==R||!sec.isConnected)return;
     const before=sec.offsetHeight,above=sec.offsetTop+before<=box.scrollTop+4;
@@ -2060,17 +2066,68 @@ function ocrScanned(R,n,pg,sec){
   }).catch(e=>{const st=sec.querySelector(".ocrst");if(st)st.textContent="Nu am putut transforma pagina în text (e nevoie de internet prima dată).";});
   ocrQ=job.catch(()=>{});
 }
-function ocrParas(data){
-  const out=[];
-  for(const bl of data.blocks||[])for(const p of bl.paragraphs||[]){
-    if(p.confidence<35)continue;
-    let t=(p.lines||[]).map(l=>l.text.replace(/\s+/g," ").trim()).filter(Boolean)
-      .reduce((a,l)=>a?(/[-‐‑]$/.test(a)&&/^[a-zăâîșşțţ]/.test(l)?a.replace(/[-‐‑]$/,"")+l:a+" "+l):l,"");
-    t=t.replace(/\s+([,.;:!?»”])/g,"$1").trim();
-    if(!t||/^\d{1,4}$/.test(t)||t.length<2)continue;
-    out.push(t);
+// curățăm scanarea: alb-negru, scoatem „purecii” (punctele mici de murdărie care devin litere greșite)
+// și despărțim paginile duble în două, ca rândurile să nu se amestece
+function ocrPrep(c,k){
+  const W=c.width,H=c.height,g=c.getContext("2d",{willReadFrequently:true}),img=g.getImageData(0,0,W,H),d=img.data;
+  const bw=new Uint8Array(W*H);let sum=0;
+  for(let i=0,j=0;j<W*H;i+=4,j++){const v=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000;sum+=v;bw[j]=v<150?1:0}
+  if(sum/(W*H)<110)for(let j=0;j<W*H;j++)bw[j]^=1;                 // pagină inversată
+  // componente conexe mici (sub ~10 pixeli la 300 dpi) = praf
+  const minA=Math.max(3,Math.round(10*k*k)),stack=new Int32Array(W*H);   // bw: 1 = negru nevizitat, 2 = vizitat
+  for(let p=0;p<W*H;p++){
+    if(bw[p]!==1)continue;
+    let sp=0,area=0,x0=W,x1=0,y0=H,y1=0;stack[sp++]=p;bw[p]=2;const list=[];
+    while(sp){const q=stack[--sp];area++;if(area<=minA)list.push(q);
+      const x=q%W,y=(q/W)|0;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+      for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const r=yy*W+xx;if(bw[r]===1){bw[r]=2;stack[sp++]=r}}}}
+    if(area<minA){for(const q of list)bw[q]=0;continue}
+    const bwd=x1-x0+1,bh=y1-y0+1;
+    if((bh>H*.12&&bwd*12<bh)||(bwd>W*.3&&bh*25<bwd)){   // linii verticale/orizontale (marginea scanării, chenare) → afară
+      sp=0;stack[sp++]=p;bw[p]=3;
+      while(sp){const q=stack[--sp];const x=q%W,y=(q/W)|0;
+        for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const r=yy*W+xx;if(bw[r]===2){bw[r]=3;stack[sp++]=r}}}}
+    }
   }
-  return out;
+  for(let j=0;j<W*H;j++)if(bw[j]===3)bw[j]=0;
+  for(let i=0,j=0;j<W*H;i+=4,j++){const v=bw[j]?0:255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
+  g.putImageData(img,0,0);
+  const cut=(x0,x1)=>{const o=document.createElement("canvas");o.width=x1-x0;o.height=H;o.getContext("2d").drawImage(c,x0,0,x1-x0,H,0,0,x1-x0,H);return o};
+  if(W>H*1.15){
+    const col=new Float32Array(W);for(let y=0;y<H;y+=2)for(let x=0;x<W;x++)col[x]+=bw[y*W+x];
+    let best=-1,bv=1e18;const lo=Math.round(W*.42),hi=Math.round(W*.58);
+    for(let x=lo;x<hi;x++){let s2=0;for(let t=-15;t<=15;t++)s2+=col[x+t]||0;if(s2<bv){bv=s2;best=x}}
+    return [cut(0,best),cut(best,W)];
+  }
+  return [cut(0,W)];
+}
+function ocrParas(data){
+  const out=[],clean=t=>t.replace(/(^|\s)[|¦]+(?=\s|$)/g," ").replace(/^[|¦\s]+|[|¦\s]+$/g,"").replace(/\s+/g," ").trim();
+  for(const bl of data.blocks||[]){
+    const lines=[];
+    for(const p of bl.paragraphs||[]){
+      if(p.confidence<55)continue;                                  // zonele cu poze dau „litere” fără sens
+      const raw=(p.lines||[]).map(l=>l.text).join(" ");
+      const letters=(raw.match(/[A-Za-zĂÂÎȘȚăâîșțŞŢşţ]/g)||[]).length;
+      if(letters<raw.replace(/\s/g,"").length*.7)continue;
+      if((p.lines||[]).length===1&&/^\s*\d{1,4}\s+[A-ZĂÂÎȘȚŞŢ .,-]{6,}$|^[A-ZĂÂÎȘȚŞŢ .,-]{6,}\s+\d{1,4}\s*$/.test(raw.trim()))continue;   // antetul paginii
+      (p.lines||[]).forEach((l,k)=>{const t=clean(l.text);if(t&&!/^\d{1,4}$/.test(t))lines.push({t,x0:l.bbox.x0,x1:l.bbox.x1,first:k===0})});
+    }
+    if(!lines.length)continue;
+    const q=(a,f)=>{const v=a.slice().sort((x,y)=>x-y);return v[Math.min(v.length-1,Math.floor(v.length*f))]};
+    const left=q(lines.map(l=>l.x0),.2),right=q(lines.map(l=>l.x1),.8),Wd=Math.max(1,right-left);
+    let cur="";
+    lines.forEach((l,i)=>{
+      const pv=lines[i-1];
+      // paragraf nou: rând retras, rândul dinainte scurt (sfârșit de paragraf sau titlu), sau Tesseract a văzut un paragraf nou după un rând incomplet
+      const endP=/[.!?:;”»"…)]$/.test(pv?pv.t:"");
+      const brk=!pv||l.x0-left>Wd*.03||pv.x1<left+Wd*.55||(endP&&pv.x1<right-Wd*.1)||(l.first&&endP&&pv.x1<right-Wd*.04);
+      if(brk&&cur){out.push(cur);cur=""}
+      cur=!cur?l.t:/[-‐‑]$/.test(cur)&&/^[a-zăâîșţțş]/.test(l.t)?cur.replace(/[-‐‑]$/,"")+l.t:cur+" "+l.t;
+    });
+    if(cur)out.push(cur);
+  }
+  return out.map(t=>t.replace(/\s+([,.;:!?»”])/g,"$1").trim()).filter(t=>t.length>1);
 }
 function textToParas(items){
   const lines=[];let cur=null,prevEnd=null;
