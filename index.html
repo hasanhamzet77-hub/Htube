@@ -328,6 +328,17 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 #reader.night .pg canvas{filter:invert(.92) hue-rotate(180deg)}
 .rbar button{width:36px!important}
 #rd-mode[aria-pressed="true"]{color:var(--accent)}
+#rd-bm.on svg{fill:var(--accent);stroke:var(--accent)}
+.bmk{background:linear-gradient(transparent 55%,rgba(255,170,40,.55) 55%);color:inherit;border-radius:2px;padding:0 1px;position:relative}
+.bmk::before{content:"";position:absolute;left:-2px;top:-.55em;width:9px;height:14px;background:#e8452c;clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)}
+.bmr{position:absolute;right:10px;width:16px;height:26px;margin-top:-13px;background:#e8452c;clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%);box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:2}
+.pg{position:relative}
+.flash{animation:bmf 1.2s ease 2}
+@keyframes bmf{50%{filter:brightness(1.4) drop-shadow(0 0 6px rgba(255,150,30,.9))}}
+#bm-pop{position:fixed;z-index:12}
+#bm-pop button{display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:14px;font-size:14.5px;font-weight:600;color:#fff;background:rgba(20,20,26,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35);white-space:nowrap;max-width:86vw;overflow:hidden;text-overflow:ellipsis}
+#bm-pop svg{width:18px;height:18px;fill:#e8452c;stroke:#e8452c;flex:none}
+#bm-pop b{font-family:var(--serif);font-weight:600;overflow:hidden;text-overflow:ellipsis}
 #reader.textmode #rd-pages{background:#f6f1e7;padding:0 0 calc(40px + env(safe-area-inset-bottom,0px))}
 #reader.textmode.night #rd-pages{background:#121212}
 .txp{padding:22px 22px 10px;max-width:680px;margin:0 auto;font-family:var(--serif);color:#2a241c;font-size:var(--fs,20px);line-height:1.62;min-height:60vh}
@@ -815,11 +826,13 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <button id="rd-mode" aria-pressed="false" aria-label="Mod text (litere mari)"><b style="font-family:var(--serif);font-size:17px;font-weight:600">Aa</b></button>
     <button id="rd-zo" aria-label="Micșorează"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
     <button id="rd-zi" aria-label="Mărește"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
+    <button id="rd-bm" aria-label="Mergi la semnul de carte"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg></button>
     <button class="musbtn" id="mus-r" aria-label="Muzică"></button>
     <button id="rd-night" aria-pressed="false" aria-label="Mod noapte"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
     <button id="rd-del" aria-label="Șterge cartea"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
   </div>
   <div id="rd-pages"></div>
+  <div id="bm-pop" hidden><button id="bm-set"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg> Semn de carte la <b id="bm-w"></b></button></div>
 </div>
 
 <section id="jrpage" hidden>
@@ -1932,6 +1945,9 @@ async function openBook(id){
     RD.ratio=v.height*RD.crop.h/(v.width*RD.crop.w);
     b.last=Date.now();bk.put(b).catch(()=>{});
     $("rd-mode").setAttribute("aria-pressed",RD.mode==="text");$("reader").classList.toggle("textmode",RD.mode==="text");
+    $("rd-bm").classList.toggle("on",!!b.mark);bmHide();
+    RD.want=b.mark?{m:b.mark.m,n:b.mark.n,p:b.mark.p,f:b.mark.f,fromMark:1}:b.pos||null;
+    if(RD.want)RD.cur=RD.want.n;
     layoutReader(RD.cur);
     clearInterval(rdTimerInt);rdTimerInt=setInterval(rdTimerTick,1000);rdTimerTick();
   }catch(e){toast(String(e).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu pot deschide cartea");closeReader()}
@@ -1971,7 +1987,7 @@ function layoutReader(goTo){
   const t=RD.pages[Math.min(RD.pages.length,goTo||1)-1];
   box.scrollTop=t?t.offsetTop-12:0;
   box.scrollLeft=Math.max(0,(box.scrollWidth-box.clientWidth)/2);
-  updPage();
+  updPage();rdRestore();
 }
 async function drawPage(el){
   if(el.dataset.st)return;el.dataset.st="1";
@@ -1990,7 +2006,7 @@ async function drawPage(el){
     el._task=pg.render({canvasContext:ctx,viewport:v});
     await el._task.promise;el._task=null;
     if(RD!==R||!el.dataset.st){c.width=c.height=0;return}
-    el.innerHTML="";el.appendChild(c);
+    el.innerHTML="";el.appendChild(c);markIn(el);rdReanchor();
   }catch(e){if(el.dataset.st&&RD===R)delete el.dataset.st}
 }
 // ── modul text: cartea așezată ca o carte electronică, cu litere mari ──
@@ -2002,7 +2018,7 @@ function layoutText(goTo){
   RD.io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)fillText(e.target)}),{root:box,rootMargin:"150% 0px"});
   RD.pages.forEach(el=>RD.io.observe(el));
   const t=RD.pages[Math.min(RD.pages.length,goTo||1)-1];
-  if(t){fillText(t).then(()=>{box.scrollTop=t.offsetTop})}
+  if(t){fillText(t).then(()=>{box.scrollTop=t.offsetTop;rdRestore()})}
   updPage();
 }
 async function fillText(sec){
@@ -2023,8 +2039,9 @@ async function fillText(sec){
       if(R.b.ocrv!==2){R.b.ocr={};R.b.ocrv=2}
       if(!R.b.ocr[n])ocrScanned(R,n,pg,sec);
     }
-    sec.classList.remove("wait");
+    sec.classList.remove("wait");markIn(sec);
     if(above)box.scrollTop+=sec.offsetHeight-before;     // păstrăm locul când se completează paginile de deasupra
+    rdReanchor();
   }catch(e){delete sec.dataset.st}
 }
 // ── OCR: cărțile scanate devin text, ca să poată fi citite cu litere mari (Tesseract, rulează pe telefon) ──
@@ -2061,8 +2078,9 @@ function ocrScanned(R,n,pg,sec){
     clearTimeout(ocrSaveT);ocrSaveT=setTimeout(()=>bk.put(R.b).catch(()=>{}),1500);
     if(RD!==R||!sec.isConnected)return;
     const before=sec.offsetHeight,above=sec.offsetTop+before<=box.scrollTop+4;
-    sec.innerHTML=`<h6>Pagina ${n}</h6>`+(paras.length?paras.map(p=>`<p>${esc(p)}</p>`).join(""):`<p class="muted">(pagină fără text)</p>`);
+    sec.innerHTML=`<h6>Pagina ${n}</h6>`+(paras.length?paras.map(p=>`<p>${esc(p)}</p>`).join(""):`<p class="muted">(pagină fără text)</p>`);markIn(sec);
     if(above)box.scrollTop+=sec.offsetHeight-before;
+    rdReanchor();
   }).catch(e=>{const st=sec.querySelector(".ocrst");if(st)st.textContent="Nu am putut transforma pagina în text (e nevoie de internet prima dată).";});
   ocrQ=job.catch(()=>{});
 }
@@ -2170,10 +2188,112 @@ function updPage(){
   let lo=0,hi=P2.length-1;
   while(lo<hi){const m=(lo+hi+1)>>1;if(P2[m].offsetTop<=y)lo=m;else hi=m-1}
   const n=lo+1;
-  if(n!==RD.cur){RD.cur=n;clearTimeout(RD.saveT);RD.saveT=setTimeout(saveProgress,800)}
+  RD.cur=n;clearTimeout(RD.saveT);RD.saveT=setTimeout(saveProgress,700);
   $("rd-pg").textContent=`${n} / ${RD.doc.numPages}`;
 }
-function saveProgress(){if(!RD)return;RD.b.pg=RD.cur;RD.b.last=Date.now();bk.put(RD.b).catch(()=>{})}
+function saveProgress(){if(!RD)return;const a=rdAnchor();if(a){RD.b.pos=a;RD.b.pg=a.n}else RD.b.pg=RD.cur;RD.b.last=Date.now();bk.put(RD.b).catch(()=>{})}
+// ── locul exact în carte: pagina + paragraful + cât din el ai citit (linia de citit e la 25% din ecran) ──
+const RLINE=.25;
+function rdAnchor(){
+  if(!RD||!RD.pages)return null;
+  const box=$("rd-pages"),bb=box.getBoundingClientRect(),y=bb.top+box.clientHeight*RLINE;
+  const pg=RD.pages.find(el=>{const r=el.getBoundingClientRect();return r.top<=y&&r.bottom>y});
+  if(!pg)return null;const n=+pg.dataset.n,r=pg.getBoundingClientRect();
+  if(RD.mode==="text"){
+    const ps=[...pg.querySelectorAll("p")];
+    const i=ps.findIndex(p=>{const q=p.getBoundingClientRect();return q.bottom>y});
+    if(i>=0&&!pg.classList.contains("wait")){const q=ps[i].getBoundingClientRect();return {m:"text",n,p:i,f:Math.max(0,Math.min(1,(y-q.top)/Math.max(1,q.height)))}}
+  }
+  return {m:RD.mode,n,f:Math.max(0,Math.min(1,(y-r.top)/Math.max(1,r.height)))};
+}
+function rdApply(a){
+  if(!RD||!a)return false;
+  const box=$("rd-pages"),pg=RD.pages[a.n-1];if(!pg)return false;
+  const bb=box.getBoundingClientRect();let el=pg,f=a.f||0;
+  if(RD.mode==="text"&&a.m==="text"&&a.p!=null){const p=pg.querySelectorAll("p")[a.p];if(!p)return false;el=p}
+  else if(RD.mode==="text"&&a.m!=="text")f=0;
+  const r=el.getBoundingClientRect();
+  box.scrollTop+=r.top-bb.top+f*r.height-box.clientHeight*RLINE;
+  return true;
+}
+// după deschidere ținem locul fix câteva secunde, cât se completează paginile din jur
+function rdReanchor(){if(RD&&RD.pin&&Date.now()<RD.pin.until)rdApply(RD.pin.a)}
+function rdRestore(){
+  if(!RD)return;const a=RD.want;RD.want=null;
+  if(!a)return;const mk=a.fromMark;
+  const go=()=>{rdApply(a);RD.pin={a,until:Date.now()+4000};updPage()};
+  const pg=RD.pages[a.n-1];
+  if(RD.mode==="text"&&pg)fillText(pg).then(go);else go();
+  if(mk)toast("Continui de la semnul de carte 🔖");
+}
+["touchstart","wheel","mousedown"].forEach(ev=>$("rd-pages").addEventListener(ev,()=>{if(RD)RD.pin=null},{passive:true}));
+// ── semnul de carte: atingi un cuvânt (sau îl selectezi) → „Pune semnul aici” ──
+function markIn(el){
+  if(!RD||!RD.b.mark||!el)return;const mk=RD.b.mark;
+  if(+el.dataset.n!==mk.n)return;
+  el.querySelectorAll(".bmk,.bmr").forEach(x=>x.replaceWith(...(x.classList.contains("bmk")?[document.createTextNode(x.textContent)]:[])));
+  if(el.tagName==="SECTION"&&mk.m==="text"){
+    const p=el.querySelectorAll("p")[mk.p];if(!p)return;
+    // găsim cuvântul după poziția lui în paragraf
+    let pos=0;const w=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);let node;
+    while((node=w.nextNode())){const L=node.data.length;if(pos+L>mk.c){const st=mk.c-pos,en=Math.min(L,st+mk.w.length);
+      const rg=document.createRange();rg.setStart(node,st);rg.setEnd(node,en);const s2=document.createElement("mark");s2.className="bmk";rg.surroundContents(s2);break}pos+=L}
+  }else if(el.tagName!=="SECTION"){
+    const rb=document.createElement("i");rb.className="bmr";rb.style.top=(mk.f*100).toFixed(2)+"%";el.appendChild(rb);
+  }
+}
+function setMark(mk){
+  if(!RD)return;mk.t=Date.now();RD.b.mark=mk;bk.put(RD.b).catch(()=>{});
+  RD.pages.forEach(markIn);
+  document.querySelectorAll("#rd-pages .bmk,#rd-pages .bmr").forEach(x=>{if(+x.closest("[data-n]").dataset.n!==mk.n)x.classList.contains("bmk")?x.replaceWith(document.createTextNode(x.textContent)):x.remove()});
+  toast("Semn de carte pus 🔖");$("rd-bm").classList.add("on");
+}
+let bmPend=null;
+function bmPop(x,y,mk){
+  bmPend=mk;const p=$("bm-pop");p.hidden=false;
+  const W=innerWidth,w=p.offsetWidth||210;p.style.left=Math.max(10,Math.min(W-w-10,x-w/2))+"px";p.style.top=Math.max(70,y-62)+"px";
+  $("bm-w").textContent=mk.w?`„${mk.w}”`:"aici";
+}
+function bmHide(){$("bm-pop").hidden=true;bmPend=null}
+function wordAt(x,y){
+  let node,off;
+  if(document.caretRangeFromPoint){const r=document.caretRangeFromPoint(x,y);if(!r)return null;node=r.startContainer;off=r.startOffset}
+  else if(document.caretPositionFromPoint){const r=document.caretPositionFromPoint(x,y);if(!r)return null;node=r.offsetNode;off=r.offset}
+  if(!node||node.nodeType!==3)return null;
+  const t=node.data,isW=ch=>/[\p{L}\p{N}'’-]/u.test(ch);
+  let a=off,b=off;while(a>0&&isW(t[a-1]))a--;while(b<t.length&&isW(t[b]))b++;
+  if(a===b)return null;
+  return {node,a,b,w:t.slice(a,b)};
+}
+function charIndexIn(p,node,off){let pos=0;const w=document.createTreeWalker(p,NodeFilter.SHOW_TEXT);let nd;while((nd=w.nextNode())){if(nd===node)return pos+off;pos+=nd.data.length}return -1}
+let bmT0=0,bmX=0,bmY=0,bmSelT=0;
+$("rd-pages").addEventListener("touchstart",e=>{bmT0=Date.now();bmX=e.touches[0].clientX;bmY=e.touches[0].clientY},{passive:true});
+$("rd-pages").addEventListener("click",e=>{
+  if(!RD)return;
+  if(!$("bm-pop").hidden){bmHide();return}
+  if(String(getSelection()||"").trim())return;           // ai selectat cu degetul: se ocupă selecția
+  const x=e.clientX,y=e.clientY;
+  if(RD.mode==="text"){
+    const p=e.target.closest(".txp p"),sec=e.target.closest(".txp");if(!p||!sec)return;
+    const hit=wordAt(x,y);if(!hit)return;
+    const c=charIndexIn(p,hit.node,hit.a);if(c<0)return;
+    const q=p.getBoundingClientRect();
+    bmPop(x,y,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:hit.w,f:Math.max(0,Math.min(1,(y-q.top)/q.height))});
+  }else{
+    const pg=e.target.closest(".pg");if(!pg)return;const r=pg.getBoundingClientRect();
+    bmPop(x,y,{m:"page",n:+pg.dataset.n,f:(y-r.top)/r.height,w:""});
+  }
+});
+// selecție cu degetul (apăsare lungă pe cuvânt)
+document.addEventListener("selectionchange",()=>{
+  if(!RD||RD.mode!=="text")return;
+  const sel=getSelection();if(!sel||sel.isCollapsed||!sel.rangeCount)return;
+  const rg=sel.getRangeAt(0),p=rg.startContainer.parentElement&&rg.startContainer.parentElement.closest(".txp p");if(!p)return;
+  const sec=p.closest(".txp"),w=String(sel).trim().split(/\s+/)[0];if(!w)return;
+  const c=charIndexIn(p,rg.startContainer,rg.startOffset);if(c<0)return;
+  const r=rg.getBoundingClientRect(),q=p.getBoundingClientRect();
+  clearTimeout(bmSelT);bmSelT=setTimeout(()=>bmPop(r.left+r.width/2,r.top,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:w.slice(0,40),f:Math.max(0,Math.min(1,(r.top-q.top)/q.height))}),250);
+});
 // timpul de citit se adună pe zi; la 10 minute se bifează „Citit”
 function readTick(){
   if(!RD)return;const now=Date.now(),m=(now-RD.t0)/6e4;
@@ -2197,7 +2317,8 @@ function audioUnlock(){
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();
     const b=actx.createBuffer(1,1,22050),src=actx.createBufferSource();src.buffer=b;src.connect(actx.destination);src.start(0)}catch(e){}
 }
-document.addEventListener("visibilitychange",()=>{if(!RD)return;if(document.hidden)readTick();else RD.t0=Date.now()});
+document.addEventListener("visibilitychange",()=>{if(!RD)return;if(document.hidden){readTick();saveProgress()}else RD.t0=Date.now()});
+addEventListener("pagehide",()=>{if(RD)saveProgress()});
 function closeReader(){
   clearInterval(rdTimerInt);$("reader").classList.remove("goal");
   if(RD){readTick();saveProgress();clearTimeout(RD.saveT);
@@ -2208,13 +2329,23 @@ function closeReader(){
 }
 function zoom(f){
   if(!RD)return;
-  if(RD.mode==="text"){const fs=Math.max(15,Math.min(32,Math.round((S.rdFont||20)+(f>1?2:-2))));S.rdFont=fs;save();$("rd-pages").style.setProperty("--fs",fs+"px");toast(`Litere ${fs}`);return}const nz=Math.min(3,Math.max(.6,Math.round(RD.z*f*100)/100));
+  if(RD.mode==="text"){const an=rdAnchor();const fs=Math.max(15,Math.min(32,Math.round((S.rdFont||20)+(f>1?2:-2))));S.rdFont=fs;save();$("rd-pages").style.setProperty("--fs",fs+"px");if(an){rdApply(an);RD.pin={a:an,until:Date.now()+1500}}toast(`Litere ${fs}`);return}
+  RD.want=rdAnchor();const nz=Math.min(3,Math.max(.6,Math.round(RD.z*f*100)/100));
   if(nz===RD.z)return;RD.z=nz;S.zoom=nz;save();layoutReader(RD.cur);
 }
 $("rd-pages").addEventListener("scroll",()=>{if(!rdRaf)rdRaf=requestAnimationFrame(()=>{rdRaf=0;updPage()})},{passive:true});
 $("rd-back").addEventListener("click",closeReader);
+$("bm-set").addEventListener("click",e=>{e.stopPropagation();if(bmPend)setMark(bmPend);bmHide();try{getSelection().removeAllRanges()}catch(_){}});
+$("rd-bm").addEventListener("click",()=>{
+  if(!RD)return;const mk=RD.b.mark;
+  if(!mk){toast("Atinge un cuvânt din carte ca să pui semnul acolo");return}
+  const a={m:mk.m,n:mk.n,p:mk.p,f:mk.f},pg=RD.pages[mk.n-1];
+  const go=()=>{rdApply(a);RD.pin={a,until:Date.now()+3000};updPage();const el=document.querySelector("#rd-pages .bmk,#rd-pages .bmr");if(el){el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}};
+  if(RD.mode==="text"&&pg)fillText(pg).then(go);else go();
+});
 $("rd-mode").addEventListener("click",()=>{
   if(!RD)return;
+  RD.want=rdAnchor();
   RD.mode=RD.mode==="text"?"page":"text";S.rdMode=RD.mode;save();
   $("rd-mode").setAttribute("aria-pressed",RD.mode==="text");$("reader").classList.toggle("textmode",RD.mode==="text");
   layoutReader(RD.cur);toast(RD.mode==="text"?"Mod text: litere mari, le reglezi cu − și +":"Mod pagină");
@@ -2228,7 +2359,7 @@ $("rd-del").addEventListener("click",async()=>{
   closeReader();try{await bk.del(b.id);toast("Carte ștearsă")}catch(e){}renderShelf();
 });
 let rdResize=0;
-addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);rdResize=setTimeout(()=>RD&&layoutReader(RD.cur),250)});
+addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);const an=rdAnchor();rdResize=setTimeout(()=>{if(!RD)return;RD.want=an;layoutReader(RD.cur)},250)});
 
 // ── jurnal de seară: se salvează singur, pe zile ──
 S.journal=S.journal||{};
