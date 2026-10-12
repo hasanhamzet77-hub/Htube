@@ -107,7 +107,7 @@ function render(){
     <div class="hl-big"><b>${fmtKg(kg)}</b><span>kg</span>
       ${last&&first&&w.length>1?`<small>${sgn(last.kg-first.kg)} kg de la ${dshort(first.d)}${wk&&wk!==last?` · ${sgn(last.kg-wk.kg)} în 7 zile`:""}</small>`:""}</div>
     ${chart()}
-    <form class="hl-row" id="hl-wf"><input id="hl-wkg" type="number" inputmode="decimal" step="0.1" min="30" max="300" placeholder="Greutatea de azi (kg)" value=""><input id="hl-wd" type="date" value="${today}" max="${today}"><button class="btn" type="submit">Adaugă</button></form>
+    <form class="hl-row" id="hl-wf"><input id="hl-wkg" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*" min="30" max="300" placeholder="ex. 95,7" value=""><input id="hl-wd" type="date" value="${today}" max="${today}"><button class="btn" type="submit">Adaugă</button></form>
     ${w.length?`<details class="hl-list"><summary>Istoric</summary>${w.slice().reverse().slice(0,60).map(x=>`<div class="hl-li"><span>${dshort(x.d)}</span><b>${fmtKg(x.kg)} kg</b><button data-hw="${x.d}" aria-label="Șterge">✕</button></div>`).join("")}</details>`:""}
     <p class="note">Cântărește-te dimineața, după baie, înainte de micul dejun. Contează tendința, nu cifra unei zile.</p>
   </div>`,
@@ -118,7 +118,7 @@ function render(){
       <label>Sex<select id="hl-sex"><option value="m"${p.sex!=="f"?" selected":""}>Bărbat</option><option value="f"${p.sex==="f"?" selected":""}>Femeie</option></select></label>
       <label>Vârsta<input id="hl-age" type="number" inputmode="numeric" min="14" max="100" value="${p.age||""}" placeholder="ani"></label>
       <label>Înălțimea<input id="hl-h" type="number" inputmode="numeric" min="120" max="230" value="${p.h||""}" placeholder="cm"></label>
-      <label>Greutatea<input id="hl-kg" type="number" inputmode="decimal" step="0.1" value="${w.length?"":(p.kg||"")}" placeholder="${w.length?fmtKg(kg)+" (din cântăriri)":"kg"}" ${w.length?"disabled":""}></label>
+      <label>Greutatea<input id="hl-kg" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*" value="${w.length?"":(p.kg||"")}" placeholder="${w.length?fmtKg(kg)+" (din cântăriri)":"kg"}" ${w.length?"disabled":""}></label>
       <label class="hl-wide">Activitatea<select id="hl-act">${ACT.map((a,i)=>`<option value="${i}"${+(p.act??2)===i?" selected":""}>${a[1]}</option>`).join("")}</select></label>
       <label class="hl-wide">Obiectivul<select id="hl-goal"><option value="lose"${(p.goal||"lose")==="lose"?" selected":""}>Slăbire (~0,5 kg/săptămână)</option><option value="keep"${p.goal==="keep"?" selected":""}>Menținere</option><option value="gain"${p.goal==="gain"?" selected":""}>Masă musculară</option></select></label>
     </div>
@@ -135,7 +135,7 @@ function render(){
     :`<form id="hl-df" class="hl-grid">
       <label class="hl-wide">Ce dietă începi<input id="hl-dn" placeholder="ex. deficit caloric, keto, fără zahăr" maxlength="60"></label>
       <label>Începe pe<input id="hl-ds" type="date" value="${today}"></label>
-      <label>Greutate țintă<input id="hl-dt" type="number" inputmode="decimal" step="0.1" placeholder="kg"></label>
+      <label>Greutate țintă<input id="hl-dt" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*" placeholder="kg"></label>
       <label class="hl-wide">Notă (de ce o faci)<input id="hl-dno" maxlength="140" placeholder="opțional"></label>
       <button class="btn hl-wide" type="submit">Încep dieta</button></form>`}
     ${b.diets.filter(d=>d.end).length?`<details class="hl-list"><summary>Diete trecute</summary>${b.diets.filter(d=>d.end).slice().reverse().map(d=>`<div class="hl-li"><span>${esc(d.name||"Dietă")}<small> ${dshort(d.start)} – ${dshort(d.end)} · ${daysBetween(d.start,d.end)+1} zile</small></span><b>${d.sw&&d.ew?sgn(d.ew-d.sw)+" kg":""}</b></div>`).join("")}</details>`:""}

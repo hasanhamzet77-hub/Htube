@@ -207,7 +207,7 @@ function addGoal(){
   const m=sheet(`<h3>Obiectiv nou pentru ${new Date().toLocaleDateString("ro-RO",{month:"long"})}</h3>
     <div class="gtpl">${GT.map((t,i)=>`<button type="button" data-t="${i}" class="${i?"":"on"}"><span>${t.e}</span>${t.n}</button>`).join("")}</div>
     <label>Nume<input name="n" value="${esc(pick.n)}" maxlength="50"></label>
-    <div class="gs-row"><label>Ținta<input name="target" type="number" inputmode="decimal" step="any" value="${pick.def}"></label><label>Puncte la final<input name="pts" type="number" inputmode="numeric" value="${pick.pts}"></label></div>
+    <div class="gs-row"><label>Ținta<input name="target" type="text" inputmode="decimal" step="any" value="${pick.def}"></label><label>Puncte la final<input name="pts" type="number" inputmode="numeric" value="${pick.pts}"></label></div>
     <p class="note" id="gs-hint">Se numără singur din aplicație.</p>
     <div class="hadd-b"><button type="button" class="btn ghost" data-close>Renunță</button><button class="btn">Adaugă</button></div>`,f=>{
       const target=parseFloat(String(f.target.value).replace(",","."));if(!(target>0)){toast("Pune o țintă");return false}
