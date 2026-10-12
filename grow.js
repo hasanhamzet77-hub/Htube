@@ -8,7 +8,8 @@ const kOf=t=>dk(new Date(t));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const fmtN=n=>Math.round(n).toLocaleString("ro-RO");
 S.xp=Object.assign({total:0,spent:0,keys:{},log:[]},S.xp||{});
-S.goals=S.goals||[];S.rewards=S.rewards||[];S.notes=S.notes||[];
+S.goals=(S.goals||[]).filter(g=>g.m!=="water");   // apa a fost scoasă din aplicație
+S.rewards=S.rewards||[];S.notes=S.notes||[];
 S.supp=Object.assign({list:[],taken:{}},S.supp||{});
 S.breath=Object.assign({days:{},pick:"box",min:5},S.breath||{});
 
@@ -122,7 +123,6 @@ const GT=[
   {m:"sauna",e:"🔥",n:"Ritualuri de saună",u:"saune",def:8,pts:200},
   {m:"breath",e:"🌬️",n:"Sesiuni de respirație",u:"sesiuni",def:15,pts:150},
   {m:"kg",e:"⚖️",n:"Kilograme date jos",u:"kg",def:2,pts:400},
-  {m:"water",e:"💧",n:"Zile cu apă suficientă",u:"zile",def:20,pts:150},
   {m:"manual",e:"🎯",n:"Obiectiv personal",u:"pași",def:10,pts:200}];
 const GTm=m=>GT.find(x=>x.m===m)||GT[GT.length-1];
 const inM=(k,m)=>String(k).startsWith(m);
@@ -277,7 +277,7 @@ function renderReport(){
   const mx=Math.max(1,...w.xpDay),best=w.xpDay.indexOf(Math.max(...w.xpDay));
   const delta=(a,b,inv)=>{if(b==null||a==null||a===b)return "";const up=a>b;return `<i class="${up!==!!inv?"up":"dn"}">${up?"▲":"▼"}</i>`};
   const T=[["🏋️","Antrenamente",w.sport,pw.sport,"/ 7"],["📖","Minute citite",w.read,pw.read,""],["🧘","Minute meditație",w.med,pw.med,""],["✍️","Zile cu jurnal",w.jour,pw.jour,"/ 7"],
-    ["⏳","Posturi",w.fast,pw.fast,""],["🔥","Saune",w.sauna,pw.sauna,""],["🧊","Zile cu apă rece",w.cold,pw.cold,""],["🌬️","Respirație",w.breath,pw.breath,"sesiuni"],["💧","Zile cu apă",w.water,pw.water,"/ 7"]];
+    ["⏳","Posturi",w.fast,pw.fast,""],["🔥","Saune",w.sauna,pw.sauna,""],["🧊","Zile cu apă rece",w.cold,pw.cold,""],["🌬️","Respirație",w.breath,pw.breath,"sesiuni"]];
   const score=Math.round(w.active/7*100);
   const msg=w.active>=6?"Săptămână de împărat. Ține ritmul.":w.active>=4?"Bună săptămână. Încă puțin și devine obicei.":w.active>=1?"Ai pornit. Alege un singur lucru și fă-l zilnic.":"O săptămână nouă e o pagină albă. Începe cu ceva mic azi.";
   R.innerHTML=`

@@ -11,7 +11,7 @@ const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/
 const hm=ms=>{ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`};
 const curW=()=>{const w=B().w;return w.length?w[w.length-1].kg:(+B().p.kg||null)};
 let tab="train",tick=0;
-const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"],["water","Apă","💧"]];
+const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"]];
 S.cold=Object.assign({log:{},pick:120},S.cold||{});
 if(!S.cold.v2){S.cold.v2=1;if(S.cold.pick===60)S.cold.pick=120}   // baia ta de gheață e de 2 min
 S.heat=Object.assign({plan:{r:3,s:15,c:2,p:2,t:90},log:{},cur:null},S.heat||{});
@@ -98,7 +98,6 @@ function render(){
   const last=w[w.length-1],first=w[0];
   const wk=w.filter(x=>daysBetween(x.d,today)<=7&&daysBetween(x.d,today)>=6)[0]||w.find(x=>daysBetween(x.d,today)<=7);
   const dA=activeDiet(),f=b.fast.cur;
-  const wl=b.water[today]||0,wGoal=kg?Math.round(kg*35/250):8;
   const sub=CS.find(x=>x[0]===(S.sub||{}).corp)?(S.sub||{}).corp:"kg";
   const SEC={
     kg:()=>`
@@ -147,13 +146,6 @@ function render(){
       <div class="hl-row"><label class="hl-lbl">Ultima masă<input id="hl-fs" type="time" value="${new Date().toTimeString().slice(0,5)}"></label><button class="btn" id="hl-fgo">Încep postul</button></div>
       <p class="note">Doar apă, ceai sau cafea neîndulcite.${(b.fast.pick||16)>=24?" Peste 24 h: ia electroliți (sare, magneziu, potasiu) și oprește-te dacă ai amețeli. Dacă iei medicamente sau ai o afecțiune, vorbește întâi cu medicul.":""}</p>`}
     ${fastStats()}
-  </div>`,
-    water:()=>`
-  <div class="sec hl">
-    <div class="sec-h"><h3>Apă azi</h3><span class="muted">țintă ${wGoal} pahare</span></div>
-    <div class="hl-water">${Array.from({length:Math.max(wGoal,wl)},(_,i)=>`<i class="${i<wl?"on":""}"></i>`).join("")}</div>
-    <div class="hadd-b"><button class="btn ghost" id="hl-w-">−</button><button class="btn" id="hl-w+">+ 1 pahar (250 ml)</button></div>
-    <p class="note">${wl*250} ml din ${wGoal*250} ml (~35 ml pe kilogram).</p>
   </div>`,
 };
   box.innerHTML=`<div class="hsub">${CS.map(([k,l,e])=>`<button data-hsub="${k}" aria-pressed="${k===sub}"><span>${e}</span>${l}</button>`).join("")}</div><div class="hpg sp-r">${SEC[sub]()}</div>`;
@@ -330,8 +322,6 @@ document.addEventListener("click",e=>{
     const okF=(Date.now()-f.start)/36e5>=f.h;if(okF){XP(`f:${f.start}`,f.h>=24?60:30,"Post dus la capăt");window.Grow&&Grow.confetti()}
     toast(okF?"Bravo! Post dus la capăt 💪":"Post salvat");render();return}
   if(t.closest("#hl-dend")){const d=activeDiet();if(!d||!confirm("Închei dieta?"))return;d.end=dk();d.ew=curW();save();toast("Dietă încheiată");render();return}
-  if(t.closest("#hl-w\\+")||t.id==="hl-w+"){const k=dk();B().water[k]=(B().water[k]||0)+1;save();const kg=curW(),g=kg?Math.round(kg*35/250):8;if(B().water[k]===g){XP(`wa:${k}`,10,"Apă suficientă");window.Grow&&Grow.confetti()}render();return}
-  if(t.closest("#hl-w-")||t.id==="hl-w-"){const k=dk();B().water[k]=Math.max(0,(B().water[k]||0)-1);save();render();return}
 });
 function startTick(){clearInterval(tick);tick=setInterval(()=>{
   if(S.heat.cur){heatTick();}
