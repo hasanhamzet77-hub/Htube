@@ -26,15 +26,18 @@ async function load(THREE,base,opts={}){
   const heat=new Float32Array(24);
   const det0=det||new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1);det0.needsUpdate=true;
   mat.defines={USE_UV:""};
-  const U={detail:{value:det0},heat:{value:heat},hotCol:{value:new THREE.Color(0xd4160c)},secCol:{value:new THREE.Color(0xc0503e)},clay:{value:opts.mode==="clay"?1:0}};
+  const face0=new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1);face0.needsUpdate=true;
+  const E=meta.eyes||[[.031,.7105,.141],[-.031,.7105,.141],.0125];
+  const U={faceMap:{value:face0},faceOn:{value:0},eyeC:{value:new THREE.Vector3(...E[0])},eyeR:{value:E[2]},detail:{value:det0},heat:{value:heat},hotCol:{value:new THREE.Color(0xd4160c)},secCol:{value:new THREE.Color(0xc0503e)},clay:{value:opts.mode==="clay"?1:0}};
   mat.onBeforeCompile=sh=>{
     Object.assign(sh.uniforms,U);
     sh.vertexShader=sh.vertexShader.replace("#include <common>",`#include <common>
-attribute vec4 mus;attribute vec4 col;uniform float heat[24];varying vec4 vCol;varying float vHeat;`)
+attribute vec4 mus;attribute vec4 col;uniform float heat[24];varying vec4 vCol;varying float vHeat;varying vec3 vObj;`)
       .replace("#include <begin_vertex>",`#include <begin_vertex>
-vCol=col;int mi=int(mus.x+.5);float hv=0.;for(int i=0;i<24;i++){if(i==mi)hv=heat[i];}vHeat=hv*mus.y/255.;`);
+vCol=col;vObj=position;int mi=int(mus.x+.5);float hv=0.;for(int i=0;i<24;i++){if(i==mi)hv=heat[i];}vHeat=hv*mus.y/255.;`);
     sh.fragmentShader=sh.fragmentShader.replace("#include <common>",`#include <common>
-uniform sampler2D detail;uniform vec3 hotCol;uniform vec3 secCol;uniform float clay;varying vec4 vCol;varying float vHeat;`)
+uniform sampler2D detail;uniform vec3 hotCol;uniform vec3 secCol;uniform float clay;varying vec4 vCol;varying float vHeat;varying vec3 vObj;
+uniform sampler2D faceMap;uniform float faceOn;uniform vec3 eyeC;uniform float eyeR;`)
       .replace("#include <color_fragment>",`#include <color_fragment>
 float ao=mix(.42,1.,vCol.r);
 vec4 dt=texture2D(detail,vUv);float brief=smoothstep(.35,.65,dt.g);float cav=dt.b;
@@ -45,11 +48,22 @@ float hh=clamp(abs(vHeat),0.,1.);
 vec3 hc=vHeat>0.?hotCol:secCol;
 sk=mix(sk,hc,hh*.9);
 sk=mix(sk,vec3(.03,.03,.035),brief);                          // slip
+// ochi: globi oculari (col.b)
+float eyeM=step(.5,vCol.b)*(1.-clay);
+if(eyeM>0.){vec3 ec=vec3(vObj.x>0.?eyeC.x:-eyeC.x,eyeC.y,eyeC.z);vec3 ed=normalize(vObj-ec);
+  float ir=smoothstep(.86,.875,ed.z),pu=smoothstep(.965,.972,ed.z);
+  vec3 iris=mix(vec3(.11,.055,.02),vec3(.05,.025,.01),smoothstep(.9,.95,ed.z));
+  sk=mix(mix(vec3(.72,.67,.62),iris,ir),vec3(.008),pu);ao=max(ao,.8);}
+// chipul tău: textură cilindrică în jurul capului (importată pe telefon)
+float fa=faceOn*smoothstep(.565,.6,vObj.y)*(1.-clay),hairM=0.;
+if(fa>0.){float th=atan(vObj.x,vObj.z-.05);vec3 fc=texture2D(faceMap,vec2(th*.15915494+.5,(vObj.y-.55)/.29)).rgb;
+  fc=pow(fc,vec3(2.2));hairM=fa*(1.-smoothstep(.015,.09,dot(fc,vec3(.2126,.7152,.0722))));
+  sk=mix(sk,fc,fa);ao=mix(ao,sqrt(ao),fa);}
 diffuseColor.rgb=sk*ao;`)
       .replace("#include <roughnessmap_fragment>",`#include <roughnessmap_fragment>
-roughnessFactor=mix(roughnessFactor,.85,smoothstep(.35,.65,texture2D(detail,vUv).g));`)
+roughnessFactor=mix(roughnessFactor,.85,smoothstep(.35,.65,texture2D(detail,vUv).g));roughnessFactor=mix(roughnessFactor,.9,hairM);roughnessFactor=mix(roughnessFactor,.12,eyeM);`)
       .replace("#include <lights_physical_fragment>",`#include <lights_physical_fragment>
-{float bf=smoothstep(.35,.65,texture2D(detail,vUv).g);material.sheenColor*=1.-bf;material.clearcoat*=1.-bf;}`)
+{float bf=max(smoothstep(.35,.65,texture2D(detail,vUv).g),hairM);material.sheenColor*=1.-max(bf,eyeM);material.clearcoat=mix(material.clearcoat*(1.-bf),1.,eyeM);material.specularColor*=1.-.75*hairM;}`)
       .replace("#include <emissivemap_fragment>",`#include <emissivemap_fragment>
 totalEmissiveRadiance+=hc*hh*.22;`);
   };
@@ -58,6 +72,10 @@ totalEmissiveRadiance+=hc*hh*.22;`);
   mesh.frustumCulled=false;
   return {mesh,geo:g,mat,meta,heat,
     setHeat(o){heat.fill(0);for(const k in o)heat[meta.mus?meta.mus.indexOf(k):+k]=o[k];},
+    setFace(img){if(U.faceMap.value!==face0)U.faceMap.value.dispose();
+      if(!img){U.faceMap.value=face0;U.faceOn.value=0;return}
+      const t=new THREE.Texture(img);t.minFilter=THREE.LinearFilter;t.generateMipmaps=false;t.wrapS=THREE.RepeatWrapping;t.anisotropy=4;t.needsUpdate=true;
+      U.faceMap.value=t;U.faceOn.value=1},
     setMode(m){const s=SKIN[m]||SKIN.skin;mat.color.setHex(s.c);mat.sheenColor.setHex(s.sh);U.clay.value=m==="clay"?1:0}};
 }
 function lights(THREE,scene,renderer){

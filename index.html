@@ -508,6 +508,11 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .sptags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.sptags i{font-style:normal;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(233,144,126,.18);color:#e9907e}.sptags i.p{background:rgba(255,59,48,.2);color:#ff5a4f}
 .sphud{position:absolute;left:14px;top:12px;right:14px;pointer-events:none}.sphud b{display:block;font-size:14.5px}.sphud small{font-size:12px;color:var(--muted)}
 .spload{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:20px;text-align:center}
+.spface{position:absolute;left:10px;bottom:9px;display:flex;gap:6px;z-index:2}
+.spface button{display:flex;align-items:center;gap:6px;height:30px;padding:0 11px 0 9px;border-radius:15px;border:1px solid var(--glass-b);background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--ink);font:600 12px/1 var(--sans);cursor:pointer}
+.spface button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.spface #sp-face-x{width:30px;padding:0;justify-content:center;font-size:17px;font-weight:500;color:var(--muted)}
+.spface button.on{border-color:color-mix(in srgb,var(--accent) 60%,transparent);color:var(--accent)}
 .sphint{position:absolute;right:12px;bottom:10px;font-size:11px;color:var(--muted);opacity:.75;pointer-events:none}
 .spgo{display:flex;align-items:center;gap:14px;width:100%;margin:14px 0;padding:14px 16px;border-radius:20px;background:var(--grad);color:#fff;text-align:left;box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 40%,transparent)}
 .spgo svg{width:46px;height:46px;padding:12px 11px 12px 13px;border-radius:50%;background:rgba(255,255,255,.22);fill:#fff;flex:none}
@@ -926,7 +931,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div id="sp-train">
     <div class="ptop"><div><small class="spkick" id="sp-kick"></small><h2 class="ptitle" id="sp-title">Sport</h2></div><span class="sptag" id="sp-tag"></span></div>
     <div class="spweek" id="sp-week"></div>
-    <div class="spstage" id="sp-stage"><canvas id="sp-cv"></canvas><div class="sphud" id="sp-hud"></div><div class="spload" id="sp-load">Se încarcă modelul 3D…</div><small class="sphint">Trage ca să rotești</small></div>
+    <div class="spstage" id="sp-stage"><canvas id="sp-cv"></canvas><div class="sphud" id="sp-hud"></div><div class="spload" id="sp-load">Se încarcă modelul 3D…</div><small class="sphint">Trage = rotești · dublu-tap = chipul</small><div class="spface"><button id="sp-face" type="button" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4.2"/><path d="M4.5 20.5c1.2-4 4.2-6 7.5-6s6.3 2 7.5 6"/></svg><span>Chipul meu</span></button><button id="sp-face-x" type="button" hidden aria-label="Elimină chipul">×</button><input type="file" id="sp-face-in" accept="image/*" hidden></div></div>
     <div id="sp-panel"></div>
     <div id="sp-list"></div>
     </div>

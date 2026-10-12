@@ -120,9 +120,10 @@ async function buildScene(THREE,canvas){
   const dir=(a,b)=>{const d=V(RG[b]).sub(V(RG[a])).normalize();return [d.x,d.y,d.z]};
   const BIND={torso:[0,1,0],ua:dir("shL","elL"),fa:dir("elL","wrL"),th:dir("hipL","knL"),sh:dir("knL","anL")};
   const body={mesh:B.mesh,lib:B};
-  G={THREE,renderer,scene,cam,root,pelvis,torso,arms,legs,body,M,grip,yaw:.7,pitch:.22,target:new THREE.Vector3(0,.85,0),dist:4.2};
+  G={THREE,renderer,scene,cam,root,pelvis,torso,arms,legs,body,M,grip,yaw:.7,pitch:.22,target:new THREE.Vector3(0,.85,0),dist:4.2,zoom:1,zoomT:1};
   applyPose(full(BIND),{});root.updateMatrixWorld(true);
   for(const k of ["R","L"])grip[k]=arms[k].el.worldToLocal(V(RG["grip"+k]));
+  G.headL=torso.worldToLocal(new THREE.Vector3(0,.71,.07));
   const bones=[pelvis,torso,arms.R.ua,arms.R.el,arms.L.ua,arms.L.el,legs.R.hip,legs.R.kn,legs.R.an,legs.L.hip,legs.L.kn,legs.L.an];
   scene.add(B.mesh);B.mesh.bind(new THREE.Skeleton(bones),new THREE.Matrix4());
   // echipament
@@ -142,11 +143,24 @@ async function buildScene(THREE,canvas){
 
 // rotești corpul trăgând cu degetul
 function setupDrag(cv){
-  let x0=null,y0=0,yaw0=0,p0=0;
-  cv.addEventListener("pointerdown",e=>{x0=e.clientX;y0=e.clientY;yaw0=G.yaw;p0=G.pitch;cv.setPointerCapture(e.pointerId)});
-  cv.addEventListener("pointermove",e=>{if(x0===null)return;G.yaw=yaw0-(e.clientX-x0)*.01;G.pitch=Math.max(-.05,Math.min(.9,p0+(e.clientY-y0)*.005));draw.dirty=true});
-  const up=e=>{if(x0!==null&&e&&Math.abs(e.clientX-x0)<6&&Math.abs(e.clientY-y0)<6)demo();x0=null};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  // un deget: rotești; două degete: zoom (până la chip); dublu-tap: apropie/depărtează fața
+  const pts=new Map();let x0=null,y0=0,yaw0=0,p0=0,d0=0,z0=1,lastTap=0,moved=false;
+  const pd=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)};
+  cv.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);
+    if(pts.size===1){x0=e.clientX;y0=e.clientY;yaw0=G.yaw;p0=G.pitch;moved=false;G.aim=0}
+    else if(pts.size===2){d0=pd();z0=G.zoomT;x0=null;moved=true}});
+  cv.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&d0){G.zoomT=G.zoom=Math.max(ZMIN,Math.min(1,z0*d0/Math.max(pd(),1)));return}
+    if(x0===null)return;if(Math.abs(e.clientX-x0)+Math.abs(e.clientY-y0)>6)moved=true;
+    G.yaw=yaw0-(e.clientX-x0)*.01;G.pitch=Math.max(-.05,Math.min(G.zoomT<.6?1.4:.9,p0+(e.clientY-y0)*.005))});
+  const up=e=>{const was=pts.size;pts.delete(e.pointerId);if(pts.size<2)d0=0;
+    if(was===1&&x0!==null&&!moved){const t=e.timeStamp||performance.now();
+      if(t-lastTap<380){if(G.zoomT<.6)G.zoomT=1;else{G.zoomT=ZMIN;G.aim=1}lastTap=0}else{lastTap=t;setTimeout(()=>{if(lastTap===t&&G.zoomT>.6)demo()},390)}}
+    if(pts.size===0)x0=null};
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{e.preventDefault();G.zoomT=G.zoom=Math.max(ZMIN,Math.min(1,G.zoom*Math.exp(e.deltaY*.0015)))},{passive:false});
 }
+const ZMIN=.15;
 
 // ── aplicarea unei poze ──
 let tmp=null;
@@ -216,6 +230,7 @@ function setExercise(key){
   cur={key,an,A,B,cycle:an.t.reduce((a,b)=>a+b,0),phase:0,rep:0,mir:false};
   G.root.position.set(...o.pos);G.target.set(...o.target);G.dist=o.dist;G.yaw=o.yaw;G.pitch=.22;
   if(an.props==="bars"){G.target.y+=.32;G.dist+=.35}
+  if(G.zoomT<.6)G.aim=1;
   // calibrare: unde stau mâinile/gleznele în poza A
   applyPose(A,an);G.root.updateMatrixWorld(true);
   if(an.pin==="feet"){const y=Math.min(anklePos("R").y,anklePos("L").y);G.root.position.y+=.075-y}
@@ -294,9 +309,18 @@ function draw(ts){
   }else{cur.phase=0}
   place();
   // cameră
-  const T=G.THREE,c=G.cam,t=G.target;
-  const breathe=anim.on?0:Math.sin((ts||0)/900)*.004;
-  c.position.set(t.x+G.dist*Math.cos(G.pitch)*Math.sin(G.yaw),t.y+G.dist*Math.sin(G.pitch)+breathe,t.z+G.dist*Math.cos(G.pitch)*Math.cos(G.yaw));
+  const T=G.THREE,c=G.cam;
+  G.zoom+=(G.zoomT-G.zoom)*Math.min(1,dt*7);
+  if(G.zoomT>.6&&G.pitch>.9)G.pitch+=(.9-G.pitch)*Math.min(1,dt*6);
+  if(G.aim){ // la apropiere, camera se întoarce spre fața lui (3/4)
+    const q=new T.Quaternion();G.torso.getWorldQuaternion(q);const f=new T.Vector3(0,0,1).applyQuaternion(q);
+    const ty=Math.atan2(f.x,f.z)+.4,tp=Math.max(-.05,Math.min(1.4,Math.asin(Math.max(-1,Math.min(1,f.y)))+.1));
+    const dy=((ty-G.yaw+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI,k=Math.min(1,dt*5);
+    G.yaw+=dy*k;G.pitch+=(tp-G.pitch)*k;if(Math.abs(dy)<.003&&Math.abs(tp-G.pitch)<.003)G.aim=0}
+  const zf=Math.min(1,Math.max(0,(1-G.zoom)/(1-ZMIN)))**.7,t=G.target.clone();
+  if(zf>0)t.lerp(G.torso.localToWorld(G.headL.clone()),zf);
+  const dist=G.dist*G.zoom,breathe=anim.on?0:Math.sin((ts||0)/900)*.004*G.zoom;
+  c.position.set(t.x+dist*Math.cos(G.pitch)*Math.sin(G.yaw),t.y+dist*Math.sin(G.pitch)+breathe,t.z+dist*Math.cos(G.pitch)*Math.cos(G.yaw));
   c.lookAt(t);
   G.renderer.render(G.scene,c);
 }
@@ -442,7 +466,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#sp-skip")){sess.restEnd=now();renderLive();return}
   if(e.target.closest("#sp-plus")){sess.restEnd+=30000;renderLive();return}
   if(e.target.closest("#sp-close")){Object.assign(sess,{state:"idle",start:0,done:{}});render();return}
-  if(e.target.closest("#sp-stage")&&sess.state==="idle"&&!e.target.closest("canvas"))demo();
+  if(e.target.closest("#sp-stage")&&sess.state==="idle"&&!e.target.closest("canvas")&&!e.target.closest(".spface"))demo();
 });
 
 // o demonstrație de 3 repetări când alegi un exercițiu (atingi corpul ca s-o repeți)
@@ -464,13 +488,42 @@ async function show(){
       await buildScene(T,$s("sp-cv"));
       new ResizeObserver(resize).observe($s("sp-stage"));resize();
       setExercise(exNow().a);$s("sp-load").hidden=true;
+      loadFace();
       // o demonstrație scurtă la prima deschidere
       demo();
     }catch(err){inited=false;$s("sp-load").textContent="Modelul 3D are nevoie de internet prima dată.";return}
   }
   resize();startLoop();
 }
+// ── chipul tău pe model: textura stă doar pe telefon (IndexedDB), nu în aplicația publică ──
+const FACE_KEY="__face";
+const faceDB={get:()=>idb("files","readonly",t=>t.objectStore("files").get(FACE_KEY)),
+  put:b=>idb("files","readwrite",t=>t.objectStore("files").put(b,FACE_KEY)),
+  del:()=>idb("files","readwrite",t=>t.objectStore("files").delete(FACE_KEY))};
+const blobImg=b=>new Promise((res,rej)=>{const u=URL.createObjectURL(b),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("img"))};im.src=u});
+let faceOn=false;
+function faceBtn(){const b=$s("sp-face"),x=$s("sp-face-x");if(!b)return;b.hidden=false;b.classList.toggle("on",faceOn);b.querySelector("span").textContent=faceOn?"Chipul meu ✓":"Chipul meu";x.hidden=!faceOn}
+async function loadFace(){
+  try{const b=await faceDB.get();if(b&&G){G.body.lib.setFace(await blobImg(b));faceOn=true}}catch(e){}
+  faceBtn();
+}
+async function importFace(file){
+  try{
+    let im=await blobImg(file);const r=im.naturalWidth/im.naturalHeight;
+    if(r<1.85||r>2.15){toast("Alege fișierul chip_HT.jpg — textura pregătită pentru model");return}
+    let blob=file;
+    if(im.naturalWidth>2048){const c=document.createElement("canvas");c.width=2048;c.height=1024;c.getContext("2d").drawImage(im,0,0,2048,1024);
+      blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.9));im=await blobImg(blob)}
+    await faceDB.put(blob);G.body.lib.setFace(im);faceOn=true;faceBtn();
+    toast("Chipul tău e pe model 💪");try{Grow.confetti()}catch(e){}
+  }catch(e){toast("Nu am putut încărca imaginea")}
+}
+document.addEventListener("click",e=>{
+  if(e.target.closest("#sp-face")){$s("sp-face-in").click();return}
+  if(e.target.closest("#sp-face-x")){if(!confirm("Scoți chipul de pe model?"))return;faceDB.del().catch(()=>{});G&&G.body.lib.setFace(null);faceOn=false;faceBtn()}
+});
+document.addEventListener("change",e=>{if(e.target.id==="sp-face-in"){const f=e.target.files[0];e.target.value="";if(f&&G)importFace(f)}});
 function hide(){stopLoop()}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopLoop();else if(!$s("v-sport").hidden&&G)startLoop()});
-window.Sport={show,hide,PLAN};
+window.Sport={show,hide,PLAN,zoomFace(on){if(G){G.zoomT=on===false?1:ZMIN;G.aim=on!==false?1:0}},_g:()=>G};
 })();
