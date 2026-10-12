@@ -387,10 +387,10 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 #intro{position:fixed;inset:0;z-index:30;background:#050505;overflow:hidden;color:#eee;cursor:pointer;--b0:1}
 #intro.out{opacity:0;transform:scale(1.04);transition:opacity .5s ease,transform .5s ease}
 .in-wall{position:absolute;inset:-6%;opacity:0;animation:inWall 2.1s ease .05s forwards}
-.in-wall img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.4) brightness(1.05);opacity:0}
+.in-wall img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:contrast(1.15) brightness(1.3);opacity:0}
 .in-wall img.on{opacity:1}
 @keyframes inWall{0%{opacity:0}15%{opacity:.9}75%{opacity:.75}100%{opacity:0}}
-.in-red{position:absolute;inset:0;background:#a50b0b;mix-blend-mode:multiply;opacity:.6;pointer-events:none}
+.in-red{position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 42%,#e0301f 0%,#9c0d09 60%,#2a0303 100%);mix-blend-mode:multiply;opacity:.55;pointer-events:none}
 .in-embers i{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;background:#ff4d2e;box-shadow:0 0 8px #ff3b1f;animation:ember linear forwards;opacity:0}
 @keyframes ember{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-70vh)}}
 .in-bust{position:absolute;left:50%;top:50%;height:100%;max-width:none;transform:translate(-50%,-50%) scale(1.1);opacity:0;
@@ -1293,9 +1293,7 @@ function artFor(x){
   if(!ART)return null;
   if(artPick.has(x.id))return artPick.get(x.id);
   const th=themesFor(x).filter(t=>ART[t]&&ART[t].length);if(!th.length)return null;
-  const h=hashStr(x.id+"|"+x.t),L0=ART[th[h%th.length]];
-  // imaginile la rezoluție mare (hq) au prioritate; cele vechi apar doar din când în când
-  const HQ=L0.filter(a=>a.id.startsWith("hq")),L=HQ.length>=6&&(h>>>3)%6?HQ:L0;
+  const h=hashStr(x.id+"|"+x.t),L=ART[th[h%th.length]];
   const src=a=>a.src==="HT"?a.id.slice(0,4):a.f;
   let k=(h>>>7)%L.length;
   for(let t=0;t<L.length&&artRecent.includes(src(L[k]));t++)k=(k+1)%L.length;
@@ -2747,28 +2745,31 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden)setTimeout
 setInterval(()=>{if(!document.hidden)checkMood()},5*60*1000);
 // ── intro la deschidere: cu sunet, așteaptă o atingere (iPhone dă voie la sunet doar după atingere) ──
 let introOn=!!$("intro");
+// cadrele din spatele intro-ului se încarcă imediat (cât aștepți atingerea)
+const WALL=Array.from({length:14},(_,i)=>`brand/wall/w${String(i).padStart(2,"0")}.jpg`),WALLOK=new Set();
+if(introOn)WALL.forEach(u=>{const im=new Image();im.onload=()=>WALLOK.add(u);im.src=u});
 (()=>{
   const el=$("intro");if(!el)return;
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   const gate=(S.music||{}).intro!==false;
   let flip=0,started=false;
-  const done=()=>{if(!introOn)return;introOn=false;clearInterval(flip);el.classList.add("out");setTimeout(()=>{el.remove();checkMood();window.Music&&Music.refresh()},520)};
+  const done=()=>{if(!introOn)return;introOn=false;clearTimeout(flip);el.classList.add("out");setTimeout(()=>{el.remove();checkMood();window.Music&&Music.refresh()},520)};
   function begin(){
     if(started)return;started=true;
     el.classList.remove("gate");
     window.__introT0=performance.now();
     // scântei
     if(!reduce){const em=$("in-embers");em.innerHTML=Array.from({length:26},()=>`<i style="left:${Math.random()*100}%;--dx:${(Math.random()*60-30).toFixed(0)}px;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s;animation-delay:${(Math.random()*.9).toFixed(2)}s"></i>`).join("")}
-    // scene de luptă care se derulează rapid (ca la începutul unui film Marvel)
-    artP.then(()=>{
-      if(reduce||!ART||!introOn)return;
-      const L=["war","roman","myth","sacred","stoic"].flatMap(k=>ART[k]||[]).slice(0,30).map(a=>"art/thumb/"+a.f);
-      const ok=[];L.forEach(u=>{const im=new Image();im.onload=()=>ok.push(u);im.src=u});
-      const imgs=[...$("in-wall").querySelectorAll("img")];let n=0;
-      flip=setInterval(()=>{if(!ok.length)return;const a=imgs[n%2],b=imgs[(n+1)%2];n++;
-        a.src=ok[n%ok.length];a.style.transform=`scale(${(1.05+Math.random()*.25).toFixed(2)}) translate(${(Math.random()*8-4).toFixed(1)}%,${(Math.random()*8-4).toFixed(1)}%) rotate(${(Math.random()*4-2).toFixed(1)}deg)`;
-        a.classList.add("on");b.classList.remove("on")},85);
-    });
+    // scene care se derulează tot mai repede (ca la începutul unui film): cadre 720p dedicate, deja în cache
+    if(!reduce){
+      const imgs=[...$("in-wall").querySelectorAll("img")];let n=0,dt=210;
+      const step=()=>{if(!introOn)return;const ok=WALL.filter(u=>WALLOK.has(u));
+        if(ok.length){const a=imgs[n%2],b=imgs[(n+1)%2];n++;
+          a.src=ok[n%ok.length];a.style.transform=`scale(${(1.06+Math.random()*.16).toFixed(2)}) translate(${(Math.random()*6-3).toFixed(1)}%,${(Math.random()*6-3).toFixed(1)}%)`;
+          a.classList.add("on");b.classList.remove("on")}
+        dt=Math.max(60,dt*.86);flip=setTimeout(step,dt)};
+      step();
+    }
     setTimeout(done,reduce?1400:2750);
   }
   if(gate){
