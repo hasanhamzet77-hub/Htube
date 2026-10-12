@@ -11,7 +11,7 @@ S.xp=Object.assign({total:0,spent:0,keys:{},log:[]},S.xp||{});
 S.goals=(S.goals||[]).filter(g=>g.m!=="water");   // apa a fost scoasă din aplicație
 S.rewards=S.rewards||[];S.notes=S.notes||[];
 S.supp=Object.assign({list:[],taken:{}},S.supp||{});
-S.breath=Object.assign({days:{},pick:"box",min:5},S.breath||{});
+S.breath=Object.assign({days:{},pick:"box",min:5,snd:"voce"},S.breath||{});
 
 // ── niveluri (ranguri romane) ──
 const LV=[[0,"Recrut","🛡️"],[150,"Legionar","⚔️"],[400,"Decurion","🗡️"],[800,"Optio","🏹"],[1400,"Centurion","🦅"],[2200,"Tribun","🏛️"],[3300,"Legat","🔱"],[4800,"Consul","👑"],[6800,"Împărat","🌟"]];
@@ -324,6 +324,7 @@ function renderBreathCard(){
   R.innerHTML=`<div class="sec-h"><h3>Respirație</h3><span class="muted">${(b.days[k]||{}).n?`azi ${b.days[k].n}× · `:""}${tot?`total ${Math.round(tot)} min`:""}</span></div>
     <div class="brpat">${Object.entries(BR).map(([id,p])=>`<button data-br="${id}" class="${b.pick===id?"on":""}"><span class="bro"></span><b>${p.n}</b><small>${p.d}</small></button>`).join("")}</div>
     ${BR[b.pick].wim?`<p class="note">Wim Hof: 30 respirații adânci, apoi ții respirația cât poți după expir, apoi o inspirație ținută 15 s. Doar stând jos sau întins, niciodată în apă sau la volan.</p>`:`<div class="pres">${[3,5,10].map(m=>`<button class="pre" data-brm="${m}" aria-pressed="${b.min===m}">${m}<small>min</small></button>`).join("")}</div>`}
+    <div class="brsnd"><span>Sunet</span>${[["voce","🗣️ Voce"],["ton","🔔 Ton"],["off","🔇 Fără"]].map(([k,l])=>`<button data-brs="${k}" aria-pressed="${(b.snd||"voce")===k}">${l}</button>`).join("")}</div>
     <button class="btn" id="br-go">Începe ${BR[b.pick].n}</button>`;
 }
 let BS=null;
@@ -341,10 +342,56 @@ function setOrb(ph,s){
   const o=BS.ov.querySelector(".brorb");o.style.transitionDuration=s+"s";o.dataset.ph=ph;
   o.style.transform=ph==="in"?"scale(1)":ph==="out"?"scale(.42)":"";
   if(navigator.vibrate)navigator.vibrate(ph==="in"?18:ph==="out"?[8,40,8]:6);
-  tone(ph);
+  tone(ph,BS&&BS.ph==="pump",s);
 }
 let tctx=null;
-function tone(ph){if((S.music||{}).on===false)return;try{tctx=tctx||new (window.AudioContext||window.webkitAudioContext)();const o=tctx.createOscillator(),g=tctx.createGain();o.type="sine";o.frequency.value=ph==="in"?396:ph==="out"?264:330;g.gain.setValueAtTime(0,tctx.currentTime);g.gain.linearRampToValueAtTime(.05,tctx.currentTime+.08);g.gain.exponentialRampToValueAtTime(.0001,tctx.currentTime+1.4);o.connect(g).connect(tctx.destination);o.start();o.stop(tctx.currentTime+1.5)}catch(e){}}
+// sunete clare pentru fiecare fază: inspir = urcă, expir = coboară, ține = două atingeri scurte
+function audioCtx(){
+  try{tctx=tctx||new (window.AudioContext||window.webkitAudioContext)();if(tctx.state!=="running")tctx.resume()}catch(e){}
+  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}   // iPhone: se aude și pe modul silențios
+  return tctx;
+}
+function chime(f0,f1,t,vol,dur){   // clopoțel: fundamentală + armonică, cu glisare ușoară
+  const c=tctx,o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain(),g2=c.createGain();
+  o.type="sine";o2.type="sine";
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur*.35);
+  o2.frequency.setValueAtTime(f0*2.01,t);o2.frequency.exponentialRampToValueAtTime(f1*2.01,t+dur*.35);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0005,t+dur);
+  g2.gain.setValueAtTime(0,t);g2.gain.linearRampToValueAtTime(vol*.28,t+.008);g2.gain.exponentialRampToValueAtTime(.0005,t+dur*.45);
+  o.connect(g).connect(c.destination);o2.connect(g2).connect(c.destination);
+  o.start(t);o2.start(t);o.stop(t+dur+.05);o2.stop(t+dur+.05);
+}
+const SAY={in:"Inspiră",out:"Expiră",hold:"Ține"};
+let roVoice=null;
+function sayRo(txt){
+  try{const ss=window.speechSynthesis;if(!ss)return false;
+    roVoice=roVoice||ss.getVoices().find(v=>/^ro/i.test(v.lang))||null;
+    ss.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="ro-RO";if(roVoice)u.voice=roVoice;u.rate=.92;u.pitch=1;u.volume=1;ss.speak(u);return true}catch(e){return false}
+}
+try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{roVoice=null}}}catch(e){}
+// ghid continuu: un ton moale care urcă pe toată durata inspirului și coboară pe expir — știi cu ochii închiși cât mai ai
+let guide=null;
+function guideTone(ph,dur){
+  try{if(guide){const g0=guide;g0.g.gain.cancelScheduledValues(tctx.currentTime);g0.g.gain.setTargetAtTime(0,tctx.currentTime,.08);g0.o.stop(tctx.currentTime+.4);guide=null}}catch(e){}
+  if(!dur||ph==="hold")return;
+  const c=tctx,t=c.currentTime+.05,o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
+  o.type="triangle";lp.type="lowpass";lp.frequency.value=900;
+  const [f0,f1]=ph==="in"?[196,392]:[392,196];                 // o octavă: sus la inspir, jos la expir
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.09,t+.4);g.gain.setValueAtTime(.09,t+Math.max(.5,dur-.35));g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(lp).connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.1);guide={o,g};
+}
+function tone(ph,quick,dur){
+  const m=S.breath.snd||"voce";if(m==="off")return;
+  const c=audioCtx();if(!c)return;const t=c.currentTime+.02;
+  if(!quick)guideTone(ph,dur);
+  try{
+    if(ph==="in"){chime(523.25,783.99,t,.32,1.1)}                       // do → sol, urcă
+    else if(ph==="out"){chime(659.25,392,t,.3,1.3)}                     // mi → sol jos, coboară
+    else{chime(880,880,t,.22,.28);chime(880,880,t+.2,.22,.28)}          // ține: tic-tic
+  }catch(e){}
+  if(m==="voce"&&!quick&&SAY[ph])setTimeout(()=>sayRo(SAY[ph]),180);
+}
 function wimStep(ph){
   BS.ph=ph;const L=$g("br-l"),Sx=$g("br-s"),tap=$g("br-tap");tap.hidden=ph!=="ret";
   if(ph==="pump"){BS.cnt=0;BS.round++;Sx.textContent=`Runda ${BS.round} din 3`;wimPump()}
@@ -369,9 +416,9 @@ function brTick(){
   const el=(now-BS.t0)/6e4;$g("br-s").textContent=`${BS.p.n} · ${Math.max(0,Math.ceil((BS.end-now)/6e4))} min rămase`;
   if(now>=BS.stepEnd){if(now>=BS.end&&BS.i%BS.p.st.length===BS.p.st.length-1){brClose(true);return}brNext()}
 }
-function brNext(){const st=BS.p.st;BS.i++;const [ph,s,l]=st[BS.i%st.length];BS.stepEnd=Date.now()+s*1000;$g("br-l").textContent=l;if(ph!=="hold")setOrb(ph,s);else{const o=BS.ov.querySelector(".brorb");o.dataset.ph="hold"}}
+function brNext(){const st=BS.p.st;BS.i++;const [ph,s,l]=st[BS.i%st.length];BS.stepEnd=Date.now()+s*1000;$g("br-l").textContent=l;if(ph!=="hold")setOrb(ph,s);else{const o=BS.ov.querySelector(".brorb");o.dataset.ph="hold";if(navigator.vibrate)navigator.vibrate([10,60,10]);tone("hold",false,s)}}
 function brClose(done){
-  if(!BS)return;clearInterval(BS.int);const b=BS,mins=(Date.now()-b.t0)/6e4;BS=null;
+  if(!BS)return;clearInterval(BS.int);try{guideTone(null,0);speechSynthesis&&speechSynthesis.cancel()}catch(e){}const b=BS,mins=(Date.now()-b.t0)/6e4;BS=null;
   b.ov.classList.remove("in");setTimeout(()=>b.ov.remove(),400);try{typeof unlockWake==="function"&&unlockWake()}catch(e){}
   if(done||mins>=2){const k=dk(),d=S.breath.days[k]=S.breath.days[k]||{n:0,min:0};d.n++;d.min+=mins;save();
     if(d.n<=2)award(`br:${k}:${d.n}`,10,"Respirație");try{bell(.3)}catch(e){}
@@ -382,7 +429,8 @@ document.addEventListener("click",e=>{
   const t=e.target;if(!t.closest("#br-sec"))return;
   const p=t.closest("[data-br]");if(p){S.breath.pick=p.dataset.br;save();renderBreathCard();return}
   const m=t.closest("[data-brm]");if(m){S.breath.min=+m.dataset.brm;save();renderBreathCard();return}
-  if(t.closest("#br-go"))brOpen();
+  const sn=t.closest("[data-brs]");if(sn){S.breath.snd=sn.dataset.brs;save();renderBreathCard();audioCtx();if(sn.dataset.brs!=="off"){tone("in")}return}
+  if(t.closest("#br-go")){audioCtx();try{if(S.breath.snd==="voce"&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}}catch(e){}brOpen()}
 });
 
 // ── notițe din cărți (apar și în feed, ca citate) ──
