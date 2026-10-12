@@ -82,7 +82,7 @@ const loadThree=()=>threeP||(threeP=new Promise((res,rej)=>{
 let G=null;   // tot ce ține de scenă
 async function buildScene(THREE,canvas){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,3));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
   const scene=new THREE.Scene();
