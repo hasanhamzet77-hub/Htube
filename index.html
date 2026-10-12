@@ -245,6 +245,8 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .shelves{--row:196px;display:flex;flex-wrap:wrap;align-items:flex-end;align-content:flex-start;gap:0 5px;padding:0 12px;min-height:calc(var(--row)*2);
   background:repeating-linear-gradient(to bottom,transparent 0 calc(var(--row) - 10px),var(--board) calc(var(--row) - 10px) calc(var(--row) - 9px),var(--board2) calc(var(--row) - 9px) var(--row));border-radius:4px}
 .slot{height:var(--row);padding-bottom:10px;display:flex;align-items:flex-end}
+.shelf-tip{flex-basis:100%;text-align:center;font-size:11px;color:var(--muted);opacity:.7;margin-top:6px}
+.spine,.now{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .spine{position:relative;display:block;border-radius:3px 3px 1px 1px;color:rgba(255,255,255,.93);
   background:linear-gradient(90deg,hsl(var(--h) 42% 24%),hsl(var(--h) 48% 38%) 38%,hsl(var(--h) 46% 31%) 70%,hsl(var(--h) 42% 22%));
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),2px 0 6px rgba(0,0,0,.18);transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s;transform-origin:bottom center}
@@ -2125,6 +2127,7 @@ const bk={
   // o carte ștearsă nu mai poate fi salvată la loc (ex. salvarea întârziată a OCR-ului sau a poziției)
   put:b=>bkGone.has(b.id)?Promise.resolve():idb("books","readwrite",t=>t.objectStore("books").put(b)),
   file:id=>idb("files","readonly",t=>t.objectStore("files").get(id)),
+  fileKeys:()=>idb("files","readonly",t=>t.objectStore("files").getAllKeys()),
   add:(b,buf)=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").put(buf,b.id);return t.objectStore("books").put(b)}),
   del:id=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").delete(id);return t.objectStore("books").delete(id)})
 };
@@ -2132,6 +2135,8 @@ let BOOKS=[],addingN=0;
 const hueOf=t=>{let h=7;for(const c of t)h=(h*31+c.charCodeAt(0))%997;return Math.round(h/997*360)};
 async function renderShelf(){
   try{BOOKS=(await bk.all()).sort((a,b)=>(b.last||b.add)-(a.last||a.add))}catch(e){BOOKS=[]}
+  try{if(BOOKS.length&&!addingN){const fk=new Set(await bk.fileKeys()),orph=BOOKS.filter(b=>!fk.has(b.id));
+    if(orph.length){for(const b of orph){bkGone.add(b.id);await bk.del(b.id)}BOOKS=BOOKS.filter(b=>fk.has(b.id))}}}catch(e){}
   $("bk-count").textContent=BOOKS.length?BOOKS.length+(BOOKS.length===1?" carte":" cărți"):"";
   const cur=BOOKS.find(b=>b.pg>1);
   $("bk-now").innerHTML=cur?(()=>{const pr=Math.round(cur.pg/cur.n*100);
@@ -2142,10 +2147,18 @@ async function renderShelf(){
     const H=Math.round(128+Math.min(46,(b.n||100)/10)),W=Math.round(26+Math.min(18,(b.n||100)/28));
     return `<div class="slot"><button class="spine" data-book="${b.id}" style="--h:${hueOf(b.t)};height:${H}px;width:${W}px" aria-label="${esc(b.t)}"><span>${esc(b.t)}</span>${b.pg>1?'<i class="rib"></i>':""}</button></div>`}).join("")
     +Array.from({length:addingN},()=>`<div class="slot"><span class="spine ghost" style="height:150px;width:34px"></span></div>`).join("")
-    +(BOOKS.length||addingN?"":`<div class="shelf-empty">Raftul e gol. Apasă <b>+ PDF</b> ca să pui prima carte.</div>`);
+    +(BOOKS.length?`<small class="shelf-tip">Ține apăsat pe o carte ca s-o ștergi</small>`:"")+(BOOKS.length||addingN?"":`<div class="shelf-empty">Raftul e gol. Apasă <b>+ PDF</b> ca să pui prima carte.</div>`);
 }
+// apăsare lungă pe o carte (cotor sau „Continuă lectura”) → o ștergi direct de pe raft
+let bkLP=0,bkLPfired=false;
+$("v-raft").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-book]");if(!b)return;bkLPfired=false;clearTimeout(bkLP);
+  bkLP=setTimeout(()=>{bkLPfired=true;if(navigator.vibrate)navigator.vibrate(30);const x=BOOKS.find(y=>y.id===b.dataset.book);
+    if(x&&confirm(`Ștergi „${x.t}” de pe raft?`))removeBook(x.id)},650)});
+["pointerup","pointercancel","pointerleave","scroll"].forEach(n=>$("v-raft").addEventListener(n,()=>clearTimeout(bkLP),true));
+$("v-raft").addEventListener("contextmenu",e=>{if(e.target.closest("[data-book]"))e.preventDefault()});
 $("v-raft").addEventListener("click",e=>{
   const b=e.target.closest("[data-book]");if(!b)return;
+  if(bkLPfired){bkLPfired=false;return}
   audioUnlock();
   if(b.classList.contains("spine")){b.classList.add("pull");setTimeout(()=>{openBook(b.dataset.book);setTimeout(()=>b.classList.remove("pull"),400)},300)}
   else openBook(b.dataset.book);
@@ -2204,7 +2217,17 @@ async function openBook(id){
     if(RD.want)RD.cur=RD.want.n;
     layoutReader(RD.cur);
     clearInterval(rdTimerInt);rdTimerInt=setInterval(rdTimerTick,1000);rdTimerTick();
-  }catch(e){toast(String(e).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu pot deschide cartea");closeReader()}
+  }catch(e){
+    closeReader();
+    if(String(e).includes("lipsă")){if(confirm(`„${b.t}” nu mai are fișierul PDF (a fost șters). O scot de pe raft?`))removeBook(b.id)}
+    else toast(String(e).includes("pdf.js")?"Am nevoie de internet prima dată":"Nu pot deschide cartea");
+  }
+}
+// ștergere sigură: nimic nu o mai poate salva la loc după aceea
+async function removeBook(id){
+  bkGone.add(id);clearTimeout(ocrSaveT);
+  try{await bk.del(id);BOOKS=BOOKS.filter(x=>x.id!==id);toast("Carte ștearsă")}catch(e){toast("Nu am putut șterge cartea")}
+  renderShelf();
 }
 // găsește zona cu conținut a paginilor (fără marginile albe), din câteva pagini-mostră
 async function findCrop(doc){
@@ -2613,9 +2636,7 @@ $("rd-night").addEventListener("click",()=>{S.night=!S.night;save();$("reader").
 $("rd-del").addEventListener("click",async()=>{
   if(!RD)return;const b=RD.b;
   if(!confirm(`Ștergi „${b.t}” de pe raft?`))return;
-  bkGone.add(b.id);clearTimeout(ocrSaveT);
-  closeReader();try{await bk.del(b.id);BOOKS=BOOKS.filter(x=>x.id!==b.id);toast("Carte ștearsă")}catch(e){toast("Nu am putut șterge cartea")}
-  renderShelf();
+  bkGone.add(b.id);closeReader();removeBook(b.id);
 });
 let rdResize=0;
 addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);const an=rdAnchor();rdResize=setTimeout(()=>{if(!RD)return;RD.want=an;layoutReader(RD.cur)},250)});
