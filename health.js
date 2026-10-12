@@ -11,6 +11,9 @@ const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/
 const hm=ms=>{ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`};
 const curW=()=>{const w=B().w;return w.length?w[w.length-1].kg:(+B().p.kg||null)};
 let tab="train",tick=0;
+const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"],["water","Apă","💧"],["cold","Duș rece","🧊"]];
+S.cold=Object.assign({log:{},pick:60},S.cold||{});
+const XP=(k,p,l)=>window.Grow&&Grow.award(k,p,l);
 
 // ── calculator ──
 const ACT=[[1.2,"Sedentar (birou, fără sport)"],[1.375,"Ușor activ (1–3 antrenamente/săpt.)"],[1.55,"Activ (3–5 antrenamente/săpt.)"],[1.725,"Foarte activ (6–7 antrenamente/săpt.)"],[1.9,"Extrem (muncă fizică + sport)"]];
@@ -66,6 +69,27 @@ function calcOut(){
     <p class="note">La sportivi musculoși IMC-ul exagerează (mușchiul cântărește mult). Formula Devine dă ${fmtKg(c.devine)} kg. Calculele sunt orientative și nu înlocuiesc sfatul medicului.</p>`
     :`<p class="note">Completează vârsta, înălțimea și greutatea ca să vezi caloriile și greutatea ideală.</p>`;
 }
+
+// ── duș rece: cronometru, serie de zile, istoric ──
+let cs=null;
+function coldStreak(){let n=0;const d=new Date();if(!S.cold.log[dk(d)])d.setDate(d.getDate()-1);while(S.cold.log[dk(d)]){n++;d.setDate(d.getDate()-1)}return n}
+function coldSec(){
+  const L=S.cold.log,today=dk(),st=coldStreak(),n30=Object.keys(L).filter(k=>daysBetween(k,today)<30).length,best=Math.max(0,...Object.values(L).map(x=>x.s||0));
+  const R=54,C=2*Math.PI*R,goal=S.cold.pick,el=cs?(Date.now()-cs)/1000:0,pr=Math.min(1,el/goal);
+  const dots=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const k=dk(d);return `<i class="${L[k]?"on":""}${k===today?" t":""}" title="${k}"></i>`}).join("");
+  return `<div class="sec hl cold">
+    <div class="sec-h"><h3>Duș rece</h3><span class="muted">${st?`🔥 ${st} zile la rând`:""}</span></div>
+    <div class="hl-fast cold"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" class="trk"/><circle cx="64" cy="64" r="${R}" class="arc${pr>=1?" done":""}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pr)).toFixed(1)}"/></svg>
+      <div class="hl-fin"><small>${cs?(pr>=1?"Țintă atinsă ❄️":"Respiră calm"):L[today]?"Făcut azi ✓":"Gata de frig?"}</small><b id="cs-t">${cs?fmtS(el):fmtS(goal)}</b><span>${cs?"din "+fmtS(goal):"ținta"}</span></div></div>
+    ${cs?`<div class="hadd-b"><button class="btn" id="cs-stop">Am ieșit ✓</button></div>`:`<div class="hl-chips cen">${[30,60,120,180].map(x=>`<button class="hl-chip${goal===x?" on":""}" data-cs="${x}">${x<60?x+" s":x/60+" min"}</button>`).join("")}</div>
+      <div class="hadd-b"><button class="btn" id="cs-go">Pornește dușul rece</button></div>`}
+    <div class="hl-macro"><span><b>${st}</b> zile la rând</span><span><b>${n30}</b> în 30 de zile</span><span><b>${best?fmtS(best):"–"}</b> cel mai lung</span></div>
+    <div class="csdots">${dots}</div>
+    <p class="note">Începe cu apă călduță și termină cu 30–60 s de rece; crește treptat. Respiră lent, pe nas. Nu e recomandat dacă ai probleme de inimă.</p>
+  </div>`;
+}
+const fmtS=s=>{s=Math.round(s);return s<60?s+" s":Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+
 function render(){
   const box=$h("sp-body");if(!box||box.hidden)return;
   const b=B(),p=b.p,w=b.w,kg=curW(),today=dk();
@@ -73,7 +97,9 @@ function render(){
   const wk=w.filter(x=>daysBetween(x.d,today)<=7&&daysBetween(x.d,today)>=6)[0]||w.find(x=>daysBetween(x.d,today)<=7);
   const dA=activeDiet(),f=b.fast.cur;
   const wl=b.water[today]||0,wGoal=kg?Math.round(kg*35/250):8;
-  box.innerHTML=`
+  const sub=CS.find(x=>x[0]===(S.sub||{}).corp)?(S.sub||{}).corp:"kg";
+  const SEC={
+    kg:()=>`
   <div class="sec hl">
     <div class="sec-h"><h3>Greutate</h3><span class="muted">${w.length?`${w.length} cântăriri`:""}</span></div>
     <div class="hl-big"><b>${fmtKg(kg)}</b><span>kg</span>
@@ -82,8 +108,8 @@ function render(){
     <form class="hl-row" id="hl-wf"><input id="hl-wkg" type="number" inputmode="decimal" step="0.1" min="30" max="300" placeholder="Greutatea de azi (kg)" value=""><input id="hl-wd" type="date" value="${today}" max="${today}"><button class="btn" type="submit">Adaugă</button></form>
     ${w.length?`<details class="hl-list"><summary>Istoric</summary>${w.slice().reverse().slice(0,60).map(x=>`<div class="hl-li"><span>${dshort(x.d)}</span><b>${fmtKg(x.kg)} kg</b><button data-hw="${x.d}" aria-label="Șterge">✕</button></div>`).join("")}</details>`:""}
     <p class="note">Cântărește-te dimineața, după baie, înainte de micul dejun. Contează tendința, nu cifra unei zile.</p>
-  </div>
-
+  </div>`,
+    cal:()=>`
   <div class="sec hl">
     <div class="sec-h"><h3>Profil & calorii</h3><span class="muted">orientativ</span></div>
     <div class="hl-grid">
@@ -95,8 +121,8 @@ function render(){
       <label class="hl-wide">Obiectivul<select id="hl-goal"><option value="lose"${(p.goal||"lose")==="lose"?" selected":""}>Slăbire (~0,5 kg/săptămână)</option><option value="keep"${p.goal==="keep"?" selected":""}>Menținere</option><option value="gain"${p.goal==="gain"?" selected":""}>Masă musculară</option></select></label>
     </div>
     <div id="hl-calc">${calcOut()}</div>
-  </div>
-
+  </div>`,
+    diet:()=>`
   <div class="sec hl">
     <div class="sec-h"><h3>Dietă</h3><span class="muted">${b.diets.filter(d=>d.end).length?b.diets.filter(d=>d.end).length+" încheiate":""}</span></div>
     ${dA?(()=>{const days=daysBetween(dA.start,today)+1,sw=+dA.sw||null,tg=+dA.target||null,ch=sw&&kg?kg-sw:null,prog=sw&&tg&&kg&&sw!==tg?Math.max(0,Math.min(1,(sw-kg)/(sw-tg))):null;
@@ -111,22 +137,25 @@ function render(){
       <label class="hl-wide">Notă (de ce o faci)<input id="hl-dno" maxlength="140" placeholder="opțional"></label>
       <button class="btn hl-wide" type="submit">Încep dieta</button></form>`}
     ${b.diets.filter(d=>d.end).length?`<details class="hl-list"><summary>Diete trecute</summary>${b.diets.filter(d=>d.end).slice().reverse().map(d=>`<div class="hl-li"><span>${esc(d.name||"Dietă")}<small> ${dshort(d.start)} – ${dshort(d.end)} · ${daysBetween(d.start,d.end)+1} zile</small></span><b>${d.sw&&d.ew?sgn(d.ew-d.sw)+" kg":""}</b></div>`).join("")}</details>`:""}
-  </div>
-
+  </div>`,
+    fast:()=>`
   <div class="sec hl" id="hl-fast">
     <div class="sec-h"><h3>Post</h3><span class="muted">${b.fast.hist.length?`${b.fast.hist.length} posturi`:""}</span></div>
     ${f?fastLive(f):`<div class="hl-chips">${FT.map(([h,l])=>`<button class="hl-chip${(b.fast.pick||16)===h?" on":""}" data-fh="${h}">${l}</button>`).join("")}</div>
       <div class="hl-row"><label class="hl-lbl">Ultima masă<input id="hl-fs" type="time" value="${new Date().toTimeString().slice(0,5)}"></label><button class="btn" id="hl-fgo">Încep postul</button></div>
       <p class="note">Doar apă, ceai sau cafea neîndulcite.${(b.fast.pick||16)>=24?" Peste 24 h: ia electroliți (sare, magneziu, potasiu) și oprește-te dacă ai amețeli. Dacă iei medicamente sau ai o afecțiune, vorbește întâi cu medicul.":""}</p>`}
     ${fastStats()}
-  </div>
-
+  </div>`,
+    water:()=>`
   <div class="sec hl">
     <div class="sec-h"><h3>Apă azi</h3><span class="muted">țintă ${wGoal} pahare</span></div>
     <div class="hl-water">${Array.from({length:Math.max(wGoal,wl)},(_,i)=>`<i class="${i<wl?"on":""}"></i>`).join("")}</div>
     <div class="hadd-b"><button class="btn ghost" id="hl-w-">−</button><button class="btn" id="hl-w+">+ 1 pahar (250 ml)</button></div>
     <p class="note">${wl*250} ml din ${wGoal*250} ml (~35 ml pe kilogram).</p>
-  </div>`;
+  </div>`,
+    cold:()=>coldSec()};
+  box.innerHTML=`<div class="hsub">${CS.map(([k,l,e])=>`<button data-hsub="${k}" aria-pressed="${k===sub}"><span>${e}</span>${l}</button>`).join("")}</div><div class="hpg sp-r">${SEC[sub]()}</div>`;
+  const nb=box.querySelector('.hsub [aria-pressed="true"]');if(nb)nb.scrollIntoView({inline:"center",block:"nearest"});
 }
 function fastLive(f){
   const now=Date.now(),el=now-f.start,goal=f.h*36e5,pr=Math.min(1,el/goal),ph=phase(el/36e5),R=54,C=2*Math.PI*R;
@@ -147,7 +176,7 @@ function fastStats(){
 document.addEventListener("submit",e=>{
   if(e.target.id==="hl-wf"){e.preventDefault();const kg=parseFloat(String($h("hl-wkg").value).replace(",",".")),d=$h("hl-wd").value||dk();
     if(!(kg>30&&kg<300)){toast("Scrie greutatea în kg");return}
-    const w=B().w.filter(x=>x.d!==d);w.push({d,kg:r1(kg)});w.sort((a,b)=>a.d<b.d?-1:1);B().w=w;save();toast("Greutate salvată");render()}
+    const w=B().w.filter(x=>x.d!==d);w.push({d,kg:r1(kg)});w.sort((a,b)=>a.d<b.d?-1:1);B().w=w;save();toast("Greutate salvată");XP(`w:${d}`,5,"Cântărire");render()}
   if(e.target.id==="hl-df"){e.preventDefault();
     B().diets.push({name:$h("hl-dn").value.trim()||"Dietă",start:$h("hl-ds").value||dk(),target:parseFloat(String($h("hl-dt").value).replace(",","."))||null,note:$h("hl-dno").value.trim(),sw:curW()});
     save();toast("Dieta a început. Succes!");render()}
@@ -164,19 +193,26 @@ document.addEventListener("click",e=>{
   const t=e.target;if(!t.closest("#v-sport"))return;
   const sw=t.closest("[data-stab]");if(sw){setTab(sw.dataset.stab);return}
   if(!t.closest("#sp-body"))return;
+  const hs=t.closest("[data-hsub]");if(hs){S.sub=S.sub||{};S.sub.corp=hs.dataset.hsub;save();render();window.scrollTo(0,0);if(S.sub.corp==="fast"||S.sub.corp==="cold")startTick();return}
+  const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();render();return}
+  if(t.closest("#cs-go")){cs=Date.now();render();startTick();return}
+  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;const prev=S.cold.log[k];S.cold.log[k]={s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();
+    if(el>=15)XP(`cs:${k}`,15,"Duș rece");if(el>=S.cold.pick&&window.Grow)Grow.confetti();toast(el>=S.cold.pick?"Bravo! Ținta atinsă 🧊":"Duș rece notat");render();return}
   const hw=t.closest("[data-hw]");if(hw){if(confirm("Ștergi cântărirea din "+dshort(hw.dataset.hw)+"?")){B().w=B().w.filter(x=>x.d!==hw.dataset.hw);save();render()}return}
   const fh=t.closest("[data-fh]");if(fh){B().fast.pick=+fh.dataset.fh;save();render();return}
   if(t.closest("#hl-fgo")){const [H,M]=($h("hl-fs").value||"").split(":").map(Number);const s=new Date();if(!isNaN(H)){s.setHours(H,M||0,0,0);if(s>Date.now())s.setDate(s.getDate()-1)}
     B().fast.cur={start:+s,h:B().fast.pick||16};save();render();startTick();toast("Post pornit");return}
   if(t.closest("#hl-fx")){if(confirm("Anulezi postul fără să-l salvezi?")){B().fast.cur=null;save();render()}return}
   if(t.closest("#hl-fend")){const f=B().fast.cur;if(!f)return;B().fast.hist.push({start:f.start,end:Date.now(),h:f.h});B().fast.cur=null;save();
-    toast((Date.now()-f.start)/36e5>=f.h?"Bravo! Post dus la capăt 💪":"Post salvat");render();return}
+    const okF=(Date.now()-f.start)/36e5>=f.h;if(okF){XP(`f:${f.start}`,f.h>=24?60:30,"Post dus la capăt");window.Grow&&Grow.confetti()}
+    toast(okF?"Bravo! Post dus la capăt 💪":"Post salvat");render();return}
   if(t.closest("#hl-dend")){const d=activeDiet();if(!d||!confirm("Închei dieta?"))return;d.end=dk();d.ew=curW();save();toast("Dietă încheiată");render();return}
-  if(t.closest("#hl-w\\+")||t.id==="hl-w+"){const k=dk();B().water[k]=(B().water[k]||0)+1;save();render();return}
+  if(t.closest("#hl-w\\+")||t.id==="hl-w+"){const k=dk();B().water[k]=(B().water[k]||0)+1;save();const kg=curW(),g=kg?Math.round(kg*35/250):8;if(B().water[k]===g){XP(`wa:${k}`,10,"Apă suficientă");window.Grow&&Grow.confetti()}render();return}
   if(t.closest("#hl-w-")||t.id==="hl-w-"){const k=dk();B().water[k]=Math.max(0,(B().water[k]||0)-1);save();render();return}
 });
 function startTick(){clearInterval(tick);tick=setInterval(()=>{
   if(document.hidden||tab!=="body"||$h("v-sport").hidden)return;
+  if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&sec-1<S.cold.pick){render();if(navigator.vibrate)navigator.vibrate([30,60,30])}else e2.textContent=fmtS(sec)}return}
   const f=B().fast.cur;if(!f)return;
   const el=$h("hl-fel");if(!el)return;
   const ms=Date.now()-f.start;
