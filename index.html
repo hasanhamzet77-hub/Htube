@@ -1293,7 +1293,9 @@ function artFor(x){
   if(!ART)return null;
   if(artPick.has(x.id))return artPick.get(x.id);
   const th=themesFor(x).filter(t=>ART[t]&&ART[t].length);if(!th.length)return null;
-  const h=hashStr(x.id+"|"+x.t),L=ART[th[h%th.length]];
+  const h=hashStr(x.id+"|"+x.t),L0=ART[th[h%th.length]];
+  // imaginile la rezoluție mare (hq) au prioritate; cele vechi apar doar din când în când
+  const HQ=L0.filter(a=>a.id.startsWith("hq")),L=HQ.length>=6&&(h>>>3)%6?HQ:L0;
   const src=a=>a.src==="HT"?a.id.slice(0,4):a.f;
   let k=(h>>>7)%L.length;
   for(let t=0;t<L.length&&artRecent.includes(src(L[k]));t++)k=(k+1)%L.length;
