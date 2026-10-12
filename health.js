@@ -11,8 +11,10 @@ const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/
 const hm=ms=>{ms=Math.max(0,ms);const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`};
 const curW=()=>{const w=B().w;return w.length?w[w.length-1].kg:(+B().p.kg||null)};
 let tab="train",tick=0;
-const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"],["water","Apă","💧"],["cold","Duș rece","🧊"]];
-S.cold=Object.assign({log:{},pick:60},S.cold||{});
+const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"],["water","Apă","💧"]];
+S.cold=Object.assign({log:{},pick:120},S.cold||{});
+if(!S.cold.v2){S.cold.v2=1;if(S.cold.pick===60)S.cold.pick=120}   // baia ta de gheață e de 2 min
+S.heat=Object.assign({plan:{r:3,s:15,c:2,p:2,t:90},log:{},cur:null},S.heat||{});
 const XP=(k,p,l)=>window.Grow&&Grow.award(k,p,l);
 
 // ── calculator ──
@@ -71,21 +73,21 @@ function calcOut(){
 }
 
 // ── duș rece: cronometru, serie de zile, istoric ──
-let cs=null;
+let cs=S.cold.run||null;   // cronometrul de frig supraviețuiește închiderii aplicației
 function coldStreak(){let n=0;const d=new Date();if(!S.cold.log[dk(d)])d.setDate(d.getDate()-1);while(S.cold.log[dk(d)]){n++;d.setDate(d.getDate()-1)}return n}
 function coldSec(){
   const L=S.cold.log,today=dk(),st=coldStreak(),n30=Object.keys(L).filter(k=>daysBetween(k,today)<30).length,best=Math.max(0,...Object.values(L).map(x=>x.s||0));
   const R=54,C=2*Math.PI*R,goal=S.cold.pick,el=cs?(Date.now()-cs)/1000:0,pr=Math.min(1,el/goal);
   const dots=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const k=dk(d);return `<i class="${L[k]?"on":""}${k===today?" t":""}" title="${k}"></i>`}).join("");
   return `<div class="sec hl cold">
-    <div class="sec-h"><h3>Duș rece</h3><span class="muted">${st?`🔥 ${st} zile la rând`:""}</span></div>
+    <div class="sec-h"><h3>Ice plunge · apă rece</h3><span class="muted">${st?`🔥 ${st} zile la rând`:""}</span></div>
     <div class="hl-fast cold"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" class="trk"/><circle cx="64" cy="64" r="${R}" class="arc${pr>=1?" done":""}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pr)).toFixed(1)}"/></svg>
       <div class="hl-fin"><small>${cs?(pr>=1?"Țintă atinsă ❄️":"Respiră calm"):L[today]?"Făcut azi ✓":"Gata de frig?"}</small><b id="cs-t">${cs?fmtS(el):fmtS(goal)}</b><span>${cs?"din "+fmtS(goal):"ținta"}</span></div></div>
-    ${cs?`<div class="hadd-b"><button class="btn" id="cs-stop">Am ieșit ✓</button></div>`:`<div class="hl-chips cen">${[30,60,120,180].map(x=>`<button class="hl-chip${goal===x?" on":""}" data-cs="${x}">${x<60?x+" s":x/60+" min"}</button>`).join("")}</div>
-      <div class="hadd-b"><button class="btn" id="cs-go">Pornește dușul rece</button></div>`}
+    ${cs?`<div class="hadd-b"><button class="btn" id="cs-stop">Am ieșit ✓</button></div>`:`<div class="hl-chips cen">${[60,120,180,240].map(x=>`<button class="hl-chip${goal===x?" on":""}" data-cs="${x}">${x<60?x+" s":x/60+" min"}</button>`).join("")}</div>
+      <div class="hadd-b"><button class="btn" id="cs-go">Intru în apă</button></div>`}
     <div class="hl-macro"><span><b>${st}</b> zile la rând</span><span><b>${n30}</b> în 30 de zile</span><span><b>${best?fmtS(best):"–"}</b> cel mai lung</span></div>
     <div class="csdots">${dots}</div>
-    <p class="note">Începe cu apă călduță și termină cu 30–60 s de rece; crește treptat. Respiră lent, pe nas. Nu e recomandat dacă ai probleme de inimă.</p>
+    <p class="note">Dimineața, în bazinul cu gheață: intră calm, respiră lent pe nas, primele 30 s sunt cele mai grele. Ieși dacă începi să tremuri necontrolat sau amorțesc degetele. Nu e recomandat dacă ai probleme de inimă.</p>
   </div>`;
 }
 const fmtS=s=>{s=Math.round(s);return s<60?s+" s":Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
@@ -153,7 +155,7 @@ function render(){
     <div class="hadd-b"><button class="btn ghost" id="hl-w-">−</button><button class="btn" id="hl-w+">+ 1 pahar (250 ml)</button></div>
     <p class="note">${wl*250} ml din ${wGoal*250} ml (~35 ml pe kilogram).</p>
   </div>`,
-    cold:()=>coldSec()};
+};
   box.innerHTML=`<div class="hsub">${CS.map(([k,l,e])=>`<button data-hsub="${k}" aria-pressed="${k===sub}"><span>${e}</span>${l}</button>`).join("")}</div><div class="hpg sp-r">${SEC[sub]()}</div>`;
   const nb=box.querySelector('.hsub [aria-pressed="true"]');if(nb)nb.scrollIntoView({inline:"center",block:"nearest"});
 }
@@ -171,6 +173,130 @@ function fastStats(){
   return `<div class="hl-macro"><span><b>${r1(Math.max(...hrs))} h</b> cel mai lung</span><span><b>${r1(hrs.reduce((a,b)=>a+b,0)/hrs.length)} h</b> în medie</span><span><b>${done}/${h.length}</b> duse la capăt</span></div>
   <details class="hl-list"><summary>Istoric posturi</summary>${h.slice().reverse().slice(0,40).map((x,i)=>`<div class="hl-li"><span>${new Date(x.start).toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}<small> țintă ${x.h} h</small></span><b>${r1((x.end-x.start)/36e5)} h ${(x.end-x.start)/36e5>=x.h?"✓":""}</b></div>`).join("")}</details>`;
 }
+
+// ── Saună & apă rece: ritualul pe runde (saună → rece → pauză) + baia de gheață de dimineață ──
+const HP={sauna:{n:"Saună",e:"🔥",c:"sauna"},cold:{n:"Apă rece",e:"🧊",c:"cold"},rest:{n:"Pauză",e:"🌿",c:"rest"}};
+function heatPhases(p){const L=[];for(let i=0;i<p.r;i++){L.push({k:"sauna",d:p.s*60,i});L.push({k:"cold",d:p.c*60,i});if(i<p.r-1&&p.p>0)L.push({k:"rest",d:p.p*60,i})}return L}
+const mmss=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const durTxt=m=>m>=60?Math.floor(m/60)+" h "+(m%60?m%60+" min":""):m+" min";
+function heatStreak(){let n=0;const d=new Date();const has=k=>(S.heat.log[k]||[]).length||S.cold.log[k];if(!has(dk(d)))d.setDate(d.getDate()-1);while(has(dk(d))){n++;d.setDate(d.getDate()-1)}return n}
+function heatStats(){
+  const today=dk(),L=S.heat.log,mon=today.slice(0,7);
+  const ses=Object.entries(L).flatMap(([k,v])=>v.map(x=>({...x,k})));
+  const m=ses.filter(x=>x.k.startsWith(mon)),min30=ses.filter(x=>daysBetween(x.k,today)<30).reduce((a,x)=>a+x.sauna,0);
+  const pl=Object.keys(S.cold.log).filter(k=>k.startsWith(mon)).length;
+  const dots=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);const k=dk(d);const a=(L[k]||[]).length,b=!!S.cold.log[k];
+    return `<i class="${a?"sa":""}${b?" pl":""}${k===today?" t":""}" title="${k}"></i>`}).join("");
+  return `<div class="hl-macro"><span><b>${m.length}</b> saune luna asta</span><span><b>${Math.round(min30)}</b> min saună / 30 zile</span><span><b>${pl}</b> plonjări luna asta</span></div>
+    <div class="csdots ht">${dots}</div><p class="note cen">🟧 saună · 🟦 apă rece dimineața · ${heatStreak()?`🔥 ${heatStreak()} zile la rând`:""}</p>`;
+}
+function heatBar(ph,cur,el){
+  const tot=ph.reduce((a,x)=>a+x.d,0)||1;
+  return `<div class="htbar">${ph.map((x,i)=>{const w=x.d/tot*100,f=cur==null?0:i<cur?100:i>cur?0:Math.min(100,el/x.d*100);
+    return `<span class="${HP[x.k].c}${cur===i?" on":""}" style="flex:${w.toFixed(2)}"><i style="width:${f.toFixed(1)}%"></i></span>`}).join("")}</div>`;
+}
+function saunaIdle(){
+  const p=S.heat.plan,ph=heatPhases(p),tot=Math.round(ph.reduce((a,x)=>a+x.d,0)/60),today=(S.heat.log[dk()]||[]).length;
+  const st=(k,l,v,u)=>`<div class="htst"><small>${l}</small><div><button data-hp="${k}" data-d="-1" aria-label="Mai puțin">−</button><b>${v}<em>${u}</em></b><button data-hp="${k}" data-d="1" aria-label="Mai mult">+</button></div></div>`;
+  return `<div class="sec hl heat">
+    <div class="sec-h"><h3>Ritual saună</h3><span class="muted">${today?`✓ ${today>1?today+" ritualuri":"făcut"} azi`:""}</span></div>
+    <div class="hthero"><b>${p.r}×</b><span>${p.s} min saună ${p.t}° → ${p.c} min apă rece${p.p&&p.r>1?` → ${p.p} min pauză`:""}</span><small>Total ~${durTxt(tot)}</small></div>
+    ${heatBar(ph,null,0)}
+    <div class="htgrid">${st("r","Runde",p.r,"")}${st("s","Saună",p.s,"min")}${st("c","Apă rece",p.c,"min")}${st("p","Pauză",p.p,"min")}${st("t","Temperatură",p.t,"°C")}</div>
+    <div class="hadd-b"><button class="btn ghost" id="ht-log">Notez fără cronometru</button><button class="btn" id="ht-go">Pornește ritualul</button></div>
+    ${heatStats()}
+    <p class="note">Telefonul rămâne afară: la 90° bateria se strică. Ecranul stă aprins cât rulează ritualul și sună la fiecare schimbare. Bea apă între runde; nu după alcool și nu dacă ai probleme de inimă sau tensiune.</p>
+  </div>`;
+}
+function heatState(){
+  const c=S.heat.cur;if(!c)return null;
+  const ph=c.ph,now=c.pauseAt||Date.now();let i=c.i,st=c.st;
+  return {ph,i,el:(now-st)/1000,cur:ph[i]};
+}
+function saunaLive(){
+  const H=heatState(),{ph,i,el,cur}=H,R=58,C=2*Math.PI*R,left=cur.d-el,pr=Math.min(1,el/cur.d),nx=ph[i+1],c=S.heat.cur;
+  return `<div class="sec hl heat htlive ph-${HP[cur.k].c}">
+    <div class="sec-h"><h3>${HP[cur.k].e} ${HP[cur.k].n}</h3><span class="muted">runda ${cur.i+1}/${c.plan.r}</span></div>
+    <div class="hl-fast htring ${HP[cur.k].c}"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" class="trk"/><circle cx="64" cy="64" r="${R}" class="arc" id="ht-arc" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*pr).toFixed(1)}"/></svg>
+      <div class="hl-fin"><small id="ht-lbl">${c.pauseAt?"în pauză":left<=0?"timpul a trecut":"rămas"}</small><b id="ht-left">${mmss(left)}</b><span>${nx?`urmează ${HP[nx.k].e} ${HP[nx.k].n.toLowerCase()} ${Math.round(nx.d/60)} min`:"ultima fază"}</span></div></div>
+    <div id="ht-bar">${heatBar(ph,i,el)}</div>
+    <div class="spbtns"><button class="spic" id="ht-pause" aria-label="${c.pauseAt?"Continuă":"Pauză"}">${c.pauseAt?'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>':'<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>'}</button>
+      <button class="btn ghost" id="ht-plus">+1 min</button><button class="btn" id="ht-next">${nx?"Gata ›":"Termin ✓"}</button>
+      <button class="spic" id="ht-stop" aria-label="Oprește"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button></div>
+    <p class="note cen">${cur.k==="sauna"?"Stai relaxat, respiră pe nas. Ieși mai devreme dacă amețești.":cur.k==="cold"?"Intră calm, expiră lung. Primele 30 de secunde trec.":"Stai jos, bea apă, lasă corpul să se liniștească."}</p>
+  </div>`;
+}
+let htDone=null;
+function saunaDone(){const x=htDone;return `<div class="sec hl heat donev"><div class="spbig">🔥🧊</div><b>Ritual încheiat</b>
+  <small>${x.rounds} ${x.rounds===1?"rundă":"runde"} · ${Math.round(x.sauna)} min saună · ${mmss(x.cold*60)} apă rece</small>
+  <div class="hadd-b"><button class="btn" id="ht-ok">Gata</button></div></div>`}
+function renderHeat(){
+  const box=$h("sp-heat");if(!box||box.hidden)return;
+  const subs=[["sauna","Saună","🔥"],["plunge","Ice plunge","🧊"]];
+  const sub=((S.sub||{}).heat)==="plunge"?"plunge":"sauna";
+  box.innerHTML=`<div class="hsub">${subs.map(([k,l,e])=>`<button data-htsub="${k}" aria-pressed="${k===sub}"><span>${e}</span>${l}${k==="sauna"&&S.heat.cur?" ●":""}${k==="plunge"&&cs?" ●":""}</button>`).join("")}</div>
+    <div class="hpg sp-r">${sub==="plunge"?coldSec()+`<div class="sec hl">${heatStats()}</div>`:htDone?saunaDone():S.heat.cur?saunaLive():saunaIdle()}</div>`;
+}
+function heatAdvance(manual){
+  const c=S.heat.cur;if(!c)return;const now=Date.now(),cur=c.ph[c.i];
+  const el=Math.min((now-c.st)/1000,manual?1e9:cur.d);
+  c.act[c.i]=el;
+  if(c.i>=c.ph.length-1){heatFinish();return}
+  c.i++;c.st=manual?now:c.st+cur.d*1000;save();
+  const k=c.ph[c.i].k;
+  try{bell(.4);if(k==="cold")setTimeout(()=>bell(.4),450)}catch(e){}
+  if(navigator.vibrate)navigator.vibrate(k==="cold"?[80,60,80,60,200]:[120,80,120]);
+}
+function heatFinish(){
+  const c=S.heat.cur;if(!c)return;const k=dk(new Date(c.t0));
+  let sa=0,co=0,rounds=0,cmax=0;c.ph.forEach((x,i)=>{const a=c.act[i]||0;if(x.k==="sauna")sa+=a/60;if(x.k==="cold"){co+=a/60;cmax=Math.max(cmax,a);if(a>20)rounds++}});
+  const e={t:c.t0,rounds:Math.max(rounds,sa>3?1:0),sauna:Math.round(sa*10)/10,cold:Math.round(co*10)/10,temp:c.plan.t};
+  if(e.sauna>=3){(S.heat.log[k]=S.heat.log[k]||[]).push(e);XP(`sa:${k}`,25,"Saună + apă rece");
+    if(cmax>0){const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(Math.min(cmax,c.plan.c*60+120),(prev||{}).s||0),t:Date.now(),sauna:1}}}
+  S.heat.cur=null;save();htDone=e;try{unlockWake()}catch(_){}
+  try{bell(.45);setTimeout(()=>bell(.35),500);setTimeout(()=>bell(.3),1000)}catch(_){}
+  if(e.sauna>=3&&window.Grow)Grow.confetti(true);
+  renderHeat();
+}
+function heatTick(){
+  const c=S.heat.cur;if(!c||c.pauseAt)return;
+  let n=0;while(S.heat.cur&&!S.heat.cur.pauseAt&&(Date.now()-S.heat.cur.st)/1000>=S.heat.cur.ph[S.heat.cur.i].d&&n++<40){
+    // dacă ai lăsat telefonul și ai ieșit mai devreme, nu trecem singuri la final: ultima fază așteaptă „Termin”
+    if(S.heat.cur.i>=S.heat.cur.ph.length-1)break;
+    heatAdvance(false);if(n===1&&tab==="heat"&&!$h("v-sport").hidden)renderHeat();
+  }
+  if(tab!=="heat"||$h("v-sport").hidden||document.hidden||!S.heat.cur)return;
+  const H=heatState(),left=H.cur.d-H.el,a=$h("ht-arc"),l=$h("ht-left");
+  if(!l){renderHeat();return}
+  l.textContent=mmss(left);$h("ht-lbl").textContent=left<=0?"timpul a trecut":"rămas";
+  if(a){const C=+a.getAttribute("stroke-dasharray");a.style.strokeDashoffset=(C*Math.min(1,H.el/H.cur.d)).toFixed(1)}
+  const b=$h("ht-bar");if(b)b.innerHTML=heatBar(H.ph,H.i,H.el);
+  if(left<=0&&left>-1.2&&H.i===H.ph.length-1){try{bell(.4)}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200])}
+}
+function heatClick(t){
+  const hs=t.closest("[data-htsub]");if(hs){S.sub=S.sub||{};S.sub.heat=hs.dataset.htsub;save();htDone=null;renderHeat();return}
+  const hp=t.closest("[data-hp]");if(hp){const p=S.heat.plan,k=hp.dataset.hp,d=+hp.dataset.d,lim={r:[1,6,1],s:[3,30,1],c:[.5,10,.5],p:[0,15,1],t:[50,110,5]}[k];
+    p[k]=Math.max(lim[0],Math.min(lim[1],Math.round((p[k]+d*lim[2])*10)/10));save();renderHeat();return}
+  if(t.closest("#ht-go")){const p={...S.heat.plan};S.heat.cur={t0:Date.now(),st:Date.now(),i:0,ph:heatPhases(p),plan:p,act:{}};save();
+    try{lockWake()}catch(e){}try{bell(.35)}catch(e){}htDone=null;renderHeat();startTick();return}
+  if(t.closest("#ht-log")){const p=S.heat.plan,k=dk();(S.heat.log[k]=S.heat.log[k]||[]).push({t:Date.now(),rounds:p.r,sauna:p.r*p.s,cold:p.r*p.c,temp:p.t,man:1});
+    const prev=S.cold.log[k];S.cold.log[k]={s:Math.max(p.c*60,(prev||{}).s||0),t:Date.now(),sauna:1};
+    save();XP(`sa:${k}`,25,"Saună + apă rece");window.Grow&&Grow.confetti();toast(`Notat: ${p.r}× saună + apă rece 🔥🧊`);renderHeat();return}
+  const c=S.heat.cur;
+  if(c&&t.closest("#ht-pause")){if(c.pauseAt){c.st+=Date.now()-c.pauseAt;c.pauseAt=null;try{lockWake()}catch(e){}}else c.pauseAt=Date.now();save();renderHeat();return}
+  if(c&&t.closest("#ht-plus")){c.ph[c.i]={...c.ph[c.i],d:c.ph[c.i].d+60};save();renderHeat();return}
+  if(c&&t.closest("#ht-next")){if(c.pauseAt){c.st+=Date.now()-c.pauseAt;c.pauseAt=null}heatAdvance(true);if(S.heat.cur)renderHeat();return}
+  if(c&&t.closest("#ht-stop")){const any=Object.keys(c.act).length||(Date.now()-c.st)>18e4;
+    if(!confirm(any?"Oprești ritualul? Salvez ce ai făcut până acum.":"Oprești ritualul?"))return;
+    if(any){c.act[c.i]=(Date.now()-c.st)/1000;heatFinish()}else{S.heat.cur=null;save();try{unlockWake()}catch(_){}renderHeat()}return}
+  if(t.closest("#ht-ok")){htDone=null;renderHeat();return}
+  // ice plunge
+  const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();renderHeat();return}
+  if(t.closest("#cs-go")){cs=Date.now();S.cold.run=cs;save();try{lockWake()}catch(e){}renderHeat();startTick();return}
+  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;S.cold.run=null;const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();try{unlockWake()}catch(_){}
+    if(el>=15)XP(`cs:${k}`,15,"Apă rece");if(el>=S.cold.pick&&window.Grow)Grow.confetti();toast(el>=S.cold.pick?"Bravo! Ținta atinsă 🧊":"Notat 🧊");renderHeat();return}
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(S.heat.cur&&!S.heat.cur.pauseAt||cs)){try{lockWake()}catch(e){}heatTick();if(tab==="heat")renderHeat()}});
 
 // ── evenimente ──
 document.addEventListener("submit",e=>{
@@ -192,12 +318,9 @@ document.addEventListener("input",onProf);document.addEventListener("change",onP
 document.addEventListener("click",e=>{
   const t=e.target;if(!t.closest("#v-sport"))return;
   const sw=t.closest("[data-stab]");if(sw){setTab(sw.dataset.stab);return}
+  if(t.closest("#sp-heat")){heatClick(t);return}
   if(!t.closest("#sp-body"))return;
-  const hs=t.closest("[data-hsub]");if(hs){S.sub=S.sub||{};S.sub.corp=hs.dataset.hsub;save();render();window.scrollTo(0,0);if(S.sub.corp==="fast"||S.sub.corp==="cold")startTick();return}
-  const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();render();return}
-  if(t.closest("#cs-go")){cs=Date.now();render();startTick();return}
-  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;const prev=S.cold.log[k];S.cold.log[k]={s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();
-    if(el>=15)XP(`cs:${k}`,15,"Duș rece");if(el>=S.cold.pick&&window.Grow)Grow.confetti();toast(el>=S.cold.pick?"Bravo! Ținta atinsă 🧊":"Duș rece notat");render();return}
+  const hs=t.closest("[data-hsub]");if(hs){S.sub=S.sub||{};S.sub.corp=hs.dataset.hsub;save();render();window.scrollTo(0,0);if(S.sub.corp==="fast")startTick();return}
   const hw=t.closest("[data-hw]");if(hw){if(confirm("Ștergi cântărirea din "+dshort(hw.dataset.hw)+"?")){B().w=B().w.filter(x=>x.d!==hw.dataset.hw);save();render()}return}
   const fh=t.closest("[data-fh]");if(fh){B().fast.pick=+fh.dataset.fh;save();render();return}
   if(t.closest("#hl-fgo")){const [H,M]=($h("hl-fs").value||"").split(":").map(Number);const s=new Date();if(!isNaN(H)){s.setHours(H,M||0,0,0);if(s>Date.now())s.setDate(s.getDate()-1)}
@@ -211,8 +334,9 @@ document.addEventListener("click",e=>{
   if(t.closest("#hl-w-")||t.id==="hl-w-"){const k=dk();B().water[k]=Math.max(0,(B().water[k]||0)-1);save();render();return}
 });
 function startTick(){clearInterval(tick);tick=setInterval(()=>{
-  if(document.hidden||tab!=="body"||$h("v-sport").hidden)return;
-  if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&sec-1<S.cold.pick){render();if(navigator.vibrate)navigator.vibrate([30,60,30])}else e2.textContent=fmtS(sec)}return}
+  if(S.heat.cur){heatTick();}
+  if(document.hidden||tab==="train"||$h("v-sport").hidden)return;
+  if(tab==="heat"){if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&sec-1<S.cold.pick){renderHeat();try{bell(.35)}catch(e){}if(navigator.vibrate)navigator.vibrate([30,60,30])}else e2.textContent=fmtS(sec)}}return}
   const f=B().fast.cur;if(!f)return;
   const el=$h("hl-fel");if(!el)return;
   const ms=Date.now()-f.start;
@@ -222,10 +346,10 @@ function startTick(){clearInterval(tick);tick=setInterval(()=>{
 function setTab(t){
   tab=t;S.spTab=t;save();
   document.querySelectorAll("#sp-tabs [data-stab]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.stab===t));
-  $h("sp-train").hidden=t!=="train";$h("sp-body").hidden=t!=="body";
-  if(t==="body"){window.Sport&&Sport.hide();render();startTick()}
-  else{clearInterval(tick);window.Sport&&Sport.show()}
+  $h("sp-train").hidden=t!=="train";$h("sp-body").hidden=t!=="body";$h("sp-heat").hidden=t!=="heat";
+  if(t==="train"){if(!S.heat.cur&&!cs)clearInterval(tick);window.Sport&&Sport.show()}
+  else{window.Sport&&Sport.hide();t==="body"?render():renderHeat();startTick()}
 }
-function show(){tab=S.spTab==="body"?"body":"train";setTab(tab)}
-window.Health={show,render};
+function show(){tab=["body","heat"].includes(S.spTab)?S.spTab:"train";setTab(tab)}
+window.Health={show,render,renderHeat};
 })();

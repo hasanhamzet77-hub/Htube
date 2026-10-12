@@ -522,7 +522,7 @@ textarea.ji{resize:none;padding:0;border-bottom:0;background-image:repeating-lin
 .sptot{margin-left:auto;font-family:var(--display);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .spname{display:block;font-size:17px;margin:4px 0 4px}
 .sprep{display:flex;align-items:center;gap:10px}
-#sp-rep{font-family:var(--display);font-size:58px;font-weight:600;line-height:1.05;letter-spacing:-.03em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:62px}
+#sp-st{font-family:var(--display);font-size:54px;font-weight:600;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:62px}
 .sprep small{font-size:12px;color:var(--muted);line-height:1.35}
 .spst{margin-left:auto;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
 .spbtns{display:flex;gap:8px;margin-top:12px;align-items:center}.spbtns .btn{flex:1}
@@ -651,8 +651,8 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 @media (prefers-reduced-motion:reduce){.enter,.hcard.pop .hcore,.spine.ghost{animation:none}.ind,.spine{transition:none}}
 
 /* ── Sport: Corp & nutriție ── */
-.sptabs{display:flex;gap:8px;margin:2px 52px 12px 0}
-.sptabs button{flex:1;padding:9px 10px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted);background:var(--glass);border:1px solid var(--glass-b)}
+.sptabs{display:flex;gap:6px;margin:2px 52px 12px 0}
+.sptabs button{flex:1 1 auto;padding:9px 6px;border-radius:999px;font-size:12.5px;white-space:nowrap;font-weight:600;color:var(--muted);background:var(--glass);border:1px solid var(--glass-b)}
 .sptabs button[aria-pressed="true"]{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 16px color-mix(in srgb,var(--accent) 35%,transparent)}
 .hl .note{margin-bottom:0}
 .hl-big{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
@@ -844,6 +844,26 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .hsub::-webkit-scrollbar{display:none}
 .hsub button{flex:none;display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;font-size:13px;font-weight:650;color:var(--muted);background:var(--glass);border:1px solid var(--glass-b);transition:all .25s}
 .hsub button[aria-pressed="true"]{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 40%,transparent);transform:scale(1.04)}
+/* ── Saună & rece ── */
+.hl.heat .hthero{text-align:center;margin:2px 0 10px}.hthero b{display:block;font-family:var(--display);font-size:40px;line-height:1;background:linear-gradient(135deg,#ffb347,#ff5e3a 55%,#3b9cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hthero span{display:block;font-size:14px;font-weight:600;margin-top:6px}.hthero small{color:var(--muted);font-size:12px}
+.htbar{display:flex;gap:3px;height:10px;margin:6px 0 14px}.htbar span{position:relative;border-radius:5px;overflow:hidden;opacity:.4}.htbar span i{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.55)}
+.htbar .sauna{background:linear-gradient(90deg,#ff9a3c,#ff4e2a)}.htbar .cold{background:linear-gradient(90deg,#5ec8ff,#2f6bff)}.htbar .rest{background:var(--muted)}
+.htbar span.on{opacity:1;box-shadow:0 0 10px currentColor}.htbar span.on.sauna{color:#ff6a3a}.htbar span.on.cold{color:#4aa8ff}
+.htlive .htbar span{opacity:.35}.htlive .htbar span.on{opacity:1}
+.htgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}.htgrid .htst:first-child{grid-column:1/-1}
+.htst{padding:8px 10px;border-radius:14px;background:var(--soft)}.htst small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.htst div{display:flex;align-items:center;justify-content:space-between}.htst b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}.htst em{font-style:normal;font-size:12px;color:var(--muted);margin-left:3px}
+.htst button{width:34px;height:34px;border-radius:11px;background:var(--glass);border:1px solid var(--glass-b);font-size:18px;color:var(--ink)}
+.htring{width:220px;height:220px}.htring.sauna .arc{stroke:#ff6a3a}.htring.cold .arc{stroke:#4aa8ff}.htring::before{content:"";position:absolute;inset:14px;border-radius:50%;pointer-events:none}.htring.sauna::before{box-shadow:0 0 34px rgba(255,110,50,.35)}.htring.cold::before{box-shadow:0 0 34px rgba(80,170,255,.4)}.htring.rest .arc{stroke:var(--muted)}
+.htring .arc{transition:stroke-dashoffset 1s linear}
+.hl.heat.htlive.ph-sauna{background:radial-gradient(120% 70% at 50% 0%,rgba(255,110,40,.18),transparent 70%),var(--glass)}
+.hl.heat.htlive.ph-cold{background:radial-gradient(120% 70% at 50% 0%,rgba(70,160,255,.2),transparent 70%),var(--glass)}
+.hl.heat .spbtns .btn{flex:1}
+.hl.heat.donev{text-align:center;display:grid;gap:6px;justify-items:center}.hl.heat.donev small{color:var(--muted)}.hl.heat.donev .hadd-b{width:100%}
+.csdots.ht i.sa{background:linear-gradient(135deg,#ffb347,#ff4e2a);box-shadow:0 0 8px rgba(255,100,40,.45)}
+.csdots.ht i.pl{box-shadow:inset 0 -5px 0 #3b9cff}.csdots.ht i.sa.pl{box-shadow:inset 0 -5px 0 #3b9cff,0 0 8px rgba(255,100,40,.45)}
+.note.cen{text-align:center}
 .hl-chips.cen{justify-content:center}
 .hl-fast.cold .arc{stroke:#5ec8ff}.hl-fast.cold .arc.done{stroke:#a5f3fc;filter:drop-shadow(0 0 8px rgba(120,220,255,.9))}
 .csdots{display:flex;gap:5px;justify-content:center;margin:12px 0 4px}.csdots i{width:14px;height:14px;border-radius:4px;background:var(--soft)}
@@ -927,7 +947,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     </div>
   </section>
   <section id="v-sport" hidden>
-    <div class="sptabs" id="sp-tabs" role="tablist"><button data-stab="train" aria-pressed="true">Antrenament</button><button data-stab="body" aria-pressed="false">Corp & nutriție</button></div>
+    <div class="sptabs" id="sp-tabs" role="tablist"><button data-stab="train" aria-pressed="true">Antrenament</button><button data-stab="body" aria-pressed="false">Corp & nutriție</button><button data-stab="heat" aria-pressed="false">Saună & rece</button></div>
     <div id="sp-train">
     <div class="ptop"><div><small class="spkick" id="sp-kick"></small><h2 class="ptitle" id="sp-title">Sport</h2></div><span class="sptag" id="sp-tag"></span></div>
     <div class="spweek" id="sp-week"></div>
@@ -936,6 +956,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div id="sp-list"></div>
     </div>
     <div id="sp-body" hidden></div>
+    <div id="sp-heat" hidden></div>
   </section>
   <section id="v-raft" hidden>
     <div class="ptop"><h2 class="ptitle">Raft</h2><span class="muted" id="bk-count"></span><label class="gbtn" for="bk-file"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>PDF</label></div>
@@ -2098,9 +2119,11 @@ function idb(stores,mode,fn){
     t.oncomplete=()=>res(out);t.onerror=t.onabort=()=>rej(t.error);
   }));
 }
+const bkGone=new Set();
 const bk={
   all:()=>idb("books","readonly",t=>t.objectStore("books").getAll()),
-  put:b=>idb("books","readwrite",t=>t.objectStore("books").put(b)),
+  // o carte ștearsă nu mai poate fi salvată la loc (ex. salvarea întârziată a OCR-ului sau a poziției)
+  put:b=>bkGone.has(b.id)?Promise.resolve():idb("books","readwrite",t=>t.objectStore("books").put(b)),
   file:id=>idb("files","readonly",t=>t.objectStore("files").get(id)),
   add:(b,buf)=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").put(buf,b.id);return t.objectStore("books").put(b)}),
   del:id=>idb(["books","files"],"readwrite",t=>{t.objectStore("files").delete(id);return t.objectStore("books").delete(id)})
@@ -2590,7 +2613,9 @@ $("rd-night").addEventListener("click",()=>{S.night=!S.night;save();$("reader").
 $("rd-del").addEventListener("click",async()=>{
   if(!RD)return;const b=RD.b;
   if(!confirm(`Ștergi „${b.t}” de pe raft?`))return;
-  closeReader();try{await bk.del(b.id);toast("Carte ștearsă")}catch(e){}renderShelf();
+  bkGone.add(b.id);clearTimeout(ocrSaveT);
+  closeReader();try{await bk.del(b.id);BOOKS=BOOKS.filter(x=>x.id!==b.id);toast("Carte ștearsă")}catch(e){toast("Nu am putut șterge cartea")}
+  renderShelf();
 });
 let rdResize=0;
 addEventListener("resize",()=>{if(!RD)return;clearTimeout(rdResize);const an=rdAnchor();rdResize=setTimeout(()=>{if(!RD)return;RD.want=an;layoutReader(RD.cur)},250)});

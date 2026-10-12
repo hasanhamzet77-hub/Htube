@@ -420,19 +420,19 @@ function renderLive(full){
   }
   const tot=fmt(elapsed()/1000),paused=!!sess.pauseAt;
   if(sess.state==="set"){
-    const reps=cur?cur.rep:0;
+    // fără numărare automată: tu îți faci ritmul, aici vezi doar timpul seriei și ținta
     if(P.dataset.st!=="set"+sess.ex+"-"+sess.set+paused){
       P.dataset.st="set"+sess.ex+"-"+sess.set+paused;
       P.innerHTML=`<div class="splive">
         <div class="sprow"><small>Exercițiul ${sess.ex+1}/${D.ex.length} · Seria ${sess.set+1}/${e.sets}</small><span class="sptot" id="sp-tot"></span></div>
         <b class="spname">${esc(e.n)}</b>
-        <div class="sprep"><span id="sp-rep">0</span><small>repetări<br>țintă ${e.reps}</small><span class="spst" id="sp-st"></span></div>
+        <div class="sprep"><span id="sp-st">0:00</span><small>timpul seriei<br>țintă <b>${e.reps}</b> repetări</small></div>
         <div class="spbtns"><button class="spic" id="sp-pause" aria-label="Pauză">${paused?'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>':'<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>'}</button>
         <button class="btn spok" id="sp-ok">✓ Serie gata</button><button class="spic" id="sp-stop" aria-label="Oprește"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button></div></div>`;
     }
-    $s("sp-tot").textContent="⏱ "+tot;$s("sp-rep").textContent=reps;
+    $s("sp-tot").textContent="⏱ "+tot;
     $s("sp-st").textContent=fmt((((sess.pauseAt||now())-sess.setStart))/1000);
-    $s("sp-hud").innerHTML=`<b>${esc(e.n)}</b><small>Seria ${sess.set+1}/${e.sets} · rep ${reps}</small>`;
+    $s("sp-hud").innerHTML=`<b>${esc(e.n)}</b><small>Seria ${sess.set+1}/${e.sets} · țintă ${e.reps}</small>`;
     return;
   }
   // pauză între serii
