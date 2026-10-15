@@ -84,7 +84,8 @@ function coldSec(){
     <div class="hl-fast cold"><svg viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" class="trk"/><circle cx="64" cy="64" r="${R}" class="arc${pr>=1?" done":""}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pr)).toFixed(1)}"/></svg>
       <div class="hl-fin"><small>${cs?(pr>=1?"Țintă atinsă ❄️":"Respiră calm"):L[today]?"Făcut azi ✓":"Gata de frig?"}</small><b id="cs-t">${cs?fmtS(el):fmtS(goal)}</b><span>${cs?"din "+fmtS(goal):"ținta"}</span></div></div>
     ${cs?`<div class="hadd-b"><button class="btn" id="cs-stop">Am ieșit ✓</button></div>`:`<div class="hl-chips cen">${[60,120,180,240].map(x=>`<button class="hl-chip${goal===x?" on":""}" data-cs="${x}">${x<60?x+" s":x/60+" min"}</button>`).join("")}</div>
-      <div class="hadd-b"><button class="btn" id="cs-go">Intru în apă</button></div>`}
+      <div class="hadd-b"><button class="btn ghost" id="cs-gong" aria-label="Ascultă gongul">🔔 Gong</button><button class="btn" id="cs-go">Intru în apă</button></div>
+      <p class="note cen">La ${fmtS(goal)} sună gongul: poți ieși.</p>`}
     <div class="hl-macro"><span><b>${st}</b> zile la rând</span><span><b>${n30}</b> în 30 de zile</span><span><b>${best?fmtS(best):"–"}</b> cel mai lung</span></div>
     <div class="csdots">${dots}</div>
     <p class="note">Dimineața, în bazinul cu gheață: intră calm, respiră lent pe nas, primele 30 s sunt cele mai grele. Ieși dacă începi să tremuri necontrolat sau amorțesc degetele. Nu e recomandat dacă ai probleme de inimă.</p>
@@ -166,6 +167,28 @@ function fastStats(){
   <details class="hl-list"><summary>Istoric posturi</summary>${h.slice().reverse().slice(0,40).map((x,i)=>`<div class="hl-li"><span>${new Date(x.start).toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}<small> țintă ${x.h} h</small></span><b>${r1((x.end-x.start)/36e5)} h ${(x.end-x.start)/36e5>=x.h?"✓":""}</b></div>`).join("")}</details>`;
 }
 
+// ── gong: lovitură de gong sintetizată (parțiale neregulate, rezonanță lungă) ──
+let gctx=null;
+function gongCtx(){try{gctx=gctx||new (window.AudioContext||window.webkitAudioContext)();if(gctx.state!=="running")gctx.resume()}catch(e){}
+  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}return gctx}
+function gong(vol=1){
+  const c=gongCtx();if(!c)return;const t=c.currentTime+.03,out=c.createGain(),lp=c.createBiquadFilter();
+  lp.type="lowpass";lp.frequency.setValueAtTime(5200,t);lp.frequency.exponentialRampToValueAtTime(900,t+3);
+  out.gain.value=.45*vol;lp.connect(out).connect(c.destination);
+  const f=98;   // sol grav
+  [[1,1,6.5],[1.47,.62,5],[2.09,.5,4.2],[2.56,.38,3.4],[3.39,.28,2.6],[4.14,.2,2],[5.4,.12,1.4],[6.8,.08,1]].forEach(([r,a,d],i)=>{
+    const o=c.createOscillator(),g=c.createGain();o.type="sine";
+    o.frequency.setValueAtTime(f*r*1.012,t);o.frequency.exponentialRampToValueAtTime(f*r,t+.6);   // „bătaia” de la început
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*.5,t+.006+i*.002);g.gain.exponentialRampToValueAtTime(.0004,t+d);
+    // ușoară pulsație, ca la un gong real
+    const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=3.2+i*.7;lg.gain.value=a*.06;lfo.connect(lg).connect(g.gain);lfo.start(t);lfo.stop(t+d);
+    o.connect(g).connect(lp);o.start(t);o.stop(t+d+.05)});
+  // lovitura (zgomot scurt de baghetă)
+  const n=c.createBuffer(1,c.sampleRate*.08,c.sampleRate),dt=n.getChannelData(0);for(let i=0;i<dt.length;i++)dt[i]=(Math.random()*2-1)*Math.pow(1-i/dt.length,3);
+  const ns=c.createBufferSource(),ng=c.createGain(),bp=c.createBiquadFilter();bp.type="bandpass";bp.frequency.value=600;bp.Q.value=.8;ng.gain.value=.35;
+  ns.buffer=n;ns.connect(bp).connect(ng).connect(lp);ns.start(t);
+}
+let csGong=!!(S.cold.run&&(Date.now()-S.cold.run)/1000>=(S.cold.pick||120));
 // ── Saună & apă rece: ritualul pe runde (saună → rece → pauză) + baia de gheață de dimineață ──
 const HP={sauna:{n:"Saună",e:"🔥",c:"sauna"},cold:{n:"Apă rece",e:"🧊",c:"cold"},rest:{n:"Pauză",e:"🌿",c:"rest"}};
 function heatPhases(p){const L=[];for(let i=0;i<p.r;i++){L.push({k:"sauna",d:p.s*60,i});L.push({k:"cold",d:p.c*60,i});if(i<p.r-1&&p.p>0)L.push({k:"rest",d:p.p*60,i})}return L}
@@ -284,8 +307,9 @@ function heatClick(t){
   if(t.closest("#ht-ok")){htDone=null;renderHeat();return}
   // ice plunge
   const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();renderHeat();return}
-  if(t.closest("#cs-go")){cs=Date.now();S.cold.run=cs;save();try{lockWake()}catch(e){}renderHeat();startTick();return}
-  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;S.cold.run=null;const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();try{unlockWake()}catch(_){}
+  if(t.closest("#cs-gong")){gong();return}
+  if(t.closest("#cs-go")){gongCtx();csGong=false;cs=Date.now();S.cold.run=cs;save();try{lockWake()}catch(e){}renderHeat();startTick();return}
+  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;csGong=false;S.cold.run=null;const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();try{unlockWake()}catch(_){}
     if(el>=15)XP(`cs:${k}`,15,"Apă rece");if(el>=S.cold.pick&&window.Grow)Grow.confetti();toast(el>=S.cold.pick?"Bravo! Ținta atinsă 🧊":"Notat 🧊");renderHeat();return}
 }
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(S.heat.cur&&!S.heat.cur.pauseAt||cs)){try{lockWake()}catch(e){}heatTick();if(tab==="heat")renderHeat()}});
@@ -326,7 +350,7 @@ document.addEventListener("click",e=>{
 function startTick(){clearInterval(tick);tick=setInterval(()=>{
   if(S.heat.cur){heatTick();}
   if(document.hidden||tab==="train"||$h("v-sport").hidden)return;
-  if(tab==="heat"){if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&sec-1<S.cold.pick){renderHeat();try{bell(.35)}catch(e){}if(navigator.vibrate)navigator.vibrate([30,60,30])}else e2.textContent=fmtS(sec)}}return}
+  if(tab==="heat"){if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&!csGong){csGong=true;renderHeat();try{gong()}catch(e){}if(navigator.vibrate)navigator.vibrate([400,150,400])}else e2.textContent=fmtS(sec)}}return}
   const f=B().fast.cur;if(!f)return;
   const el=$h("hl-fel");if(!el)return;
   const ms=Date.now()-f.start;

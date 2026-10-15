@@ -870,7 +870,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .brsnd button{padding:7px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--soft);border:1px solid transparent}
 .brsnd button[aria-pressed="true"]{background:var(--grad);color:#fff}
 .hl-chips.cen{justify-content:center}
-.hl-fast.cold .arc{stroke:#5ec8ff}.hl-fast.cold .arc.done{stroke:#a5f3fc;filter:drop-shadow(0 0 8px rgba(120,220,255,.9))}
+.hl-fast.cold .arc{stroke:#5ec8ff}.hl-fast.cold .arc.done{stroke:#a5f3fc}.hl-fast.cold:has(.arc.done)::before{content:"";position:absolute;inset:12px;border-radius:50%;box-shadow:0 0 30px rgba(120,220,255,.55);pointer-events:none}
 .csdots{display:flex;gap:5px;justify-content:center;margin:12px 0 4px}.csdots i{width:14px;height:14px;border-radius:4px;background:var(--soft)}
 .csdots i.on{background:linear-gradient(135deg,#a5f3fc,#3b82f6);box-shadow:0 0 8px rgba(80,170,255,.5)}.csdots i.t{outline:2px solid var(--accent);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.ghero::after,.gbar i::after,.rcard.ok,.gh-em span,.bro{animation:none}}
