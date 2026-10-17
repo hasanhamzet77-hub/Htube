@@ -3,7 +3,12 @@ name: Reamintire jurnal
 on:
   schedule:
     - cron: "5,35 15-21 * * *"   # seara, ora Germaniei (UTC+1/+2); scriptul alege momentul potrivit
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Trimite acum o notificare de test"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -41,6 +46,7 @@ jobs:
         if: steps.chk.outputs.go == '1'
         env:
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          PUSH_TEST: ${{ inputs.test && '1' || '' }}
         run: |
           npm i --no-save --silent web-push@3
           node scripts/push_journal.mjs

@@ -26,16 +26,17 @@ const LINES = [
   "Un minut de liniște: ce te-a învățat ziua de azi?",
   "Marcus Aurelius își scria gândurile în fiecare seară. E rândul tău."
 ];
-const body = LINES[new Date().getDate() % LINES.length];
+const TEST = process.env.PUSH_TEST === "1";
+const body = TEST ? "Test: notificările IMPERIUM funcționează ✓" : LINES[new Date().getDate() % LINES.length];
 let changed = false;
 for (const s of subs) {
   const id = s.e.slice(-16), target = (s.h ?? 21) * 60 + (s.m ?? 30);
-  if (sent.includes(id)) { console.log(id, "deja trimis azi"); continue; }
-  if (now < target || now > target + 150) { console.log(id, "nu e ora", now, target); continue; }
+  if (!TEST && sent.includes(id)) { console.log(id, "deja trimis azi"); continue; }
+  if (!TEST && (now < target || now > target + 150)) { console.log(id, "nu e ora", now, target); continue; }
   try {
     await webpush.sendNotification({ endpoint: s.e, keys: s.k }, JSON.stringify({ title: "Jurnalul de seară", body, url: "./?open=jurnal" }), { TTL: 3 * 3600, urgency: "normal" });
     console.log(id, "trimis");
-    sent.push(id); changed = true;
+    if (!TEST) { sent.push(id); changed = true; }
   } catch (e) {
     console.log("::warning::", id, e.statusCode || "", String(e.body || e.message).slice(0, 200));
     if (e.statusCode === 404 || e.statusCode === 410) console.log("::warning::Abonament expirat: activează din nou notificările din Setări și trimite codul nou.");
