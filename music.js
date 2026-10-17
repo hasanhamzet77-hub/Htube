@@ -104,7 +104,7 @@ function sceneNow(){
   if(vis("qpop"))sc=(S.music.qsrc!=="local"&&!window.__spFail)?null:"feed";   // citat deschis: Spotify sau piesele noastre
   else if(vis("reader"))sc="raft";
   else if(vis("medov")||(typeof jrOpen!=="undefined"&&jrOpen))sc="azi";
-  else if(vis("v-sport"))sc=workout?"sport":null;
+  else if(vis("v-sport"))sc=workout?"sport":(window.Health&&Health.saunaMusic&&Health.saunaMusic())?"azi":null;   // în saună: muzica de meditație
   else if(vis("v-azi"))sc="azi";
   return sc&&pool(sc).length?sc:null;                                   // Feed, Shorts, Salvate, Setări, Raft: liniște
 }

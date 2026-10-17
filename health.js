@@ -14,7 +14,7 @@ let tab="train",tick=0;
 const CS=[["kg","Greutate","⚖️"],["cal","Calorii","🔥"],["diet","Dietă","🥗"],["fast","Post","⏳"]];
 S.cold=Object.assign({log:{},pick:120},S.cold||{});
 if(!S.cold.v2){S.cold.v2=1;if(S.cold.pick===60)S.cold.pick=120}   // baia ta de gheață e de 2 min
-S.heat=Object.assign({plan:{r:3,s:15,c:2,p:2,t:90},log:{},cur:null},S.heat||{});
+S.heat=Object.assign({plan:{r:3,s:15,c:2,p:2,t:90},log:{},cur:null,music:true},S.heat||{});
 const XP=(k,p,l)=>window.Grow&&Grow.award(k,p,l);
 
 // ── calculator ──
@@ -235,6 +235,7 @@ function saunaIdle(){
     <div class="hthero"><b>${p.r}×</b><span>${p.s} min saună ${p.t}° → ${p.c} min apă rece${p.p&&p.r>1?` → ${p.p} min pauză`:""}</span><small>Total ~${durTxt(tot)}</small></div>
     ${heatBar(ph,null,0)}
     <div class="htgrid">${st("r","Runde",p.r,"")}${st("s","Saună",p.s,"min")}${st("c","Apă rece",p.c,"min")}${st("p","Pauză",p.p,"min")}${st("t","Temperatură",p.t,"°C")}</div>
+    <button class="htmus" id="ht-mus" aria-pressed="${S.heat.music!==false}">🎵 Muzică de meditație în saună<span>${S.heat.music!==false?"pornită":"oprită"}</span></button>
     <div class="hadd-b"><button class="btn ghost" id="ht-log">Notez fără cronometru</button><button class="btn" id="ht-go">Pornește ritualul</button></div>
     ${heatStats()}
     <p class="note">Telefonul rămâne afară: la 90° bateria se strică. Ecranul stă aprins cât rulează ritualul și sună la fiecare schimbare. Bea apă între runde; nu după alcool și nu dacă ai probleme de inimă sau tensiune.</p>
@@ -255,6 +256,7 @@ function saunaLive(){
     <div class="spbtns"><button class="spic" id="ht-pause" aria-label="${c.pauseAt?"Continuă":"Pauză"}">${c.pauseAt?'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>':'<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>'}</button>
       <button class="btn ghost" id="ht-plus">+1 min</button><button class="btn" id="ht-next">${nx?"Gata ›":"Termin ✓"}</button>
       <button class="spic" id="ht-stop" aria-label="Oprește"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button></div>
+    <button class="htmus" id="ht-mus" aria-pressed="${S.heat.music!==false}">🎵 Muzică<span>${S.heat.music!==false?"pornită":"oprită"}</span></button>
     <p class="note cen">${cur.k==="sauna"?"Stai relaxat, respiră pe nas. Ieși mai devreme dacă amețești.":cur.k==="cold"?"Intră calm, expiră lung. Primele 30 de secunde trec.":"Stai jos, bea apă, lasă corpul să se liniștească."}</p>
   </div>`;
 }
@@ -285,7 +287,7 @@ function heatFinish(){
   const e={t:c.t0,rounds:Math.max(rounds,sa>3?1:0),sauna:Math.round(sa*10)/10,cold:Math.round(co*10)/10,temp:c.plan.t};
   if(e.sauna>=3){(S.heat.log[k]=S.heat.log[k]||[]).push(e);XP(`sa:${k}`,25,"Saună + apă rece");
     if(cmax>0){const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(Math.min(cmax,c.plan.c*60+120),(prev||{}).s||0),t:Date.now(),sauna:1}}}
-  S.heat.cur=null;save();htDone=e;try{unlockWake()}catch(_){}
+  S.heat.cur=null;save();htDone=e;try{unlockWake()}catch(_){}setTimeout(musR,2500);
   try{bell(.45);setTimeout(()=>bell(.35),500);setTimeout(()=>bell(.3),1000)}catch(_){}
   if(e.sauna>=3&&window.Grow)Grow.confetti(true);
   renderHeat();
@@ -309,8 +311,9 @@ function heatClick(t){
   const hs=t.closest("[data-htsub]");if(hs){S.sub=S.sub||{};S.sub.heat=hs.dataset.htsub;save();htDone=null;renderHeat();return}
   const hp=t.closest("[data-hp]");if(hp){const p=S.heat.plan,k=hp.dataset.hp,d=+hp.dataset.d,lim={r:[1,6,1],s:[3,30,1],c:[.5,10,.5],p:[0,15,1],t:[50,110,5]}[k];
     p[k]=Math.max(lim[0],Math.min(lim[1],Math.round((p[k]+d*lim[2])*10)/10));save();renderHeat();return}
+  if(t.closest("#ht-mus")){S.heat.music=S.heat.music===false;save();renderHeat();musR();return}
   if(t.closest("#ht-go")){const p={...S.heat.plan};S.heat.cur={t0:Date.now(),st:Date.now(),i:0,ph:heatPhases(p),plan:p,act:{}};save();
-    try{lockWake()}catch(e){}try{bell(.35)}catch(e){}htDone=null;renderHeat();startTick();return}
+    try{lockWake()}catch(e){}try{bell(.35)}catch(e){}htDone=null;renderHeat();startTick();musR();return}
   if(t.closest("#ht-log")){const p=S.heat.plan,k=dk();(S.heat.log[k]=S.heat.log[k]||[]).push({t:Date.now(),rounds:p.r,sauna:p.r*p.s,cold:p.r*p.c,temp:p.t,man:1});
     const prev=S.cold.log[k];S.cold.log[k]={s:Math.max(p.c*60,(prev||{}).s||0),t:Date.now(),sauna:1};
     save();XP(`sa:${k}`,25,"Saună + apă rece");window.Grow&&Grow.confetti();toast(`Notat: ${p.r}× saună + apă rece 🔥🧊`);renderHeat();return}
@@ -320,7 +323,7 @@ function heatClick(t){
   if(c&&t.closest("#ht-next")){if(c.pauseAt){c.st+=Date.now()-c.pauseAt;c.pauseAt=null}heatAdvance(true);if(S.heat.cur)renderHeat();return}
   if(c&&t.closest("#ht-stop")){const any=Object.keys(c.act).length||(Date.now()-c.st)>18e4;
     if(!confirm(any?"Oprești ritualul? Salvez ce ai făcut până acum.":"Oprești ritualul?"))return;
-    if(any){c.act[c.i]=(Date.now()-c.st)/1000;heatFinish()}else{S.heat.cur=null;save();try{unlockWake()}catch(_){}renderHeat()}return}
+    if(any){c.act[c.i]=(Date.now()-c.st)/1000;heatFinish()}else{S.heat.cur=null;save();try{unlockWake()}catch(_){}renderHeat();musR()}return}
   if(t.closest("#ht-ok")){htDone=null;renderHeat();return}
   // ice plunge
   const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();renderHeat();plAudio();return}
@@ -379,9 +382,11 @@ function setTab(t){
   tab=t;S.spTab=t;save();
   document.querySelectorAll("#sp-tabs [data-stab]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.stab===t));
   $h("sp-train").hidden=t!=="train";$h("sp-body").hidden=t!=="body";$h("sp-heat").hidden=t!=="heat";
+  musR();
   if(t==="train"){if(!S.heat.cur&&!cs)clearInterval(tick);window.Sport&&Sport.show()}
   else{window.Sport&&Sport.hide();t==="body"?render():renderHeat();startTick()}
 }
 function show(){tab=["body","heat"].includes(S.spTab)?S.spTab:"train";setTab(tab)}
-window.Health={show,render,renderHeat};
+window.Health={show,render,renderHeat,saunaMusic:()=>!!S.heat.cur&&S.heat.music!==false&&tab==="heat"};
+const musR=()=>{try{window.Music&&Music.refresh()}catch(e){}};
 })();

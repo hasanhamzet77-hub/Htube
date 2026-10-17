@@ -123,6 +123,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:calc(10p
 #stage{position:fixed;z-index:3;background:#000;overflow:hidden;border-radius:14px;pointer-events:none}
 #stage.short{border-radius:0;z-index:6}
 #stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+#stage iframe.ytoff{opacity:0;visibility:hidden}
 #stage.short iframe{transform:scale(1.02)}
 #cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .2s ease;pointer-events:none}
 #stage:not(.loading) #cover{opacity:0}
@@ -634,6 +635,13 @@ main.wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}
 #stage.short .sinfo2{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 #stage.short .sside2{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .toast{bottom:calc(98px + env(safe-area-inset-bottom,0px));background:var(--glass);color:var(--ink);border:1px solid var(--glass-b);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(0,0,0,.15);font-weight:600}
+/* bara cu persoane deasupra Shorts-urilor */
+#s-people{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:0;right:0;z-index:7;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 12px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+#s-people::-webkit-scrollbar{display:none}
+#s-people button{flex:none;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;font:600 12.5px/1 var(--sans);color:#fff;background:rgba(20,20,26,.45);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#s-people button small{font-size:10.5px;opacity:.6;font-weight:600}
+#s-people button[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
+#stage.short .unmute{top:calc(56px + env(safe-area-inset-top,0px))!important}
 /* bara de navigare: plutește, din sticlă, cu un indicator care alunecă */
 nav{left:50%;right:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(calc(100% - 24px),440px);padding:6px;border-radius:26px;
   background:var(--glass);border:1px solid var(--glass-b);-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);box-shadow:0 12px 34px rgba(0,0,0,.16);justify-content:space-between}
@@ -869,6 +877,8 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .brsnd{display:flex;align-items:center;gap:6px;margin:4px 0 12px;flex-wrap:wrap}.brsnd span{font-size:12px;color:var(--muted);margin-right:2px}
 .brsnd button{padding:7px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--soft);border:1px solid transparent}
 .brsnd button[aria-pressed="true"]{background:var(--grad);color:#fff}
+.htmus{display:flex;align-items:center;justify-content:space-between;width:100%;margin:2px 0 12px;padding:11px 14px;border-radius:14px;background:var(--soft);font:600 13.5px/1.2 var(--sans);color:var(--ink);border:1px solid transparent}
+.htmus span{font-size:12px;color:var(--muted)}.htmus[aria-pressed="true"]{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}.htmus[aria-pressed="true"] span{color:var(--accent)}
 .hl-chips.cen{justify-content:center}
 .hl-fast.cold .arc{stroke:#5ec8ff}.hl-fast.cold .arc.done{stroke:#a5f3fc}.hl-fast.cold:has(.arc.done)::before{content:"";position:absolute;inset:12px;border-radius:50%;box-shadow:0 0 30px rgba(120,220,255,.55);pointer-events:none}
 .csdots{display:flex;gap:5px;justify-content:center;margin:12px 0 4px}.csdots i{width:14px;height:14px;border-radius:4px;background:var(--soft)}
@@ -1057,7 +1067,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 <section id="v-shorts" hidden></section>
 
 <div id="stage" class="loading" hidden>
-  <div id="yt"></div>
+  <div id="yt"></div><div id="yt2"></div>
   <img id="cover" alt="">
   <div id="touch"></div>
   <span class="big"><svg viewBox="0 0 12 12"><path d="M3 1.5v9l7.5-4.5z"/></svg></span>
@@ -1176,6 +1186,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 
 <script src="data.js"></script>
 <script src="threads.js"></script>
+<script src="data2.js"></script>
 <script>
 const CATS={mot:"Motivație",dev:"Minte",biz:"Afaceri",soc:"Oameni",san:"Sănătate",int:"Înțelepciune"};
 const $=id=>document.getElementById(id);
@@ -1228,11 +1239,9 @@ function markSeen(ids){
     save()},1500)}
 }
 // amestec: întâi ce n-ai văzut (în ordine aleatorie), apoi ce ai văzut demult; ce ai văzut azi vine ultimul
+// ce n-ai văzut niciodată vine primul (amestecat); apoi ce ai văzut cel mai demult → un lucru revine abia după ce le-ai văzut pe toate
 function mix(arr){
-  const now=Date.now();
-  return arr.map(x=>{const t=S.seen[x.id];let sc=Math.random();
-      if(t){const h=(now-t)/36e5;sc+=h<12?3:h<48?2:h<168?1:.4}
-      return [sc,x]})
+  return arr.map(x=>{const t=S.seen[x.id];return [t?t+Math.random()*6*36e5:Math.random()*1e6,x]})
     .sort((a,b)=>a[0]-b[0]).map(p=>p[1]);
 }
 
@@ -1246,8 +1255,11 @@ function makeGen(){
   const pools={},idx={},last={};
   for(const k in src){pools[k]=mix(src[k]);idx[k]=0}
   // nu pune două clipuri de la aceeași persoană unul după altul
+  // un tip de conținut deja văzut azi lasă locul altuia care încă are lucruri noi
+  const stale=k=>{const pl=pools[k];if(!pl||!pl.length)return true;const x=pl[idx[k]%pl.length],t=S.seen[x.id];return !!t&&Date.now()-t<20*36e5};
   const take=k=>{
     if(!pools[k].length)return null;
+    if(k!=="v"&&k!=="s"&&stale(k)){const alt=["q","i","t"].find(o=>o!==k&&!stale(o));if(alt)k=alt}
     if(idx[k]>=pools[k].length){pools[k]=mix(src[k]);idx[k]=0}
     const pl=pools[k],j=idx[k];
     for(let m=j;m<Math.min(pl.length,j+10);m++){if((pl[m].who||pl[m].ch)!==last[k]){[pl[j],pl[m]]=[pl[m],pl[j]];break}}
@@ -1537,10 +1549,33 @@ let unlocked=false;                  // browserul a permis sunetul în sesiunea 
 const stage=$("stage"), cover=$("cover");
 const boxId=b=>b.dataset.vid||b.dataset.sid;
 const fmt=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,"0");return h?`${h}:${String(m).padStart(2,"0")}:${x}`:`${m}:${x}`};
+// două playere: unul se vede, celălalt încarcă în liniște Short-ul următor → la swipe pornește imediat
+let Q=null,qReady=false;
+const PV={autoplay:1,mute:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,rel:0,playsinline:1,modestbranding:1,cc_load_policy:0,origin:location.origin};
+const ifr=pl=>{try{return pl.getIframe()}catch(e){return null}};
 window.onYouTubeIframeAPIReady=()=>{
-  P=new YT.Player("yt",{width:"100%",height:"100%",playerVars:{autoplay:1,mute:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,rel:0,playsinline:1,modestbranding:1,cc_load_policy:0,origin:location.origin},
+  P=new YT.Player("yt",{width:"100%",height:"100%",playerVars:PV,
     events:{onReady:()=>{ytReady=true;P.mute();if(pending){const b=pending;pending=null;active=null;activate(b)}},onStateChange:onState}});
+  Q=new YT.Player("yt2",{width:"100%",height:"100%",playerVars:PV,
+    events:{onReady:()=>{qReady=true;Q.mute();const f=ifr(Q);if(f)f.classList.add("ytoff");preloadNext()},onStateChange:onState}});
 };
+// Short-ul de după cel activ (în ordinea din listă)
+function nextShortId(){
+  if(!activeShort||!active)return null;
+  const cur=active.closest(".short");const nx=cur&&cur.nextElementSibling;
+  const f=nx&&nx.querySelector(".sframe");return f?f.dataset.sid:null;
+}
+function preloadNext(){
+  if(!qReady||!Q||!ytReady)return;
+  const id=nextShortId();if(!id||Q.preId===id)return;
+  Q.preId=id;Q.preOk=false;
+  try{Q.mute();Q.loadVideoById({videoId:id})}catch(e){Q.preId=null}
+}
+function swapPlayers(){
+  const old=P;P=Q;Q=old;
+  const fa=ifr(P),fb=ifr(Q);if(fa)fa.classList.remove("ytoff");if(fb)fb.classList.add("ytoff");
+  try{Q.pauseVideo();Q.mute()}catch(e){}Q.preId=null;Q.preOk=false;
+}
 (()=>{const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s)})();
 const noSubs=()=>{try{P.setOption("captions","track",{})}catch(e){}try{P.unloadModule("captions")}catch(e){}try{P.unloadModule("cc")}catch(e){}};
 
@@ -1579,8 +1614,16 @@ function activate(box){
   if(activeShort){const it=byId(id)||{};$("s-who").textContent=it.who||it.ch||"";$("s-t").textContent=it.t||"";
     $("s-save").dataset.id=$("s-hide").dataset.id=id;$("s-save").setAttribute("aria-pressed",S.saved.includes(id))}
   if(!ytReady){pending=box;return}
-  P.loadVideoById({videoId:id});
-  if(wantSound&&unlocked){P.unMute();P.setVolume(100)}else P.mute();
+  if(activeShort&&Q&&qReady&&Q.preId===id){
+    // era deja încărcat în playerul din spate: îl aducem în față și pornește imediat
+    const ok=Q.preOk;swapPlayers();
+    try{P.seekTo(0,true)}catch(e){}
+    if(wantSound&&unlocked){P.unMute();P.setVolume(100)}else P.mute();
+    P.playVideo();if(ok){stage.classList.remove("loading")}
+  }else{
+    P.loadVideoById({videoId:id});
+    if(wantSound&&unlocked){P.unMute();P.setVolume(100)}else P.mute();
+  }
   // dacă YouTube rulează o reclamă, clipul nu „pornește” oficial: arătăm reclama (cu butonul ei de Skip)
   clearTimeout(adT);
   adT=setTimeout(()=>{if(active===box&&stage.classList.contains("loading")){stage.classList.remove("loading");stage.classList.add("ad")}},2000);
@@ -1595,7 +1638,11 @@ function deactivate(box){
 }
 function onState(e){
   const s=e.data;
-  if(s===1){clearTimeout(adT);stage.classList.remove("loading","paused","ad");noSubs();wake()}
+  if(e.target&&Q&&e.target===Q){        // playerul din spate: doar încarcă, nu se aude și nu se vede
+    if(s===1&&Q.preId){try{Q.pauseVideo();Q.seekTo(0,true);Q.mute()}catch(_){}Q.preOk=true}
+    return;
+  }
+  if(s===1){clearTimeout(adT);stage.classList.remove("loading","paused","ad");noSubs();wake();if(activeShort)setTimeout(preloadNext,400)}
   if(s===2&&!userPaused&&active){
     // browserul a blocat pornirea cu sunet: continuăm fără sunet până la prima atingere
     if(!P.isMuted()){P.mute();unlocked=false;showUnmute();P.playVideo();return}
@@ -1650,7 +1697,9 @@ $("c-snd").addEventListener("click",e=>{e.stopPropagation();if(soundIsOn())muteB
 (()=>{
   const t=$("touch");let y0=0,x0=0,t0=0,moved=false;
   const shorts=$("v-shorts");
-  const go=dir=>{const h=shorts.clientHeight;shorts.scrollTo({top:Math.round(shorts.scrollTop/h+dir)*h,behavior:"smooth"})};
+  const go=dir=>{const h=shorts.clientHeight,k=Math.max(0,Math.round(shorts.scrollTop/h+dir));
+    shorts.scrollTo({top:k*h,behavior:"smooth"});
+    const el=shorts.querySelectorAll(".short")[k],f=el&&el.querySelector(".sframe");if(f&&f!==active)activate(f)};
   t.addEventListener("touchstart",e=>{const p=e.touches[0];y0=p.clientY;x0=p.clientX;t0=Date.now();moved=false},{passive:true});
   t.addEventListener("touchmove",e=>{e.preventDefault();const dy=e.touches[0].clientY-y0;if(Math.abs(dy)>8)moved=true;if(!isFull)stage.style.transform=`translateY(${dy*.35}px)`},{passive:false});
   t.addEventListener("touchend",e=>{
@@ -1725,8 +1774,25 @@ function swEnd(){
 
 // Shorts pe ecran întreg; fiecare pornește când ajunge în centru
 let shortsIO=null;
+// alegi cu cine vrei Shorts: amestecat sau o singură persoană
+S.shortWho=S.shortWho||"";
+const whoOf=v=>v.who||v.ch||"";
+function peopleBar(){
+  const all=vids().filter(v=>v.s&&!S.hidden.includes(v.id)),cnt={};all.forEach(v=>{const w=whoOf(v);if(w&&w!=="YouTube")cnt[w]=(cnt[w]||0)+1});
+  const ppl=Object.entries(cnt).filter(([,n])=>n>=3).sort((a,b)=>b[1]-a[1]);
+  let bar=$("s-people");
+  if(!bar){bar=document.createElement("div");bar.id="s-people";document.body.appendChild(bar)}
+  bar.innerHTML=[["","🔀 Amestecat",all.length],...ppl.map(([w,n])=>[w,w,n])].map(([k,l,n])=>`<button data-who="${esc(k)}" aria-pressed="${S.shortWho===k}">${esc(l)}<small>${n}</small></button>`).join("");
+  bar.hidden=false;
+  const on=bar.querySelector('[aria-pressed="true"]');if(on)on.scrollIntoView({inline:"center",block:"nearest"});
+}
+document.addEventListener("click",e=>{const b=e.target.closest("#s-people [data-who]");if(!b)return;e.stopPropagation();
+  S.shortWho=b.dataset.who;save();deactivate();buildShorts();toast(S.shortWho?`Shorts cu ${S.shortWho}`:"Shorts amestecate")},true);
 function buildShorts(startId){
-  const list=rankShorts(vids().filter(v=>v.s));
+  peopleBar();
+  let pool=vids().filter(v=>v.s);
+  if(S.shortWho&&!startId){const f=pool.filter(v=>whoOf(v)===S.shortWho);if(f.length)pool=f;else{S.shortWho="";save();peopleBar()}}
+  const list=rankShorts(pool);
   if(startId){const i=list.findIndex(v=>v.id===startId);if(i>0)list.unshift(...list.splice(i,1))}
   const box=$("v-shorts");
   if(shortsIO)shortsIO.disconnect();
@@ -1861,7 +1927,7 @@ function switchTo(v,startShort){
   if(window.Sport){if(v==="sport"){Sport.show();window.Health&&Health.show()}else Sport.hide()}
   $("v-shorts").hidden=v!=="shorts";$("hdr").hidden=v!=="feed";$("newpill").hidden=true;
   $("nav").classList.toggle("dark",v==="shorts");
-  if(v==="shorts")buildShorts(startShort);else if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}
+  if(v==="shorts")buildShorts(startShort);else{if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}if($("s-people"))$("s-people").hidden=true}
   if(v==="saved")renderSaved();
   if(v==="set"){settings();window.Music&&Music.settingsUI()}
   $("mus-f").hidden=v==="feed"||v==="shorts";
