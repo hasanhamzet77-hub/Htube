@@ -188,6 +188,23 @@ function gong(vol=1){
   const ns=c.createBufferSource(),ng=c.createGain(),bp=c.createBiquadFilter();bp.type="bandpass";bp.frequency.value=600;bp.Q.value=.8;ng.gain.value=.35;
   ns.buffer=n;ns.connect(bp).connect(ng).connect(lp);ns.start(t);
 }
+// pe iPhone, sunetele Web Audio tac pe modul silențios și se opresc când ecranul se blochează.
+// De aceea gongul vine dintr-un fișier audio pornit chiar când intri în apă: liniște exact cât ținta + gong.
+// Așa sună la timp chiar și cu ecranul blocat sau pe silențios (fișierul rulează ca muzica).
+let plA=null,plT=0,gA=null;
+const plSrc=p=>`brand/plunge-${[60,120,180,240].includes(p)?p:120}.mp3`;
+function plAudio(){const src=plSrc(S.cold.pick||120);
+  if(!plA){plA=new Audio();plA.preload="auto";plA.setAttribute("playsinline","");
+    plA.addEventListener("timeupdate",()=>{if(cs&&!csGong&&plA.currentTime>=plT){csGong=true;if(navigator.vibrate)navigator.vibrate([400,150,400]);if(tab==="heat")renderHeat()}})}
+  if(!plA.src.endsWith(src)){plA.src=src;plA.load()}
+  plT=[60,120,180,240].includes(S.cold.pick)?S.cold.pick:120;return plA}
+function plStart(){
+  const a=plAudio();try{a.currentTime=0}catch(e){}
+  const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{});
+  try{if("mediaSession" in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:"Ice plunge · "+fmtS(S.cold.pick||120),artist:"IMPERIUM"})}}catch(e){}
+}
+function plStop(){try{plA&&plA.pause()}catch(e){}}
+function gongPreview(){if(!gA){gA=new Audio("brand/gong.mp3");gA.preload="auto"}try{gA.currentTime=0}catch(e){}const pr=gA.play();if(pr&&pr.catch)pr.catch(()=>gong())}
 let csGong=!!(S.cold.run&&(Date.now()-S.cold.run)/1000>=(S.cold.pick||120));
 // ── Saună & apă rece: ritualul pe runde (saună → rece → pauză) + baia de gheață de dimineață ──
 const HP={sauna:{n:"Saună",e:"🔥",c:"sauna"},cold:{n:"Apă rece",e:"🧊",c:"cold"},rest:{n:"Pauză",e:"🌿",c:"rest"}};
@@ -250,7 +267,7 @@ function renderHeat(){
   const subs=[["sauna","Saună","🔥"],["plunge","Ice plunge","🧊"]];
   const sub=((S.sub||{}).heat)==="plunge"?"plunge":"sauna";
   box.innerHTML=`<div class="hsub">${subs.map(([k,l,e])=>`<button data-htsub="${k}" aria-pressed="${k===sub}"><span>${e}</span>${l}${k==="sauna"&&S.heat.cur?" ●":""}${k==="plunge"&&cs?" ●":""}</button>`).join("")}</div>
-    <div class="hpg sp-r">${sub==="plunge"?coldSec()+`<div class="sec hl">${heatStats()}</div>`:htDone?saunaDone():S.heat.cur?saunaLive():saunaIdle()}</div>`;
+    <div class="hpg sp-r">${sub==="plunge"?(plAudio(),coldSec())+`<div class="sec hl">${heatStats()}</div>`:htDone?saunaDone():S.heat.cur?saunaLive():saunaIdle()}</div>`;
 }
 function heatAdvance(manual){
   const c=S.heat.cur;if(!c)return;const now=Date.now(),cur=c.ph[c.i];
@@ -306,10 +323,10 @@ function heatClick(t){
     if(any){c.act[c.i]=(Date.now()-c.st)/1000;heatFinish()}else{S.heat.cur=null;save();try{unlockWake()}catch(_){}renderHeat()}return}
   if(t.closest("#ht-ok")){htDone=null;renderHeat();return}
   // ice plunge
-  const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();renderHeat();return}
-  if(t.closest("#cs-gong")){gong();return}
-  if(t.closest("#cs-go")){gongCtx();csGong=false;cs=Date.now();S.cold.run=cs;save();try{lockWake()}catch(e){}renderHeat();startTick();return}
-  if(t.closest("#cs-stop")){const el=(Date.now()-cs)/1000,k=dk();cs=null;csGong=false;S.cold.run=null;const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();try{unlockWake()}catch(_){}
+  const cp=t.closest("[data-cs]");if(cp){S.cold.pick=+cp.dataset.cs;save();renderHeat();plAudio();return}
+  if(t.closest("#cs-gong")){gongPreview();return}
+  if(t.closest("#cs-go")){csGong=false;plStart();cs=Date.now();S.cold.run=cs;save();try{lockWake()}catch(e){}renderHeat();startTick();return}
+  if(t.closest("#cs-stop")){plStop();const el=(Date.now()-cs)/1000,k=dk();cs=null;csGong=false;S.cold.run=null;const prev=S.cold.log[k];S.cold.log[k]={...(prev||{}),s:Math.max(el,(prev||{}).s||0),t:Date.now()};save();try{unlockWake()}catch(_){}
     if(el>=15)XP(`cs:${k}`,15,"Apă rece");if(el>=S.cold.pick&&window.Grow)Grow.confetti();toast(el>=S.cold.pick?"Bravo! Ținta atinsă 🧊":"Notat 🧊");renderHeat();return}
 }
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(S.heat.cur&&!S.heat.cur.pauseAt||cs)){try{lockWake()}catch(e){}heatTick();if(tab==="heat")renderHeat()}});
@@ -350,7 +367,8 @@ document.addEventListener("click",e=>{
 function startTick(){clearInterval(tick);tick=setInterval(()=>{
   if(S.heat.cur){heatTick();}
   if(document.hidden||tab==="train"||$h("v-sport").hidden)return;
-  if(tab==="heat"){if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick&&!csGong){csGong=true;renderHeat();try{gong()}catch(e){}if(navigator.vibrate)navigator.vibrate([400,150,400])}else e2.textContent=fmtS(sec)}}return}
+  if(tab==="heat"){if(cs){const e2=$h("cs-t");if(e2){const sec=(Date.now()-cs)/1000;if(sec>=S.cold.pick+1&&!csGong){csGong=true;renderHeat();   // rezervă: dacă fișierul n-a pornit, gongul sintetizat
+          if(!plA||plA.paused)try{gong()}catch(e){}if(navigator.vibrate)navigator.vibrate([400,150,400])}else e2.textContent=fmtS(sec)}}return}
   const f=B().fast.cur;if(!f)return;
   const el=$h("hl-fel");if(!el)return;
   const ms=Date.now()-f.start;

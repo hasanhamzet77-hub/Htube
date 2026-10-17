@@ -1,5 +1,5 @@
 // HTube: aplicația merge și fără internet; feed-ul se ia mereu proaspăt când există conexiune
-const CACHE = "imperium-v28";
+const CACHE = "imperium-v29";
 const FILES = ["./", "./index.html", "./data.js", "./threads.js", "./body.js", "./sport.js", "./health.js", "./grow.js", "./music.js", "./feed.json", "./channels.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./brand/intro.jpg", "./brand/emblem.png", "./brand/emblem-96.png", "./brand/wall/w00.jpg", "./brand/wall/w01.jpg", "./brand/wall/w02.jpg", "./brand/wall/w03.jpg", "./brand/wall/w04.jpg", "./brand/wall/w05.jpg", "./brand/wall/w06.jpg", "./brand/wall/w07.jpg", "./brand/wall/w08.jpg", "./brand/wall/w09.jpg", "./brand/wall/w10.jpg", "./brand/wall/w11.jpg", "./brand/wall/w12.jpg", "./brand/wall/w13.jpg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: "reload" }))))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
@@ -15,6 +15,8 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (u.origin !== location.origin) return;
+  // audio/video: Safari cere bucăți (Range); le lăsăm direct la rețea/cache-ul browserului, altfel iPhone nu le redă
+  if (e.request.headers.has("range") || /\.(m4a|mp3|mp4|wav)$/i.test(u.pathname)) return;
   // corpul 3D și imaginile (citate, intro) se descarcă o singură dată pe versiune
   if (u.pathname.includes("/body/") || u.pathname.includes("/art/") || u.pathname.includes("/brand/")) {
     e.respondWith(caches.match(u.origin + u.pathname).then(m => m || fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(u.origin + u.pathname, c)); return r; })));
