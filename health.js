@@ -381,12 +381,12 @@ function startTick(){clearInterval(tick);tick=setInterval(()=>{
 function setTab(t){
   tab=t;S.spTab=t;save();
   document.querySelectorAll("#sp-tabs [data-stab]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.stab===t));
-  $h("sp-train").hidden=t!=="train";$h("sp-body").hidden=t!=="body";$h("sp-heat").hidden=t!=="heat";
+  $h("sp-train").hidden=t!=="train";$h("sp-body").hidden=t!=="body";$h("sp-heat").hidden=t!=="heat";$h("sp-watch").hidden=t!=="watch";
   musR();
   if(t==="train"){if(!S.heat.cur&&!cs)clearInterval(tick);window.Sport&&Sport.show()}
-  else{window.Sport&&Sport.hide();t==="body"?render():renderHeat();startTick()}
+  else{window.Sport&&Sport.hide();t==="body"?render():t==="watch"?(window.Watch&&Watch.render()):renderHeat();startTick()}
 }
-function show(){tab=["body","heat"].includes(S.spTab)?S.spTab:"train";setTab(tab)}
+function show(){tab=["body","heat","watch"].includes(S.spTab)?S.spTab:"train";setTab(tab)}
 window.Health={show,render,renderHeat,saunaMusic:()=>!!S.heat.cur&&S.heat.music!==false&&tab==="heat"};
 const musR=()=>{try{window.Music&&Music.refresh()}catch(e){}};
 })();

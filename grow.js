@@ -122,6 +122,8 @@ const GT=[
   {m:"cold",e:"🧊",n:"Zile cu apă rece",u:"zile",def:20,pts:200},
   {m:"sauna",e:"🔥",n:"Ritualuri de saună",u:"saune",def:8,pts:200},
   {m:"breath",e:"🌬️",n:"Sesiuni de respirație",u:"sesiuni",def:15,pts:150},
+  {m:"steps",e:"👟",n:"Zile cu ținta de pași",u:"zile",def:20,pts:250},
+  {m:"sleep",e:"😴",n:"Nopți cu somn bun",u:"nopți",def:20,pts:250},
   {m:"kg",e:"⚖️",n:"Kilograme date jos",u:"kg",def:2,pts:400},
   {m:"manual",e:"🎯",n:"Obiectiv personal",u:"pași",def:10,pts:200}];
 const GTm=m=>GT.find(x=>x.m===m)||GT[GT.length-1];
@@ -136,6 +138,8 @@ function metric(g){
     case"fast":return ((b.fast||{}).hist||[]).filter(x=>inM(kOf(x.end),m)&&(x.end-x.start)/36e5>=x.h).length;
     case"cold":return Object.keys((S.cold||{}).log||{}).filter(k=>inM(k,m)).length;
     case"sauna":return Object.entries((S.heat||{}).log||{}).filter(([k])=>inM(k,m)).reduce((a,[,v])=>a+v.length,0);
+    case"steps":return window.Watch?Watch.stepsDays(k=>inM(k,m)):0;
+    case"sleep":return window.Watch?Watch.sleepDays(k=>inM(k,m)):0;
     case"breath":return Object.entries(S.breath.days).filter(([k])=>inM(k,m)).reduce((a,[,v])=>a+(v.n||0),0);
     case"water":{const w=b.w||[],kg=w.length?w[w.length-1].kg:70,goal=Math.round(kg*35/250);return Object.entries(b.water||{}).filter(([k,v])=>inM(k,m)&&v>=goal).length}
     case"kg":{const w=(b.w||[]).filter(x=>inM(x.d,m));if(w.length<2)return 0;return Math.max(0,Math.round((w[0].kg-w[w.length-1].kg)*10)/10)}
@@ -265,6 +269,8 @@ function weekStats(days){
     cold:days.filter(k=>((S.cold||{}).log||{})[k]).length,
     sauna:days.reduce((a,k)=>a+(((S.heat||{}).log||{})[k]||[]).length,0),
     breath:days.reduce((a,k)=>a+((S.breath.days[k]||{}).n||0),0),
+    steps:(()=>{const a=days.map(k=>((S.watch||{}).d||{})[k]).filter(x=>x&&x.p).map(x=>x.p);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null})(),
+    sleep:(()=>{const a=days.map(k=>((S.watch||{}).d||{})[k]).filter(x=>x&&x.sl).map(x=>x.sl.m);return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null})(),
     water:days.filter(k=>((b.water||{})[k]||0)>=goalW).length,
     dkg:wts.length>1?Math.round((wts[wts.length-1].kg-wts[0].kg)*10)/10:null,
     mood:mood.length?mood.reduce((a,v)=>a+v,0)/mood.length:null,
@@ -278,6 +284,7 @@ function renderReport(){
   const delta=(a,b,inv)=>{if(b==null||a==null||a===b)return "";const up=a>b;return `<i class="${up!==!!inv?"up":"dn"}">${up?"▲":"▼"}</i>`};
   const T=[["🏋️","Antrenamente",w.sport,pw.sport,"/ 7"],["📖","Minute citite",w.read,pw.read,""],["🧘","Minute meditație",w.med,pw.med,""],["✍️","Zile cu jurnal",w.jour,pw.jour,"/ 7"],
     ["⏳","Posturi",w.fast,pw.fast,""],["🔥","Saune",w.sauna,pw.sauna,""],["🧊","Zile cu apă rece",w.cold,pw.cold,""],["🌬️","Respirație",w.breath,pw.breath,"sesiuni"]];
+  if(w.steps!=null||pw.steps!=null)T.push(["👟","Pași pe zi",w.steps||0,pw.steps,""]);
   const score=Math.round(w.active/7*100);
   const msg=w.active>=6?"Săptămână de împărat. Ține ritmul.":w.active>=4?"Bună săptămână. Încă puțin și devine obicei.":w.active>=1?"Ai pornit. Alege un singur lucru și fă-l zilnic.":"O săptămână nouă e o pagină albă. Începe cu ceva mic azi.";
   R.innerHTML=`
@@ -286,6 +293,7 @@ function renderReport(){
     <div class="rp-xp"><b data-count="${w.xp}">0</b><small>XP câștigat ${delta(w.xp,pw.xp)}</small><p>${msg}</p></div></div>
   <div class="rp-bars">${w.xpDay.map((v,i)=>`<div class="${i===best&&v?"best":""}"><i style="--h:${(v/mx*100).toFixed(1)}%"></i><small>${["L","Ma","Mi","J","V","S","D"][i]}</small></div>`).join("")}</div>
   <div class="rp-grid">${T.map(([e,l,v,p,u])=>`<div><span>${e}</span><b>${fmtN(v)}<small> ${u}</small></b><small>${l} ${delta(v,p)}</small></div>`).join("")}
+    ${w.sleep!=null?`<div><span>😴</span><b>${Math.floor(w.sleep/60)}h ${String(w.sleep%60).padStart(2,"0")}</b><small>Somn mediu ${delta(w.sleep,pw.sleep)}</small></div>`:""}
     <div><span>⚖️</span><b>${w.dkg==null?"–":(w.dkg>0?"+":"")+String(w.dkg).replace(".",",")}<small> kg</small></b><small>Greutate în săptămână</small></div>
     <div><span>${w.mood==null?"🙂":w.mood>.3?"😄":w.mood<-.3?"😔":"🙂"}</span><b>${w.mood==null?"–":w.mood>.3?"Bună":w.mood<-.3?"Grea":"Echilibrată"}</b><small>Starea medie</small></div></div>`;
   animateRings(R);countUp(R);

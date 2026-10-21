@@ -884,6 +884,37 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .csdots{display:flex;gap:5px;justify-content:center;margin:12px 0 4px}.csdots i{width:14px;height:14px;border-radius:4px;background:var(--soft)}
 .csdots i.on{background:linear-gradient(135deg,#a5f3fc,#3b82f6);box-shadow:0 0 8px rgba(80,170,255,.5)}.csdots i.t{outline:2px solid var(--accent);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.ghero::after,.gbar i::after,.rcard.ok,.gh-em span,.bro{animation:none}}
+
+/* ⌚ ceas */
+.wsync{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin:4px 0 10px}
+.wtip{font-size:13.5px;color:var(--muted);margin:6px 2px 10px;line-height:1.45}
+.wpaste{display:grid;gap:8px;margin-bottom:12px}.wpaste textarea{width:100%;border-radius:12px;border:1px solid var(--glass-b);background:var(--soft);color:var(--ink);padding:10px;font:13px/1.4 ui-monospace,monospace}
+.wrings{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 4px}
+.wring{position:relative;display:grid;place-items:center}
+.wring svg{width:100%;max-width:150px;transform:rotate(-90deg)}
+.wring .trk{fill:none;stroke:var(--line);stroke-width:9}
+.wring .arc{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.wring.full svg{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--live) 50%,transparent))}
+.wring>div{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:1px}
+.wring small{font-size:11px;color:var(--muted)}.wring b{font-size:21px;font-weight:800;letter-spacing:-.02em}.wring span{font-size:11px;color:var(--muted)}
+.wst{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;font-size:12px;color:var(--muted);margin:2px 0 10px}
+.wst i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.wst .s-deep i{background:#5b4bff}.wst .s-core i{background:#8b7cff}.wst .s-rem i{background:#2ec5d3}.wst .s-awake i{background:#ffb347}
+.wtiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.wtiles>div{background:var(--soft);border-radius:14px;padding:10px 12px;display:grid;gap:1px}
+.wtiles span{font-size:17px}.wtiles b{font-size:19px;font-weight:800}.wtiles b small{font-size:11px;font-weight:600;color:var(--muted)}.wtiles>div>small{font-size:11.5px;color:var(--muted)}
+.wbars{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:130px;align-items:end;padding-top:16px}
+.wbars>div{display:grid;grid-template-rows:auto 1fr auto;height:100%;text-align:center;align-items:end}
+.wbars em{font-style:normal;font-size:10px;color:var(--muted);align-self:end;margin-bottom:2px}
+.wbars>div>i{display:block;border-radius:7px 7px 3px 3px;min-height:0;align-self:end;opacity:.9}
+.wbars small{font-size:10.5px;color:var(--muted);margin-top:4px}
+.wbars .wgoal{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed color-mix(in srgb,var(--live) 70%,transparent);margin-bottom:18px;pointer-events:none}
+.htgrid.wgoals .htst:first-child{grid-column:auto}.wgoals .htst b{font-size:17px}
+#sp-tabs{gap:5px}#sp-tabs button{padding:9px 4px;font-size:12px}
+.wguide summary{font-weight:700;font-size:14px;cursor:pointer;padding:2px 0}
+.wguide ol{padding-left:20px;margin:10px 0;font-size:13.5px;line-height:1.5;display:grid;gap:7px}
+.wguide code{font-size:12.5px;background:var(--soft);padding:1px 5px;border-radius:5px;word-break:break-all}
+.wguide p{font-size:13px;color:var(--muted);line-height:1.45}
 </style>
 </head>
 <body>
@@ -962,7 +993,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     </div>
   </section>
   <section id="v-sport" hidden>
-    <div class="sptabs" id="sp-tabs" role="tablist"><button data-stab="train" aria-pressed="true">Antrenament</button><button data-stab="body" aria-pressed="false">Corp & nutriție</button><button data-stab="heat" aria-pressed="false">Saună & rece</button></div>
+    <div class="sptabs" id="sp-tabs" role="tablist"><button data-stab="train" aria-pressed="true">Antrenament</button><button data-stab="body" aria-pressed="false">Corp</button><button data-stab="heat" aria-pressed="false">Saună & rece</button><button data-stab="watch" aria-pressed="false">⌚ Ceas</button></div>
     <div id="sp-train">
     <div class="ptop"><div><small class="spkick" id="sp-kick"></small><h2 class="ptitle" id="sp-title">Sport</h2></div><span class="sptag" id="sp-tag"></span></div>
     <div class="spweek" id="sp-week"></div>
@@ -972,6 +1003,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     </div>
     <div id="sp-body" hidden></div>
     <div id="sp-heat" hidden></div>
+    <div id="sp-watch" hidden></div>
   </section>
   <section id="v-raft" hidden>
     <div class="ptop"><h2 class="ptitle">Raft</h2><span class="muted" id="bk-count"></span><label class="gbtn" for="bk-file"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>PDF</label></div>
@@ -2957,6 +2989,7 @@ if("serviceWorker" in navigator){
 <script src="body.js"></script>
 <script src="sport.js"></script>
 <script src="health.js"></script>
+<script src="watch.js"></script>
 <script src="grow.js"></script>
 <script src="music.js"></script>
 </body>
