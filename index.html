@@ -915,6 +915,30 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .wguide ol{padding-left:20px;margin:10px 0;font-size:13.5px;line-height:1.5;display:grid;gap:7px}
 .wguide code{font-size:12.5px;background:var(--soft);padding:1px 5px;border-radius:5px;word-break:break-all}
 .wguide p{font-size:13px;color:var(--muted);line-height:1.45}
+/* DEX: explicația cuvântului din cititor */
+.dxs{z-index:70}
+.dxs .gs-card{max-height:78vh}
+.dx-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.dx-hd small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.dx-hd h3{font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.1;margin-top:2px;word-break:break-word}
+.dx-hd button{width:34px;height:34px;border-radius:50%;background:var(--soft);font-size:20px;line-height:1;flex:none}
+.dx-ctx{font-family:var(--serif);font-size:14.5px;line-height:1.5;color:var(--muted);padding:9px 12px;border-left:3px solid #e8452c;background:var(--soft);border-radius:0 12px 12px 0}
+.dx-ctx mark{background:rgba(232,69,44,.18);color:inherit;border-radius:4px;padding:0 2px;font-weight:600}
+.dx-body{display:grid;gap:10px}
+.dx-def{padding:12px 14px;border-radius:16px;background:var(--soft);font-size:14.5px;line-height:1.55}
+.dx-def>small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#e8452c;margin-bottom:5px}
+.dx-def.syn>small{color:var(--muted)}
+.dx-def b{font-weight:700}
+.dx-n{display:inline-block;min-width:1.4em;font-weight:800;color:#e8452c}
+.dx-ex{display:block;margin:2px 0 4px 1.4em;font-size:13.5px;color:var(--muted)}
+.dx-lem{font-size:14px}
+.dx-none{font-size:14.5px;color:var(--muted);line-height:1.5}
+.dx-ext{justify-self:start;text-decoration:none}
+.dx-src{font-size:11.5px;color:var(--muted)}
+.dx-load{display:flex;gap:6px;justify-content:center;padding:22px 0}
+.dx-load i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dxb 1s infinite ease-in-out}
+.dx-load i:nth-child(2){animation-delay:.15s}.dx-load i:nth-child(3){animation-delay:.3s}
+@keyframes dxb{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -1130,7 +1154,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <button id="rd-del" aria-label="Șterge cartea"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
   </div>
   <div id="rd-pages"></div>
-  <div id="bm-pop" hidden><button id="bm-set"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg> Semn de carte la <b id="bm-w"></b></button><button id="bm-note" hidden><span class="bmq">❝</span> Salvează în notițe</button></div>
+  <div id="bm-pop" hidden><button id="bm-set"><svg viewBox="0 0 24 24"><path d="M7 4h10v16l-5-4-5 4z"/></svg> Semn de carte la <b id="bm-w"></b></button><button id="bm-dex" hidden><span class="bmq">📖</span> Explicație</button><button id="bm-note" hidden><span class="bmq">❝</span> Salvează în notițe</button></div>
 </div>
 
 <section id="jrpage" hidden>
@@ -2629,9 +2653,12 @@ function setMark(mk){
 let bmPend=null;
 function bmPop(x,y,mk){
   bmPend=mk;const p=$("bm-pop");p.hidden=false;
-  const W=innerWidth,w=p.offsetWidth||210;p.style.left=Math.max(10,Math.min(W-w-10,x-w/2))+"px";p.style.top=Math.max(70,y-62)+"px";
   $("bm-w").textContent=mk.w?`„${mk.w}”`:"aici";
   $("bm-note").hidden=!(mk.sel&&mk.sel.split(/\s+/).length>=3);
+  $("bm-dex").hidden=!(window.Dex&&mk.w&&/\p{L}{2,}/u.test(mk.w));
+  // butoanele stau deasupra degetului; dacă nu încap sus, coboară sub el
+  const W=innerWidth,w=p.offsetWidth||210,h=p.offsetHeight||50;p.style.left=Math.max(10,Math.min(W-w-10,x-w/2))+"px";
+  p.style.top=(y-h-14>=60?y-h-14:Math.min(innerHeight-h-10,y+24))+"px";
 }
 function bmHide(){$("bm-pop").hidden=true;bmPend=null}
 function wordAt(x,y){
@@ -2657,7 +2684,7 @@ $("rd-pages").addEventListener("click",e=>{
     const hit=wordAt(x,y);if(!hit)return;
     const c=charIndexIn(p,hit.node,hit.a);if(c<0)return;
     const q=p.getBoundingClientRect();
-    bmPop(x,y,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:hit.w,f:Math.max(0,Math.min(1,(y-q.top)/q.height))});
+    bmPop(x,y,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:hit.w,ctx:p.textContent,f:Math.max(0,Math.min(1,(y-q.top)/q.height))});
   }else{
     const pg=e.target.closest(".pg");if(!pg)return;const r=pg.getBoundingClientRect();
     bmPop(x,y,{m:"page",n:+pg.dataset.n,f:(y-r.top)/r.height,w:""});
@@ -2672,7 +2699,7 @@ document.addEventListener("selectionchange",()=>{
   const c=charIndexIn(p,rg.startContainer,rg.startOffset);if(c<0)return;
   const r=rg.getBoundingClientRect(),q=p.getBoundingClientRect();
   const selT=String(sel).replace(/\s+/g," ").trim().slice(0,900);
-  clearTimeout(bmSelT);bmSelT=setTimeout(()=>bmPop(r.left+r.width/2,r.top,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:w.slice(0,40),sel:selT,f:Math.max(0,Math.min(1,(r.top-q.top)/q.height))}),250);
+  clearTimeout(bmSelT);bmSelT=setTimeout(()=>bmPop(r.left+r.width/2,r.top,{m:"text",n:+sec.dataset.n,p:[...sec.querySelectorAll("p")].indexOf(p),c,w:w.slice(0,40),sel:selT,ctx:p.textContent,f:Math.max(0,Math.min(1,(r.top-q.top)/q.height))}),250);
 });
 // timpul de citit se adună pe zi; la 10 minute se bifează „Citit”
 function readTick(){
@@ -2715,7 +2742,8 @@ function zoom(f){
 }
 $("rd-pages").addEventListener("scroll",()=>{if(!rdRaf)rdRaf=requestAnimationFrame(()=>{rdRaf=0;updPage()})},{passive:true});
 $("rd-back").addEventListener("click",closeReader);
-$("bm-set").addEventListener("click",e=>{e.stopPropagation();if(bmPend){const m=Object.assign({},bmPend);delete m.sel;setMark(m)}bmHide();try{getSelection().removeAllRanges()}catch(_){}});
+$("bm-set").addEventListener("click",e=>{e.stopPropagation();if(bmPend){const m=Object.assign({},bmPend);delete m.sel;delete m.ctx;setMark(m)}bmHide();try{getSelection().removeAllRanges()}catch(_){}});
+$("bm-dex").addEventListener("click",e=>{e.stopPropagation();const m=bmPend;bmHide();try{getSelection().removeAllRanges()}catch(_){}if(m&&m.w&&window.Dex)Dex.open(m.w,m.ctx||"")});
 $("bm-note").addEventListener("click",e=>{e.stopPropagation();if(bmPend&&bmPend.sel&&RD&&window.Grow)Grow.saveNote({t:bmPend.sel,b:RD.b.t,bid:RD.b.id,n:bmPend.n});bmHide();try{getSelection().removeAllRanges()}catch(_){}});
 $("rd-bm").addEventListener("click",()=>{
   if(!RD)return;const mk=RD.b.mark;
@@ -2990,6 +3018,7 @@ if("serviceWorker" in navigator){
 <script src="sport.js"></script>
 <script src="health.js"></script>
 <script src="watch.js"></script>
+<script src="dex.js"></script>
 <script src="grow.js"></script>
 <script src="music.js"></script>
 </body>
