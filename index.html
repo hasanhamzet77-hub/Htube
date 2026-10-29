@@ -915,6 +915,43 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .wguide ol{padding-left:20px;margin:10px 0;font-size:13.5px;line-height:1.5;display:grid;gap:7px}
 .wguide code{font-size:12.5px;background:var(--soft);padding:1px 5px;border-radius:5px;word-break:break-all}
 .wguide p{font-size:13px;color:var(--muted);line-height:1.45}
+/* Planul zilei */
+.az-tools{display:flex;align-items:flex-start;gap:8px;margin-right:46px;flex:none}
+.azi-hd>div:first-child{min-width:0}
+#az-hi{font-size:24px;line-height:1.12;margin-bottom:6px}
+.az-tools .xpchip{margin-right:0}
+.gear{width:40px;height:40px;margin-top:6px;border-radius:14px;display:grid;place-items:center;background:var(--glass);border:1px solid var(--glass-b);flex:none}
+.gear svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.plan-hd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.plan-ring{position:relative;width:48px;height:48px;flex:none}
+.plan-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.plan-ring circle{fill:none;stroke-width:5}
+.plan-ring .rb{stroke:color-mix(in srgb,var(--ink) 10%,transparent)}
+.plan-ring .rf{stroke:var(--live);stroke-linecap:round;transition:stroke-dasharray .5s}
+.plan-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:11.5px;font-weight:800}
+.plan-tt{flex:1;min-width:0}.plan-tt h3{margin:0}.plan-tt .muted{font-size:13px}
+.plist{display:grid;gap:7px}
+.prow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-b);min-height:56px}
+.prow.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+.prow.late{box-shadow:inset 3px 0 0 #f59f00}
+.pchk{width:28px;height:28px;flex:none;border-radius:50%;border:2px solid color-mix(in srgb,var(--ink) 28%,transparent);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.prow.done .pchk{background:var(--live);border-color:var(--live)}
+.prow.done .pchk::after{content:"";width:12px;height:7px;border:solid #fff;border-width:0 0 2.5px 2.5px;transform:translateY(-1px) rotate(-45deg)}
+.pem{font-size:22px;width:26px;text-align:center;flex:none}
+.ptx{flex:1;min-width:0;display:grid}
+.ptx b{font-size:15.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptx small{font-size:12px;color:var(--muted)}
+.prow.done{opacity:.62}.prow.done .ptx b{text-decoration:line-through;text-decoration-thickness:1.5px}
+.pgo{flex:none;padding:8px 12px;border-radius:12px;font-size:13px;font-weight:700;background:var(--accent);color:var(--on-accent)}
+.pdel{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.pdel svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.pdiv{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:8px 2px 0}
+.pall{padding:14px;text-align:center;font-weight:650;border-radius:16px;background:color-mix(in srgb,var(--live) 14%,transparent)}
+.pnew{padding:12px;border-radius:16px;border:1.5px dashed color-mix(in srgb,var(--ink) 25%,transparent);font-weight:650;color:var(--muted)}
+.tdadd{display:flex;gap:8px;margin-top:8px}
+.tdadd input{flex:1;min-width:0;padding:13px 14px;border-radius:16px;font-size:15px}
+.tdadd .btn{flex:none;padding-inline:16px}
+#set-back{margin-top:calc(10px + env(safe-area-inset-top,0px))}
 /* DEX: explicația cuvântului din cititor */
 .dxs{z-index:70}
 .dxs .gs-card{max-height:78vh}
@@ -964,18 +1001,18 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 <button class="newpill" id="newpill" hidden></button>
 
 <main class="wrap">
-  <section id="v-feed"><div id="feed"></div><div class="sentinel" id="sentinel">Se încarcă…</div></section>
-  <section id="v-azi" hidden>
+  <section id="v-feed" hidden><div id="feed"></div><div class="sentinel" id="sentinel">Se încarcă…</div></section>
+  <section id="v-azi">
     <div class="azi-top">
       <div class="azi-hd"><div><small id="az-date"></small>
-      <h2 id="az-hi">Bună ziua</h2></div><button class="xpchip" id="xp-chip" aria-label="Nivelul tău"></button></div>
+      <h2 id="az-hi" class="azhi1">Bună ziua</h2></div><div class="az-tools"><button class="xpchip" id="xp-chip" aria-label="Nivelul tău"></button><button class="gear" id="az-set" aria-label="Setări"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div></div>
     </div>
     <div class="subnav" data-subnav="azi"><button data-sub="azi">Azi</button><button data-sub="minte">Minte</button><button data-sub="obiective">Obiective</button><button data-sub="raport">Raport</button></div>
     <div class="subpg" data-of="azi" data-subpg="azi">
-      <div id="az-card"></div>
-    <div class="sec">
-      <div class="sec-h"><h3>Obiceiuri</h3><span class="muted" id="hb-score"></span><button class="link" id="hb-edit">Editează</button></div>
-      <div class="hrow" id="habits"></div>
+    <div class="sec plan">
+      <div class="plan-hd"><div class="plan-ring" id="pl-ring"></div><div class="plan-tt"><h3>Planul zilei</h3><span class="muted" id="hb-score"></span></div><button class="link" id="hb-edit">Editează</button></div>
+      <div class="plist" id="habits"></div>
+      <form id="td-add" class="tdadd" autocomplete="off"><input id="td-in" placeholder="＋ Adaugă ceva de făcut azi…" maxlength="90" enterkeyhint="done"><button class="btn" type="submit" id="td-ok" hidden>Adaugă</button></form>
       <form id="hb-add" class="hadd" hidden>
         <p class="note">Alege un emoji de pe tastatură sau din listă. Numele e opțional.</p>
         <div class="hemo-row">
@@ -986,6 +1023,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
         <div class="hadd-b"><button class="btn ghost" type="button" id="hb-cancel">Renunță</button><button class="btn" type="submit">Adaugă</button></div>
       </form>
     </div>
+      <div id="az-card"></div>
       <div class="sec" id="sup-sec"></div>
     </div>
     <div class="subpg" data-of="azi" data-subpg="minte" hidden>
@@ -1046,6 +1084,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div id="saved"></div>
   </section>
   <section id="v-set" hidden>
+    <button class="back" id="set-back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Azi</button>
     <div class="subnav" data-subnav="set"><button data-sub="gen">General</button><button data-sub="muz">Muzică</button><button data-sub="sho">Shorts</button><button data-sub="con">Conținut</button></div>
     <div class="subpg" data-of="set" data-subpg="gen">
     <h2>IMPERIUM</h2>
@@ -1232,12 +1271,11 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 </div>
 
 <nav id="nav" role="tablist"><span class="ind" id="ind"></span>
-  <button class="tab" role="tab" data-v="feed" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
+  <button class="tab" role="tab" data-v="azi" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4.4 3-7.5 8-7.5 0 5-3.2 7.8-8 7.5zM12 15c0-3.3-2.4-5.6-7-5.6 0 4 2.6 6 7 5.6z"/></svg>Azi</button>
+  <button class="tab" role="tab" data-v="feed" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
   <button class="tab" role="tab" data-v="shorts" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
-  <button class="tab" role="tab" data-v="azi" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4.4 3-7.5 8-7.5 0 5-3.2 7.8-8 7.5zM12 15c0-3.3-2.4-5.6-7-5.6 0 4 2.6 6 7 5.6z"/></svg>Azi</button>
   <button class="tab" role="tab" data-v="sport" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6.5 7.5v9M17.5 7.5v9M3.5 10v4M20.5 10v4M6.5 12h11"/></svg>Sport</button>
   <button class="tab" role="tab" data-v="raft" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5.5 4.5v14M9.5 4.5v14M14 6l3.6 12.6M3 20.5h18"/></svg>Raft</button>
-  <button class="tab" role="tab" data-v="set" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Setări</button>
 </nav>
 
 <script src="data.js"></script>
@@ -2066,20 +2104,50 @@ function ringSVG(h){
   }
   return `<svg viewBox="0 0 118 118" aria-hidden="true">${out}</svg>`;
 }
+// ── Planul zilei: obiceiurile de fiecare zi + sarcinile de azi, într-o singură listă ──
+S.todo=S.todo||[];                                   // [{id,t,c:"zi creată",d:"zi bifată"|null}]
+const dayDiff=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
+// ce deschide fiecare rând (ca să ajungi dintr-o atingere unde trebuie)
+function actOf(h){
+  const k=h.k||(/sport|mișcare|miscare|antren|sală|sala|alerg/i.test(h.n||"")?"sport":/medit/i.test(h.n||"")?"med":/citit|citesc|carte/i.test(h.n||"")?"read":/jurnal/i.test(h.n||"")?"jour":"");
+  const L={med:"Începe",read:"Citește",sport:"Sport",jour:"Scrie"};return L[k]?{k,l:L[k]}:null;
+}
+async function planGo(k){
+  if(k==="med"){window.Grow&&Grow.setSub("azi","minte",true);return}
+  if(k==="sport"){switchTo("sport");return}
+  if(k==="jour"){openJournal();return}
+  if(k==="read"){try{await renderShelf()}catch(e){}const cur=BOOKS.find(b=>b.pg>1)||BOOKS[0];if(cur)openBook(cur.id);else{switchTo("raft");toast("Pune o carte pe raft (+ PDF)")}}
+}
+function planCount(){
+  const t=dk(),hd=S.habits.filter(h=>isDone(h,t)).length;
+  const open=S.todo.filter(x=>!x.d).length,tdDone=S.todo.filter(x=>x.d===t).length;
+  return {done:hd+tdDone,total:S.habits.length+open+tdDone,left:S.habits.length-hd+open};
+}
+function planBadge(){try{const n=planCount().left;if(navigator.setAppBadge){n?navigator.setAppBadge(n):navigator.clearAppBadge()}}catch(e){}}
 function renderHabits(pop){
-  const keep=$("habits").scrollLeft;requestAnimationFrame(()=>{$("habits").scrollLeft=keep});
-  let mig=false;S.habits.forEach(h=>{if(!h.e){h.e=guessEmo(h);mig=true}});if(mig)save();
-  const t=dk(),done=S.habits.filter(h=>isDone(h,t)).length;
-  $("hb-score").textContent=S.habits.length?`${done} din ${S.habits.length} azi`:"";
+  let mig=false;S.habits.forEach(h=>{if(!h.e){h.e=guessEmo(h);mig=true}});
+  const t=dk(),cut=dk(dayAt(-14)),n0=S.todo.length;S.todo=S.todo.filter(x=>!x.d||x.d>=cut);if(mig||S.todo.length!==n0)save();
+  const c=planCount(),p=c.total?c.done/c.total:0;
+  $("hb-score").textContent=!c.total?"Adaugă primul lucru de făcut":c.left?`${c.done} din ${c.total} făcute · mai ai ${c.left}`:"Ziua e completă 👑";
+  $("pl-ring").innerHTML=`<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="rb"/><circle cx="22" cy="22" r="18" class="rf" style="stroke-dasharray:${(p*113.1).toFixed(1)} 113.1"/></svg><b>${Math.round(p*100)}%</b>`;
   $("hb-edit").textContent=hbEdit?"Gata":"Editează";
-  $("habits").innerHTML=S.habits.map(h=>{
-    const on=isDone(h,t),st=streak(h);
-    return `<div class="hcard${on?" done":""}${pop===h.id?" pop":""}">
-      <div class="hring">${ringSVG(h)}<button class="hcore" data-h="${h.id}" aria-pressed="${on}" aria-label="${esc(h.n||h.e)}">${esc(h.e)}</button>
-      ${hbEdit?`<button class="hx" data-hdel="${h.id}" aria-label="Șterge">${ic.x}</button>`:""}</div>
-      <div class="hcnt"><b>${st}</b>${st===1?"zi":"zile"}</div>${h.n?`<small>${esc(h.n)}</small>`:""}
-    </div>`}).join("")
-    +`<div class="hcard"><button class="hplus" id="hb-plus" aria-label="Obicei nou">+</button><small>Obicei nou</small></div>`;
+  const hrow=(h,on)=>{const st=streak(h),y=isDone(h,dk(dayAt(-1))),a=actOf(h);
+    const sub=on?(st>1?`🔥 ${st} zile la rând`:"Făcut azi"):st?`🔥 ${st} ${st===1?"zi":"zile"} · nu rupe șirul`:y?"Ieri l-ai făcut":"Începe azi";
+    return `<div class="prow${on?" done":""}${pop===h.id?" pop":""}"><button class="pchk" data-h="${h.id}" aria-pressed="${on}" aria-label="Bifează ${esc(h.n||h.e)}"></button>
+      <span class="pem">${esc(h.e)}</span><div class="ptx"><b>${esc(h.n||"Obicei")}</b><small>${sub}</small></div>
+      ${hbEdit?`<button class="pdel" data-hdel="${h.id}" aria-label="Șterge">${ic.x}</button>`:!on&&a?`<button class="pgo" data-go="${a.k}">${a.l} ›</button>`:""}</div>`};
+  const trow=x=>{const on=!!x.d,age=on?0:dayDiff(x.c,t);
+    const sub=on?"Făcut azi":age===1?"Rămas de ieri":age>1?`Așteaptă de ${age} zile`:"Pentru azi";
+    return `<div class="prow todo${on?" done":""}${age>0?" late":""}${pop===x.id?" pop":""}"><button class="pchk" data-td="${x.id}" aria-pressed="${on}" aria-label="Bifează"></button>
+      <div class="ptx"><b>${esc(x.t)}</b><small>${sub}</small></div>${hbEdit||on?`<button class="pdel" data-tdel="${x.id}" aria-label="Șterge">${ic.x}</button>`:""}</div>`};
+  const hs=S.habits.filter(h=>!isDone(h,t)),hd=S.habits.filter(h=>isDone(h,t));
+  const ts=S.todo.filter(x=>!x.d).sort((a,b)=>a.c<b.c?-1:1),td=S.todo.filter(x=>x.d===t);
+  const todo=hs.map(h=>hrow(h,false)).join("")+ts.map(trow).join("");
+  const done=hd.map(h=>hrow(h,true)).join("")+td.map(trow).join("");
+  $("habits").innerHTML=(todo||(c.total?`<div class="pall">Ai bifat tot pentru azi. Bravo! 👑</div>`:""))
+    +(done?`<div class="pdiv">Făcute azi · ${hd.length+td.length}</div>${done}`:"")
+    +(hbEdit?`<button class="pnew" id="hb-plus">＋ Obicei nou de fiecare zi</button>`:"");
+  planBadge();
 }
 function openAdd(on){
   $("hb-add").hidden=!on;
@@ -2975,6 +3043,13 @@ $("v-azi").addEventListener("click",e=>{
   const h=e.target.closest("[data-h]");
   if(h){const hb=S.habits.find(x=>x.id===h.dataset.h),d=dk();if(hb){const on=!isDone(hb,d);setDone(hb.id,d,on);renderHabits(on?hb.id:null);if(on&&navigator.vibrate)navigator.vibrate(12);
     if(window.Grow){if(on)Grow.award(`hb:${hb.id}:${d}`,5,hb.n||"Obicei");else Grow.revoke(`hb:${hb.id}:${d}`)}}return}
+  const tdb=e.target.closest("[data-td]");
+  if(tdb){const x=S.todo.find(y=>y.id===tdb.dataset.td);if(x){x.d=x.d?null:dk();save();renderHabits(x.d?x.id:null);if(x.d&&navigator.vibrate)navigator.vibrate(12);
+    if(window.Grow){if(x.d)Grow.award(`td:${x.id}`,5,"Sarcină făcută");else Grow.revoke(`td:${x.id}`)}}return}
+  const tdl=e.target.closest("[data-tdel]");
+  if(tdl){S.todo=S.todo.filter(y=>y.id!==tdl.dataset.tdel);save();renderHabits();return}
+  const go=e.target.closest("[data-go]");if(go){planGo(go.dataset.go);return}
+  if(e.target.closest("#az-set")){switchTo("set");return}
   if(e.target.closest("#hb-plus")){openAdd(true);return}
   const del=e.target.closest("[data-hdel]");
   if(del){const hb=S.habits.find(x=>x.id===del.dataset.hdel);if(hb&&confirm(`Ștergi obiceiul „${hb.n}”?`)){S.habits=S.habits.filter(x=>x!==hb);save();renderHabits()}return}
@@ -2983,12 +3058,17 @@ $("v-azi").addEventListener("click",e=>{
   if(pr){S.med.pick=+pr.dataset.m;save();renderMed();return}
   if(e.target.closest("#md-start")){startMed();return}
 });
+$("td-in").addEventListener("input",e=>{$("td-ok").hidden=!e.target.value.trim()});
+$("td-add").addEventListener("submit",e=>{
+  e.preventDefault();const t=$("td-in").value.trim().replace(/\s+/g," ");if(!t)return;
+  const id="t"+Date.now().toString(36);S.todo.push({id,t,c:dk(),d:null});save();$("td-in").value="";$("td-ok").hidden=true;renderHabits(id);
+});
+$("set-back").addEventListener("click",()=>switchTo("azi"));
 $("hb-add").addEventListener("submit",e=>{
   e.preventDefault();
   const em=$("hb-emo").value.trim()||"🎯",n=$("hb-name").value.trim();
   const id="h"+Date.now().toString(36);
   S.habits.push({id,n,e:em,k:""});save();openAdd(false);renderHabits(id);
-  setTimeout(()=>{const r=$("habits");r.scrollTo({left:r.scrollWidth,behavior:"smooth"})},50);
 });
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden)return;
@@ -2996,7 +3076,18 @@ document.addEventListener("visibilitychange",()=>{
   if(!$("v-azi").hidden)renderHabits();             // a trecut miezul nopții? bifele se resetează
 });
 
-chips();loadFeed();openFromLink();requestAnimationFrame(moveInd);if(document.fonts)document.fonts.ready.then(moveInd);
+chips();loadFeed();
+// aplicația se deschide mereu pe „Azi” (planul zilei); la fel când revii după o pauză mai lungă
+function homeAzi(){S.sub=S.sub||{};S.sub.azi="azi";window.Grow&&Grow.setSub("azi","azi",false);switchTo("azi")}
+addEventListener("load",()=>{if(!$("v-azi").hidden)renderAzi()});
+homeAzi();openFromLink();
+let hidAt=0;
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){hidAt=Date.now();planBadge();return}
+  const busy=!$("reader").hidden||!$("stage").hidden||!$("jrpage").hidden||(typeof md!=="undefined"&&md&&md.run);
+  if(hidAt&&Date.now()-hidAt>20*60*1000&&!busy)homeAzi();
+});
+requestAnimationFrame(moveInd);if(document.fonts)document.fonts.ready.then(moveInd);
 setInterval(()=>{if(!document.hidden)loadFeed()},10*60*1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadFeed()});
 // actualizări: verificăm la fiecare deschidere; când vine o versiune nouă, aplicația se reîncarcă singură

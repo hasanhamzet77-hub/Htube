@@ -147,14 +147,14 @@ add("biz","Charlie Munger","",["Pune-te în situația să meriți ce vrei. E un 
 add("biz","Naval Ravikant","",["Învață să vinzi. Învață să construiești. Dacă le știi pe amândouă, nu poți fi oprit.","Fii de neînlocuit fiind autentic."]);
 add("biz","Henry Ford","",["Fie că crezi că poți, fie că crezi că nu poți, ai dreptate."]);
 
-// ── Alan Watts (citate scurte, traduse liber; restul sunt idei spuse cu cuvintele noastre) ──
-add("int","Alan Watts","Prelegeri (traducere liberă)",[
- "Singurul mod de a înțelege schimbarea e să te arunci în ea și să intri în dans.",
- "Apa tulbure se limpezește cel mai bine dacă o lași în pace.",
- "Să încerci să te definești e ca și cum ai încerca să-ți muști propriii dinți.",
- "Nu poate face planuri bune pentru viitor cel care nu știe să trăiască acum.",
- "Ce ai face dacă banii n-ar conta?",
- "Ești universul care se privește pe sine.",
+// ── Alan Watts (idei spuse cu cuvintele noastre) ──
+add("int","Alan Watts","Idei din prelegeri (parafrazat)",[
+ "Schimbarea nu se înțelege stând pe mal. Intră în ea și mișcă-te odată cu ea.",
+ "Mintea agitată se liniștește singură când încetezi s-o tot amesteci.",
+ "Nu te poți prinde pe tine în definiții, cum nici ochiul nu se poate vedea pe sine.",
+ "Cine nu știe să trăiască azi nu se va bucura nici de viitorul pe care îl plănuiește.",
+ "Ce ai face cu viața ta dacă banii n-ar fi o problemă?",
+ "Nu ești un străin în lume. Ești o parte prin care lumea se privește pe ea însăși.",
 ]);
 add("int","Alan Watts","Idei din prelegeri (parafrazat)",[
  "Viața nu e o călătorie spre o destinație. E o melodie: rostul ei e să fie cântată.",
