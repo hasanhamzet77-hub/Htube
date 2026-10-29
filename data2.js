@@ -147,6 +147,21 @@ add("biz","Charlie Munger","",["Pune-te în situația să meriți ce vrei. E un 
 add("biz","Naval Ravikant","",["Învață să vinzi. Învață să construiești. Dacă le știi pe amândouă, nu poți fi oprit.","Fii de neînlocuit fiind autentic."]);
 add("biz","Henry Ford","",["Fie că crezi că poți, fie că crezi că nu poți, ai dreptate."]);
 
+// ── Alan Watts (citate scurte, traduse liber; restul sunt idei spuse cu cuvintele noastre) ──
+add("int","Alan Watts","Prelegeri (traducere liberă)",[
+ "Singurul mod de a înțelege schimbarea e să te arunci în ea și să intri în dans.",
+ "Apa tulbure se limpezește cel mai bine dacă o lași în pace.",
+ "Să încerci să te definești e ca și cum ai încerca să-ți muști propriii dinți.",
+ "Nu poate face planuri bune pentru viitor cel care nu știe să trăiască acum.",
+ "Ce ai face dacă banii n-ar conta?",
+ "Ești universul care se privește pe sine.",
+]);
+add("int","Alan Watts","Idei din prelegeri (parafrazat)",[
+ "Viața nu e o călătorie spre o destinație. E o melodie: rostul ei e să fie cântată.",
+ "Cine se agață de siguranță pierde exact clipa pe care voia s-o păzească.",
+ "Nu ești o picătură separată de ocean. Ești oceanul care face un val.",
+ "Prezentul e singurul loc în care se întâmplă ceva.",
+]);
 // ── sănătate și minte ──
 add("san","Andrew Huberman","Huberman Lab",[
  "Lumina soarelui dimineața e cel mai puternic semnal pentru ceasul tău intern.",
@@ -222,8 +237,23 @@ idea("biz","Pareto","Clienții care contează","Aprox. 20% dintre clienți aduc 
 idea("dev","Stoicism","Rezerva","Pornește la orice cu clauza „dacă nimic nu mă împiedică”. Te implici total, dar rezultatul nu te mai zdrobește.");
 
 // ── fire noi ──
+idea("int","Alan Watts","Muzica, nu finalul","Nu asculți o melodie ca să ajungi la ultima notă și nici nu dansezi ca să ajungi într-un anumit colț al camerei. Azi, fă un lucru obișnuit (mersul, mâncatul, munca la o mașină) pentru el însuși, nu doar ca să-l termini.");
+idea("int","Alan Watts","Dacă banii n-ar conta","Scrie pe o foaie: ce ai face toată ziua dacă n-ai avea grija banilor? Apoi caută o felie din asta pe care o poți face deja săptămâna asta. Watts spunea că, dacă faci bine ce iubești, banii vin de multe ori după.");
+idea("int","Alan Watts","Lasă apa să se așeze","Când mintea e agitată, nu te lupta cu gândurile. Stai 3 minute, respiră și doar privește-le cum trec, ca nisipul care se așază în apă. Limpezimea vine singură.");
+idea("int","Alan Watts","Înțelepciunea nesiguranței","Viitorul nu poate fi controlat complet. Cu cât îl strângi mai tare, cu atât ratezi azi. Fă planul, apoi întoarce-te cu atenția la ce faci acum.");
 const T=window.THREADS=window.THREADS||[];
 T.push(
+ {c:"int",who:"Alan Watts",h:"Ce ai face dacă banii n-ar conta?",src:"Prelegere celebră (rezumat cu cuvintele noastre)",parts:[
+  "Watts le punea studenților o întrebare simplă: ce ți-ar plăcea să faci, dacă banii n-ar fi o problemă?",
+  "Cei mai mulți răspundeau ceva ce iubeau de fapt: să picteze, să scrie, să trăiască în natură, să construiască.",
+  "Ideea lui: e absurd să-ți petreci viața făcând ce nu-ți place, doar ca să câștigi bani ca să continui să faci ce nu-ți place.",
+  "Dacă faci cu adevărat bine ce iubești, de obicei găsești și o cale să trăiești din asta.",
+  "Întrebarea pentru tine: ce parte din munca ta ai face-o și gratis? Acolo e direcția."]},
+ {c:"int",who:"Alan Watts",h:"Viața ca muzică",src:"Idee din prelegeri (rezumat cu cuvintele noastre)",parts:[
+  "Școala ne învață să urcăm din clasă în clasă, apoi la facultate, la job, la promovare, mereu spre ceva ce urmează.",
+  "La final ajungem la pensie și ne dăm seama că am alergat spre un capăt, iar „ceva”-ul era chiar drumul.",
+  "Watts compara viața cu muzica: rostul unei melodii nu e ultima notă, ci cântatul ei.",
+  "Nu înseamnă să renunți la obiective. Înseamnă să fii prezent cât lucrezi la ele."]},
  {c:"int",who:"Seneca",h:"Despre mânie",src:"Despre mânie (traducere liberă)",parts:[
   "Mânia e o nebunie scurtă: nu-și mai stăpânește nici decența, nici legăturile, e surdă la rațiune.",
   "Cel mai bun leac al mâniei e întârzierea. Nu-i cere să dispară, cere-i să aștepte.",
