@@ -9,7 +9,7 @@
     },
     {
       "name": "Alan Watts", "c": "int",
-      "channels": ["UC3wxPA1Sph--HxKGdOGVjrg"],
+      "channels": ["@alanwattsorg"],
       "search": ["Alan Watts shorts", "Alan Watts #shorts", "Alan Watts lecture", "Alan Watts full lecture", "Alan Watts speech"],
       "must": ["alan watts", "watts"],
       "block": ["ai voice", "ai generated", "reaction", "reacts"]
