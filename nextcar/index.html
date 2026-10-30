@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NextCar · IMPERIUM</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HGroup Fundation">
+<meta name="application-name" content="HGroup Fundation">
+<meta name="theme-color" content="#0F1012">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: one-screen app — slim header, horizontal snap pager (Calendar · Azi · Bani · Parc · Service), quiet tab bar. Minimal dark: flat surfaces, hairlines, one amber accent. Details open as pop-ups anchored to the top, above the keyboard. */
+:root{
+  --bg:#0F1012; --panel:#17181B; --panel-2:#1F2125; --panel-3:#1A1B1F;
+  --line:#25272C; --line-2:#33363C;
+  --fg:#F2F2F0; --muted:#8D9096; --dim:#5D6067;
+  --amber:#F2A93B; --amber-2:#F2A93B; --amber-soft:rgba(242,169,59,.14); --on-amber:#1A1204;
+  --ice:#7DBFF5; --ice-soft:rgba(125,191,245,.12);
+  --good:#3FD18C; --good-soft:rgba(63,209,140,.12);
+  --bad:#F2585C; --bad-soft:rgba(242,88,92,.12);
+  --scrim:rgba(0,0,0,.6);
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,"Segoe UI",sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+  --tabs-h:58px;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;background:var(--bg)}
+body{color:var(--fg);font-family:var(--body);font-size:15px;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;-webkit-font-smoothing:antialiased;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+#app{height:100%;display:flex;flex-direction:column;position:relative}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 8px) 20px 4px}
+.brand{font-weight:800;font-size:15px;letter-spacing:-.01em}
+.brand small{color:var(--dim);font-weight:600;margin-left:4px}
+.sync{border:0;background:var(--panel);padding:7px 11px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap}
+.sync i{width:6px;height:6px;border-radius:50%;background:var(--dim)}
+.sync.cloud i{background:var(--good)}
+.sync.local i{background:var(--amber)}
+.sync.pending i{animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* pager */
+#pager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+#pager::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;width:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-align:start;scroll-snap-stop:always;padding-inline:20px;padding-block:4px 110px;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.wrap{max-width:540px;margin:0 auto}
+
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-block:8px 18px}
+.eyebrow{font-size:13px;color:var(--muted);font-weight:600}
+h2{font-size:28px;line-height:1.1;margin:2px 0 0;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+h2 .dim{color:var(--dim);font-weight:600}
+h3{font-size:20px;line-height:1.15;margin:2px 0 0;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.navbtns{display:flex;gap:4px;flex:none}
+.navbtns button{height:36px;min-width:36px;padding:0 12px;border-radius:10px;border:0;background:var(--panel);font-weight:700;font-size:13px;color:var(--muted)}
+.lnk{background:none;border:0;color:var(--amber);font-weight:700;font-size:inherit;padding:0}
+.hint{color:var(--muted);font-size:14px;margin:6px 2px 14px;line-height:1.45}
+
+/* azi */
+.dayhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:8px 14px}
+.ring{position:relative;width:52px;height:52px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--line);stroke-width:4}
+.ring-fg{fill:none;stroke:var(--amber);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.ring-t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.ring-t span{color:var(--dim);font-size:11px}
+.week{display:grid;grid-template-columns:20px repeat(7,minmax(0,1fr)) 20px;gap:2px;align-items:center;margin-block:0 16px}
+.wk-arrow{background:none;border:0;color:var(--dim);font-size:20px;padding:0}
+.wd{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 0;border:0;background:none;color:var(--dim);min-width:0}
+.wd span{font-size:11px;font-weight:700}
+.wd b{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;font-size:15px;color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums;transition:background .15s}
+.wd i{width:4px;height:4px;border-radius:50%}
+.wd i.dot{background:var(--amber)} .wd i.dot.ice{background:var(--ice)}
+.wd.today b{color:var(--amber)}
+.wd.sel b{background:var(--fg);color:var(--bg)}
+.wd.sel.today b{background:var(--amber);color:var(--on-amber)}
+
+.quick{display:flex;gap:8px;margin-bottom:16px}
+.quick .in{flex:1;min-width:0}
+.in{display:block;width:100%;min-height:46px;background:var(--panel);border:1px solid transparent;border-radius:12px;color:var(--fg);font:500 16px var(--body);padding:11px 14px;outline:0;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.in::placeholder{color:var(--dim)}
+.in:focus{border-color:var(--line-2)}
+.in.time{flex:0 0 92px;padding-inline:8px;text-align:center}
+.pop-card .in{background:var(--bg)}
+
+.tasks{display:flex;flex-direction:column}
+.task{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);transition:opacity .25s}
+.task:last-child{border-bottom:0}
+.chk{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line-2);background:none;display:grid;place-items:center;padding:0;color:var(--on-amber);transition:background .2s,border-color .2s}
+.task.appt .chk{border-color:var(--ice)}
+.task.done .chk{background:var(--amber);border-color:var(--amber)}
+.chk svg{width:13px;height:13px;opacity:0;transform:scale(.4);transition:opacity .2s,transform .2s}
+.task.done .chk svg{opacity:1;transform:none}
+.t-main{flex:1;min-width:0;background:none;border:0;text-align:left;padding:2px 0}
+.t-title{font-weight:600;font-size:15.5px;overflow-wrap:anywhere;line-height:1.35}
+.task.done{opacity:.5}
+.task.done .t-title{text-decoration:line-through;text-decoration-color:var(--dim)}
+.t-meta{display:flex;gap:8px;margin-top:2px;font-size:12.5px;color:var(--muted);align-items:center}
+.tm{font-weight:700;color:var(--ice);font-variant-numeric:tabular-nums}
+.late-d{color:var(--bad);font-weight:700}
+.mini{flex:none;border:0;background:var(--panel-2);color:var(--amber);font-weight:700;font-size:12.5px;border-radius:9px;padding:7px 11px}
+.pop{animation:popin .35s ease}
+@keyframes popin{from{transform:translateY(4px);opacity:0}}
+
+.ex{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel);font-size:13px;color:var(--muted);line-height:1.35;margin-bottom:14px}
+.ex button{flex:none;border:0;background:none;color:var(--amber);font-weight:700;font-size:13px;padding:4px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+.empty b{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
+
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:6px 2px 6px;font-size:13px;color:var(--muted);font-weight:700}
+.sec b{color:var(--fg);font-size:14px;font-variant-numeric:tabular-nums}
+.sec.mt{margin-top:22px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px 0}
+.cal .dh{font-size:11px;text-align:center;color:var(--dim);font-weight:700;padding-bottom:6px}
+.cd{display:flex;flex-direction:column;align-items:center;gap:4px;padding:3px 0 6px;border:0;background:none;min-width:0}
+.cd b{display:grid;place-items:center;width:38px;height:38px;max-width:100%;border-radius:50%;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;transition:background .15s}
+.cd .dots{display:flex;gap:3px;height:4px}
+.cd .dots i{width:4px;height:4px;border-radius:50%;background:var(--amber)}
+.cd .dots i.a{background:var(--ice)}
+.cd .dots i.d{background:var(--dim)}
+.cd.out{visibility:hidden}
+.cd.past b{color:var(--dim)}
+.cd.today b{color:var(--amber)}
+.cd.sel b{background:var(--panel-2)}
+.cd:active b{background:var(--panel-2)}
+.cal-up{margin-top:22px}
+
+/* stats & cards */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:18px;background:var(--line);border-radius:14px;overflow:hidden}
+.stat{padding:13px 14px;background:var(--panel);min-width:0}
+.stat span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.stat b{display:block;font-size:20px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;letter-spacing:-.01em}
+.stat.hl b{color:var(--amber)}
+.stat.hl-ice b{color:var(--ice)}
+.good-t{color:var(--good)} .bad-t{color:var(--bad)} .amber-t{color:var(--amber)} .ice-t{color:var(--ice)}
+
+.seg{display:flex;gap:2px;padding:3px;border-radius:11px;background:var(--panel);margin-bottom:14px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font-weight:700;font-size:13px;padding:8px 6px;border-radius:9px;transition:background .15s,color .15s}
+.seg button.on{background:var(--panel-2);color:var(--fg)}
+
+.cards{display:flex;flex-direction:column}
+.car{display:block;width:100%;text-align:left;padding:14px 2px;border:0;border-bottom:1px solid var(--line);background:none}
+.car:last-child{border-bottom:0}
+.car-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.car-name{font-weight:700;font-size:15.5px;min-width:0;overflow-wrap:anywhere}
+.car-inv{font-size:16px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.car-sub{font-size:13px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.gauge{height:3px;border-radius:3px;background:var(--line);margin-top:10px;overflow:hidden}
+.gauge i{display:block;height:100%;border-radius:inherit;background:currentColor}
+.gauge-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-top:5px;font-weight:600}
+.car-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.amber{background:var(--amber-soft);color:var(--amber)}
+.pill.ice{background:var(--ice-soft);color:var(--ice)}
+.foot-r{font-size:13px;color:var(--muted);font-weight:600}
+.foot-r b{font-size:14px}
+
+/* bani */
+.hero{padding:4px 0 18px;margin-bottom:6px}
+.mnav{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.mnav b{font-size:14px;font-weight:700;color:var(--muted);min-width:0;text-align:center;flex:1}
+.mnav button{width:32px;height:32px;border-radius:9px;border:0;background:var(--panel);font-size:17px;color:var(--muted)}
+.big{font-size:40px;font-weight:800;line-height:1;margin-top:6px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.split{display:flex;gap:24px;margin-top:14px}
+.split div{min-width:0}
+.split span{font-size:12px;color:var(--muted);font-weight:600;display:block}
+.split b{font-size:17px;display:block;margin-top:2px;font-variant-numeric:tabular-nums}
+.bar{display:flex;height:4px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:16px;gap:2px}
+.bar i{display:block;height:100%;min-width:3px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+.tile{text-align:left;padding:12px 13px;border-radius:13px;background:var(--panel);border:0;display:flex;flex-direction:column;gap:4px;min-width:0;transition:background .15s}
+.tile:active{background:var(--panel-2)}
+.tile .tn{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;min-width:0;color:var(--muted)}
+.tile .tn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .tn i{width:7px;height:7px;border-radius:50%;flex:none}
+.tile b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.tile small{color:var(--dim);font-size:12px;font-weight:600}
+.tile .go-a{margin-left:auto;color:var(--dim);font-style:normal}
+.tile.add{background:none;border:1px dashed var(--line-2);align-items:center;justify-content:center;color:var(--muted);font-weight:700;min-height:80px}
+
+.list{margin-bottom:20px}
+.line{display:flex;align-items:center;gap:12px;padding:11px 2px;border:0;border-bottom:1px solid var(--line);width:100%;background:none;text-align:left}
+.line:last-child{border-bottom:0}
+.l-ic{width:8px;height:8px;border-radius:50%;flex:none;font-size:0;overflow:hidden}
+.l-main{flex:1;min-width:0}
+.l-main div{font-weight:600;overflow-wrap:anywhere;font-size:14.5px}
+.l-main small{color:var(--muted);font-size:12.5px;font-weight:500}
+.l-amt{font-weight:700;white-space:nowrap;font-size:15px;font-variant-numeric:tabular-nums}
+.l-amt.plus{color:var(--good)}
+.x{flex:none;border:0;background:var(--panel-2);color:var(--muted);border-radius:9px;min-width:30px;height:30px;font-size:16px;font-weight:700;padding:0 8px}
+.x.armed{color:var(--on-amber);background:var(--bad);font-size:12px}
+.paybtn{flex:none;border:0;background:var(--good-soft);color:var(--good);font-weight:700;border-radius:9px;padding:7px 10px;font-size:12.5px}
+.due{font-weight:700}
+.due.over{color:var(--bad)} .due.soon{color:var(--amber)}
+
+/* tabs & fab */
+.tabs{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:calc(var(--tabs-h) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);border-top:1px solid var(--line);background:var(--bg);flex:none}
+.tab{border:0;background:none;color:var(--dim);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:700;transition:color .2s}
+.tab svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--fg)}
+.tab-ind{position:absolute;top:-1px;left:0;width:20%;height:1px;display:flex;justify-content:center;pointer-events:none}
+.tab-ind::after{content:"";width:24px;height:2px;border-radius:2px;background:var(--amber)}
+.fab{position:absolute;right:20px;bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom,0px) + 16px);width:56px;height:56px;border-radius:50%;border:0;background:var(--amber);color:var(--on-amber);display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.8);z-index:20;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+.fab svg{width:24px;height:24px;stroke:currentColor;stroke-width:2.4;fill:none;stroke-linecap:round}
+
+/* pop-up */
+#sheet{position:fixed;left:0;right:0;top:0;height:100%;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 12px}
+.scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;transition:opacity .2s}
+.sheet{position:relative;width:100%;max-width:520px;max-height:100%;-webkit-user-select:text;user-select:text;overflow-y:auto;overscroll-behavior:contain;background:var(--panel);border-radius:20px;padding:6px 16px 18px;transform:translateY(-10px) scale(.98);opacity:0;transition:transform .22s ease,opacity .2s ease;box-shadow:0 24px 60px -20px rgba(0,0,0,.9)}
+#sheet.open .scrim{opacity:1}
+#sheet.open .sheet{transform:none;opacity:1}
+.grab{display:none}
+.sh-bar{position:sticky;top:-6px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 -16px 10px;padding:10px 12px 10px 8px;background:var(--panel)}
+.sh-bar .ttl{flex:1;min-width:0;text-align:center}
+.sh-bar .ttl small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.sh-bar .ttl b{display:block;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-x{flex:none;width:40px;height:36px;border:0;background:none;color:var(--muted);font-size:22px;line-height:1;border-radius:10px}
+.sh-save{flex:none;min-width:40px;height:36px;border:0;border-radius:10px;background:var(--amber);color:var(--on-amber);font-weight:800;font-size:14px;padding:0 14px}
+.sh-sp{flex:none;width:40px}
+.sh-head{display:none}
+.sh-sec{font-size:13px;color:var(--muted);font-weight:700;margin:18px 2px 6px}
+.sh-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.amt{display:block;padding:4px 2px 10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.amt-l{font-size:12px;color:var(--muted);font-weight:600}
+.amt-row{display:flex;align-items:baseline;gap:6px}
+.amt-in{flex:1;min-width:0;width:100%;background:none;border:0;outline:0;color:var(--fg);font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-.02em;padding:2px 0;font-variant-numeric:tabular-nums}
+.amt-in::placeholder{color:var(--dim)}
+.amt-c{font-size:24px;color:var(--dim);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:0;background:var(--panel-2);font-weight:600;font-size:13.5px;max-width:100%;color:var(--muted)}
+.chip i{width:7px;height:7px;border-radius:50%;flex:none}
+.chip.on{background:var(--fg);color:var(--bg)}
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
+.fld>span{font-size:12px;color:var(--muted);font-weight:600}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 8px}
+.span2{grid-column:1/-1}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border:0;border-radius:12px;background:var(--bg);width:100%;margin-bottom:10px;font-weight:600;text-align:left}
+.sw small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+.sw i{width:44px;height:26px;border-radius:26px;background:var(--line-2);position:relative;flex:none;transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.sw[aria-pressed="true"] i{background:var(--amber)}
+.sw[aria-pressed="true"] i::after{transform:translateX(18px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border-radius:12px;border:0;background:var(--panel-2);font-weight:700;font-size:15px}
+.btn.primary{background:var(--amber);color:var(--on-amber)}
+.btn.good{background:var(--good-soft);color:var(--good)}
+.btn.block{width:100%}
+.btn.ghost{background:none}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:var(--on-amber)}
+.btn.sq{flex:0 0 46px;width:46px;min-height:46px;padding:0;font-size:22px}
+.addline{display:flex;gap:8px;margin-bottom:6px}
+.addline .in{flex:1;min-width:0}
+.addline .in.w-amt{flex:0 0 90px}
+.err{color:var(--bad);font-weight:700;font-size:13px;margin:0 2px 10px}
+.box{padding:12px 14px;border-radius:12px;background:var(--bg);margin-bottom:10px}
+.box.good{background:var(--good-soft)}
+.box-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-weight:600;color:var(--muted);font-size:13.5px}
+.box-row+.box-row{margin-top:6px}
+.box-row b{color:var(--fg);font-size:16px;font-variant-numeric:tabular-nums}
+.swrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.swatch{width:36px;height:36px;border-radius:50%;border:2px solid transparent;padding:0}
+.swatch.on{border-color:var(--fg);box-shadow:0 0 0 3px var(--panel) inset}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translate(-50%,-12px);opacity:0;padding:9px 16px;border-radius:999px;background:var(--fg);color:var(--bg);font-weight:700;font-size:13px;z-index:60;transition:opacity .2s,transform .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:repeat(4,1fr)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+#splash{position:fixed;inset:0;z-index:100;background:#060708;transition:opacity .3s ease}
+#splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#splash.out{opacity:0;pointer-events:none}
+.sp-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);text-align:center;font-size:12px;color:rgba(255,232,190,.35);font-weight:600;letter-spacing:.06em;opacity:0;animation:spskip .4s .6s forwards}
+@keyframes spskip{to{opacity:1}}
+/* IMPERIUM: paginile sus, butonul + deasupra barei IMPERIUM */
+.top{padding-top:10px}
+.tabs{grid-template-columns:repeat(4,1fr);height:50px;padding-bottom:0;border-top:0;border-bottom:1px solid var(--line)}
+.tab{flex-direction:row;gap:6px;font-size:12.5px}.tab svg{width:18px;height:18px}
+.tab-ind{top:auto;bottom:-1px;width:25%}
+.fab{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
+.page{padding-block:8px 130px}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="top">
+    <div class="brand">HGroup<small>Fundation</small></div>
+    <button class="sync local" id="sync" aria-label="Backup date"><i></i><span>Backup</span></button>
+  </header>
+
+  <nav class="tabs" aria-label="Navigare">
+    <div class="tab-ind" id="tab-ind"></div>
+    <button class="tab" data-tab="0"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendar</button>
+    <button class="tab" data-tab="1"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg>Bani</button>
+    <button class="tab" data-tab="2"><svg viewBox="0 0 24 24"><path d="M5 16V12l2-4.5A2 2 0 0 1 8.8 6.3h6.4A2 2 0 0 1 17 7.5L19 12v4M4 12h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>Parc</button>
+    <button class="tab" data-tab="3"><svg viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0 4.9 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.4a4 4 0 0 0-2-2.1z"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/></svg>Service</button>
+  </nav>
+
+  <main id="pager" aria-label="Pagini">
+    <section class="page" id="p-cal" aria-label="Calendar"><div class="wrap">
+      <div id="cal-head"></div>
+      <div id="cal-grid"></div>
+      <div class="cal-up" id="cal-up"></div>
+    </div></section>
+
+
+
+    <section class="page" id="p-bani" aria-label="Bani"><div class="wrap" id="bani"></div></section>
+    <section class="page" id="p-parc" aria-label="Parc auto"><div class="wrap" id="parc"></div></section>
+    <section class="page" id="p-svc" aria-label="Service"><div class="wrap" id="svc"></div></section>
+  </main>
+
+  <div hidden><section class="page" id="p-azi" aria-label="Azi"><div class="wrap">
+      <div id="azi-head"></div>
+      <form class="quick" id="azi-form" autocomplete="off">
+        <input id="azi-text" class="in" placeholder="Adaugă un task…" enterkeyhint="done" aria-label="Task nou">
+        <input id="azi-time" type="time" class="in time" aria-label="Ora (opțional)">
+        <button class="btn primary sq" aria-label="Adaugă task">+</button>
+      </form>
+      <div id="azi-body"></div>
+    </div></section></div>
+
+  <button class="fab" id="fab" aria-label="Adaugă"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+
+
+
+  <div id="sheet" hidden><div class="scrim" id="scrim"></div><div class="sheet pop-card" id="sheet-body" role="dialog" aria-modal="true"></div></div>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>iso(new Date());
+const parseISO=s=>{const[y,m,d]=String(s||today()).split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parseISO(s);d.setDate(d.getDate()+n);return iso(d)};
+const daysBetween=(a,b)=>{const[x,y,z]=String(a).split('-').map(Number),[p,q,r]=String(b).split('-').map(Number);return Math.max(0,Math.round((Date.UTC(p,q-1,r)-Date.UTC(x,y-1,z))/864e5))};
+const DOW=['Duminică','Luni','Marți','Miercuri','Joi','Vineri','Sâmbătă'];
+const DOW_S=['Du','Lu','Ma','Mi','Jo','Vi','Sâ'];
+const MON=['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+const MON_S=['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+const fmtDay=s=>{const d=parseISO(s);return `${d.getDate()} ${MON_S[d.getMonth()]}`};
+const fmtDM=s=>{const d=parseISO(s);return `${d.getDate()} ${MON[d.getMonth()]}`};
+const eurF0=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const eurF2=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+const eur=n=>{n=+n||0;return (Math.abs(n%1)>0.004?eurF2:eurF0).format(n)};
+const seur=n=>(n>0?'+':n<0?'−':'')+eur(Math.abs(n));
+const num=v=>{let s=String(v??'').trim().replace(/[\s€]/g,'');if(!s)return 0;if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.')}else if(/^\d{1,3}(\.\d{3})+$/.test(s)){s=s.replace(/\./g,'')}const n=parseFloat(s);return isFinite(n)?Math.round(n*100)/100:0};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const zile=n=>n===0?'azi':n===1?'1 zi':`${n} zile`;
+const CHECK='<svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ---------- state ---------- */
+const COLS=['tasks','expenses','cars','jobs'];
+const DEFAULT_CATS=[
+  {id:'parc',name:'Parc auto',color:'#FFB547',sys:true},
+  {id:'service',name:'Service',color:'#6CD2FF',sys:true},
+  {id:'combustibil',name:'Combustibil',color:'#FF8A5C'},
+  {id:'acte',name:'Acte & taxe',color:'#B69CFF'},
+  {id:'reclama',name:'Reclamă',color:'#46E0A0'},
+  {id:'personal',name:'Personal',color:'#F2D45C'}
+];
+const SWATCHES=['#FF8A5C','#B69CFF','#46E0A0','#F2D45C','#FF6FB5','#5B8CFF','#9BE15D','#FF6B6E','#4FD1C5','#C9A27A'];
+const S={tasks:{},expenses:{},cars:{},jobs:{},settings:{cats:null}};
+const cats=()=>(S.settings&&Array.isArray(S.settings.cats)&&S.settings.cats.length)?S.settings.cats:DEFAULT_CATS;
+const catOf=id=>cats().find(c=>c.id===id)||{id,name:'Altele',color:'#7F8BA0'};
+const UI={page:1,day:today(),calMonth:today().slice(0,7),calDay:today(),month:today().slice(0,7),parcF:'stock',svcF:'active'};
+let justAdded=null;
+
+/* ---------- storage: claude db, else this device ---------- */
+let db=null, mode='pending'; const queue=[];
+const LKEY='hgroup-fundation-v1';
+function readLocal(){try{return JSON.parse(localStorage.getItem(LKEY)||'null')}catch(e){return null}}
+function loadLocal(){const r=readLocal();if(r){for(const k of COLS)S[k]=r[k]||{};S.settings=r.settings||{cats:null}}}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify({tasks:S.tasks,expenses:S.expenses,cars:S.cars,jobs:S.jobs,settings:S.settings}))}catch(e){}}
+const chains={};
+function enqueue(key,fn,retried){chains[key]=(chains[key]||Promise.resolve()).then(fn).catch(err=>{
+  const code=err&&err.code;
+  if(code==='unavailable'&&!retried){setTimeout(()=>enqueue(key,fn,true),500+Math.random()*900);return}
+  if(code==='invalid_argument')toast('Nu ai drept de salvare aici');
+  else if(code==='quota_exceeded')toast('Spațiul de date e plin. Șterge intrări vechi.');
+  else toast('Nu s-a putut salva. Reîncearcă.');
+})}
+const clean=o=>JSON.parse(JSON.stringify(o));
+function backendPut(col,obj){
+  if(mode==='cloud'){enqueue(col==='settings'?'meta/settings':col+'/'+obj.id,()=>col==='settings'?db.doc('meta/settings').set(clean(obj)):db.collection(col).doc(obj.id).set(clean(obj)))}
+  else if(mode==='local')saveLocal();
+  else queue.push(['put',col,obj]);
+}
+function backendDel(col,id){
+  if(mode==='cloud')enqueue(col+'/'+id,()=>db.collection(col).doc(id).delete());
+  else if(mode==='local')saveLocal();
+  else queue.push(['del',col,id]);
+}
+function put(col,obj){if(col==='settings')S.settings=obj;else S[col]={...S[col],[obj.id]:obj};backendPut(col,obj);render();if(col==='settings')setSync()}
+function del(col,id){const c={...S[col]};delete c[id];S[col]=c;backendDel(col,id);render()}
+function flush(){const q=queue.splice(0);for(const[op,col,x]of q){if(op==='put'){if(col==='settings')S.settings=x;else S[col]={...S[col],[x.id]:x};backendPut(col,x)}else{const c={...S[col]};delete c[x];S[col]=c;backendDel(col,x)}}}
+let loaded=new Set(), migrated=false;
+function maybeMigrate(){
+  if(migrated||loaded.size<COLS.length)return; migrated=true;
+  const empty=COLS.every(c=>!Object.keys(S[c]).length); const r=readLocal();
+  if(empty&&r&&COLS.some(c=>r[c]&&Object.keys(r[c]).length)){
+    for(const c of COLS)for(const x of Object.values(r[c]||{}))put(c,x);
+    if(r.settings&&r.settings.cats)put('settings',r.settings);
+    toast('Datele de pe telefon au fost urcate');
+  }
+}
+function subscribe(){
+  for(const col of COLS){
+    db.collection(col).onSnapshot(snap=>{const o={};for(const d of snap.docs){o[d.id]={...d.data(),id:d.id}}S[col]=o;loaded.add(col);render();maybeMigrate()},onDbError);
+  }
+  db.doc('meta/settings').onSnapshot(s=>{S.settings=s.exists?{...s.data()}:{cats:null};render()},onDbError);
+}
+function onDbError(e){if(e&&(e.code==='revoked'||e.code==='not_granted')){mode='local';loadLocal();setSync();render()}toast('Sincronizarea s-a întrerupt')}
+async function initStore(){
+  mode='local';loadLocal();flush();setSync();render();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+}
+function setSync(){const el=$('#sync');const last=(S.settings&&S.settings.lastBackup)||null;const old=!last||daysBetween(last,today())>=14;el.className='sync '+(old?'local':'cloud');el.lastElementChild.textContent=last?('Backup '+fmtDay(last)):'Backup'}
+
+/* ---------- derived ---------- */
+const sum=(a,f)=>a.reduce((s,x)=>s+(+f(x)||0),0);
+const carCosts=c=>sum(c.costs||[],x=>x.amount);
+const carInvested=c=>(+c.buyPrice||0)+carCosts(c);
+const carProfit=c=>c.sold?(+c.sellPrice||0)-carInvested(c):0;
+const carShare=c=>{const s=+c.share;return s>0&&s<100?s/100:1};
+const myInv=c=>carInvested(c)*carShare(c);
+const myProfit=c=>carProfit(c)*carShare(c);
+const shareTag=c=>carShare(c)<1?`${Math.round(carShare(c)*100)}%${c.partner?' cu '+esc(c.partner):''}`:'';
+const carDays=c=>daysBetween(c.buyDate||today(),c.sold?(c.sellDate||today()):today());
+const jobParts=j=>sum(j.parts||[],x=>x.amount);
+const jobProfit=j=>(+j.price||0)-jobParts(j);
+const jobDays=j=>daysBetween(j.startDate||today(),j.done?(j.doneDate||today()):today());
+function weekStart(s){const d=parseISO(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return iso(d)}
+function taskSort(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;const ta=a.time||'99:99',tb=b.time||'99:99';if(ta!==tb)return ta<tb?-1:1;return (a.created||0)-(b.created||0)}
+function tasksIndex(){const idx={};for(const x of Object.values(S.tasks)){(idx[x.date]=idx[x.date]||[]).push(x)}return idx}
+function relLabel(day){const n=Math.round((parseISO(day)-parseISO(today()))/864e5);if(n===0)return'Azi';if(n===1)return'Mâine';if(n===-1)return'Ieri';return DOW[parseISO(day).getDay()]}
+function ledger(m){
+  const inM=d=>d&&String(d).slice(0,7)===m; const byCat={},cnt={}; let spent=0,income=0;
+  const add=(cat,v)=>{v=+v||0;byCat[cat]=(byCat[cat]||0)+v;cnt[cat]=(cnt[cat]||0)+1;spent+=v};
+  for(const e of Object.values(S.expenses))if(!e.future&&inM(e.date))add(e.cat,e.amount);
+  for(const c of Object.values(S.cars)){const k=carShare(c);if(inM(c.buyDate))add('parc',(+c.buyPrice||0)*k);for(const x of c.costs||[])if(inM(x.date))add('parc',(+x.amount||0)*k);if(c.sold&&inM(c.sellDate))income+=(+c.sellPrice||0)*k}
+  for(const j of Object.values(S.jobs)){for(const x of j.parts||[])if(inM(x.date))add('service',x.amount);if(j.paid&&inM(j.paidDate))income+=+j.price||0}
+  return {byCat,cnt,spent,income};
+}
+function movements(m){
+  const inM=d=>d&&String(d).slice(0,7)===m; const out=[];
+  for(const e of Object.values(S.expenses))if(!e.future&&inM(e.date)){const c=catOf(e.cat);out.push({date:e.date,label:e.note||c.name,sub:c.name,color:c.color,amt:-(+e.amount||0),act:'edit-exp',id:e.id,t:e.created||0})}
+  for(const c of Object.values(S.cars)){const k=carShare(c),sx=k<1?' ('+shareTag(c)+')':'';
+    if(inM(c.buyDate))out.push({date:c.buyDate,label:'Cumpărat · '+c.name+sx,sub:'Parc auto',color:'#FFB547',amt:-(+c.buyPrice||0)*k,act:'open-car',id:c.id,t:1});
+    for(const x of c.costs||[])if(inM(x.date))out.push({date:x.date,label:(x.label||'Cost')+' · '+c.name+sx,sub:'Parc auto',color:'#FFB547',amt:-(+x.amount||0)*k,act:'open-car',id:c.id,t:2});
+    if(c.sold&&inM(c.sellDate))out.push({date:c.sellDate,label:'Vândut · '+c.name+sx,sub:'Încasare',color:'#46E0A0',amt:(+c.sellPrice||0)*k,act:'open-car',id:c.id,t:3});
+  }
+  for(const j of Object.values(S.jobs)){
+    for(const x of j.parts||[])if(inM(x.date))out.push({date:x.date,label:(x.label||'Piese')+' · '+j.title,sub:'Service',color:'#6CD2FF',amt:-(+x.amount||0),act:'open-job',id:j.id,t:2});
+    if(j.paid&&inM(j.paidDate))out.push({date:j.paidDate,label:'Încasat · '+j.title,sub:'Service',color:'#46E0A0',amt:+j.price||0,act:'open-job',id:j.id,t:3});
+  }
+  return out.sort((a,b)=>a.date===b.date?(b.t-a.t):(a.date<b.date?1:-1));
+}
+const hasExamples=()=>COLS.some(c=>Object.values(S[c]).some(x=>x.example));
+const exBanner=()=>hasExamples()?`<div class="ex"><span>Vezi date de exemplu ca să încerci aplicația.</span><button data-act="del-examples">Șterge exemplele</button></div>`:'';
+
+/* ---------- render ---------- */
+let rq=0;
+function render(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;renderAll()})}
+function renderAll(){renderAzi();renderCal();renderBani();renderParc();renderSvc();if(sheet&&sheet.refresh)sheet.refresh();if(justAdded)setTimeout(()=>{justAdded=null},500)}
+function ring(done,total){const C=2*Math.PI*21,p=total?done/total:0;return `<div class="ring" aria-label="${done} din ${total} gata"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="21" class="ring-bg"/><circle cx="26" cy="26" r="21" class="ring-fg" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C*(1-p)).toFixed(2)}"/></svg><div class="ring-t num">${done}<span>/${total}</span></div></div>`}
+function taskRow(t,late){const appt=!!t.time;return `<div class="task ${t.done?'done':''} ${appt?'appt':''} ${t.id===justAdded?'pop':''}">
+  <button class="chk" data-act="toggle" data-id="${t.id}" aria-label="${t.done?'Debifează':'Bifează'}">${CHECK}</button>
+  <button class="t-main" data-act="edit-task" data-id="${t.id}"><div class="t-title">${esc(t.text)}</div>${(appt||late)?`<div class="t-meta">${appt?`<span class="tm">${esc(t.time)}</span><span>Programare</span>`:''}${late?`<span class="late-d">din ${fmtDay(t.date)}</span>`:''}</div>`:''}</button>
+  ${late?`<button class="mini" data-act="move-today" data-id="${t.id}">Pe azi</button>`:''}</div>`}
+
+function renderAzi(){
+  const d=UI.day,t=today(),idx=tasksIndex(),items=(idx[d]||[]).sort(taskSort),done=items.filter(x=>x.done).length;
+  const ws=weekStart(d);let strip='';
+  for(let i=0;i<7;i++){const ds=addDays(ws,i),its=idx[ds]||[],open=its.filter(x=>!x.done),appt=open.some(x=>x.time);
+    strip+=`<button class="wd ${ds===d?'sel':''} ${ds===t?'today':''}" data-act="pick-day" data-d="${ds}" aria-label="${fmtDM(ds)}"><span>${DOW_S[parseISO(ds).getDay()]}</span><b>${parseISO(ds).getDate()}</b><i class="${open.length?(appt?'dot ice':'dot'):''}"></i></button>`}
+  const left=items.length-done;
+  $('#azi-head').innerHTML=`<div class="dayhead"><div><div class="eyebrow">${relLabel(d)}${d!==t?' · <button class="lnk" data-act="go-today">înapoi la azi</button>':''}</div><h2>${fmtDM(d)}</h2><div class="sub">${DOW[parseISO(d).getDay()]} · ${items.length?(left?`${left} ${left===1?'rămas':'rămase'}`:'totul bifat'):'nimic planificat'}</div></div>${ring(done,items.length)}</div>
+  <div class="week"><button class="wk-arrow" data-act="wk-prev" aria-label="Săptămâna trecută">‹</button>${strip}<button class="wk-arrow" data-act="wk-next" aria-label="Săptămâna viitoare">›</button></div>`;
+  let body=exBanner();
+  if(d===t){const late=Object.values(S.tasks).filter(x=>!x.done&&x.date<t).sort((a,b)=>a.date<b.date?-1:1);
+    if(late.length)body+=`<div class="sec"><span>Restante · ${late.length}</span><button class="lnk" data-act="move-all">Mută toate pe azi</button></div><div class="tasks">${late.map(x=>taskRow(x,true)).join('')}</div><div class="sec mt"><span>Azi</span></div>`}
+  body+=items.length?`<div class="tasks">${items.map(x=>taskRow(x)).join('')}</div>`:`<div class="empty"><b>Zi liberă</b>Scrie un task mai sus și apasă +. Programările din calendar apar aici automat.</div>`;
+  $('#azi-body').innerHTML=body;
+}
+
+function renderCal(){
+  const[y,m]=UI.calMonth.split('-').map(Number),t=today(),idx=tasksIndex();
+  const lead=(new Date(y,m-1,1).getDay()+6)%7,dim=new Date(y,m,0).getDate();
+  let g=['Lu','Ma','Mi','Jo','Vi','Sâ','Du'].map(s=>`<div class="dh">${s}</div>`).join('');
+  for(let i=0;i<lead;i++)g+='<div class="cd out"></div>';
+  for(let dd=1;dd<=dim;dd++){const ds=`${y}-${pad(m)}-${pad(dd)}`,its=(idx[ds]||[]).slice().sort(taskSort);
+    const dots=its.slice(0,6).map(x=>`<i class="${x.done?'d':x.time?'a':''}"></i>`).join('');
+    g+=`<button class="cd ${ds===t?'today':''} ${ds===UI.calDay?'sel':''} ${ds<t?'past':''}" data-act="cal-pick" data-d="${ds}" aria-label="${dd} ${MON[m-1]}${its.length?`, ${its.length} intrări`:''}"><b>${dd}</b><span class="dots">${dots}</span></button>`}
+  $('#cal-head').innerHTML=`<div class="page-head"><div><div class="eyebrow">Calendar · programări</div><h2>${MON[m-1]} <span class="dim">${y}</span></h2></div><div class="navbtns"><button data-act="cal-prev" aria-label="Luna trecută">‹</button><button data-act="cal-today">Azi</button><button data-act="cal-next" aria-label="Luna viitoare">›</button></div></div>`;
+  $('#cal-grid').innerHTML=`<div class="cal">${g}</div>`;
+  const up=Object.values(S.tasks).filter(x=>x.time&&!x.done&&x.date>=t).sort((a,b)=>a.date===b.date?(a.time<b.time?-1:1):(a.date<b.date?-1:1)).slice(0,6);
+  $('#cal-up').innerHTML=`<div class="sec"><span>Următoarele programări</span></div>`+(up.length?`<div class="list">${up.map(x=>`<button class="line" data-act="edit-task" data-id="${x.id}"><span class="l-main"><div>${esc(x.text)}</div><small>${relLabel(x.date)===DOW[parseISO(x.date).getDay()]?fmtDay(x.date):relLabel(x.date)} · <span class="tm">${esc(x.time)}</span></small></span></button>`).join('')}</div>`:`<p class="hint">Apasă pe o zi ca să adaugi o programare.</p>`);
+}
+
+function renderBani(){
+  const m=UI.month,[y,mm]=m.split('-').map(Number),L=ledger(m),C=cats(),res=L.income-L.spent;
+  const known=new Set(C.map(c=>c.id));let other=0;for(const k in L.byCat)if(!known.has(k))other+=L.byCat[k];
+  const bar=C.filter(c=>L.byCat[c.id]>0).map(c=>`<i style="flex:${L.byCat[c.id]};background:${c.color}" title="${esc(c.name)}"></i>`).join('')+(other>0?`<i style="flex:${other};background:#7F8BA0"></i>`:'');
+  const cars=Object.values(S.cars),stock=cars.filter(c=>!c.sold).length,active=Object.values(S.jobs).filter(j=>!j.done).length;
+  const tiles=C.map(c=>{const v=L.byCat[c.id]||0,n=L.cnt[c.id]||0;const sub=c.id==='parc'?`${stock} în parc`:c.id==='service'?`${active} ${active===1?'job activ':'joburi active'}`:`${n} ${n===1?'plată':'plăți'}`;
+    return `<button class="tile" data-act="open-cat" data-cat="${esc(c.id)}"><div class="tn"><i style="background:${c.color}"></i><span>${esc(c.name)}</span>${c.sys?'<em class="go-a">›</em>':''}</div><b>${eur(v)}</b><small>${sub}</small></button>`}).join('')+`<button class="tile add" data-act="add-cat">+ Categorie</button>`;
+  const fut=Object.values(S.expenses).filter(e=>e.future).sort((a,b)=>a.date<b.date?-1:1),futSum=sum(fut,e=>e.amount),t=today();
+  const futRows=fut.map(e=>{const c=catOf(e.cat),n=Math.round((parseISO(e.date)-parseISO(t))/864e5);const cls=n<0?'over':n<=7?'soon':'';const when=n<0?`întârziat ${zile(-n)}`:n===0?'scadent azi':`în ${zile(n)}`;
+    return `<div class="line"><span class="l-ic" style="background:${c.color}26;color:${c.color}">${esc(c.name.slice(0,1))}</span><button class="l-main" data-act="edit-exp" data-id="${e.id}" style="background:none;border:0;padding:0;text-align:left"><div>${esc(e.note||c.name)}</div><small>${fmtDay(e.date)} · <span class="due ${cls}">${when}</span></small></button><span class="l-amt">${eur(e.amount)}</span><button class="paybtn" data-act="pay" data-id="${e.id}">Plătit</button></div>`}).join('');
+  const mv=movements(m);
+  const mvRows=mv.slice(0,40).map(x=>`<button class="line" data-act="${x.act}" data-id="${x.id}"><span class="l-ic" style="background:${x.color}26;color:${x.color}">${x.amt>0?'+':esc(x.sub.slice(0,1))}</span><span class="l-main"><div>${esc(x.label)}</div><small>${fmtDay(x.date)} · ${esc(x.sub)}</small></span><span class="l-amt ${x.amt>0?'plus':''}">${seur(x.amt)}</span></button>`).join('');
+  $('#bani').innerHTML=`<div class="page-head"><div><div class="eyebrow">Cheltuieli & încasări</div><h2>Bani</h2></div></div>
+  ${exBanner()}
+  <div class="hero">
+    <div class="mnav"><button data-act="m-prev" aria-label="Luna trecută">‹</button><b>${MON[mm-1]} ${y}</b><button data-act="m-next" aria-label="Luna viitoare">›</button></div>
+    <div class="eyebrow">Cheltuit</div><div class="big">${eur(L.spent)}</div>
+    <div class="split"><div><span>Încasat</span><b class="good-t">${eur(L.income)}</b></div><div><span>Rezultat</span><b class="${res>=0?'good-t':'bad-t'}">${seur(res)}</b></div></div>
+    <div class="bar">${bar}</div>
+  </div>
+  <div class="sec"><span>Categorii</span></div>
+  <div class="tiles">${tiles}</div>
+  <div class="sec"><span>Urmează de plătit</span>${fut.length?`<b>${eur(futSum)}</b>`:''}</div>
+  ${fut.length?`<div class="list">${futRows}</div>`:`<p class="hint">Nicio plată viitoare. La + alege „Cheltuială viitoare” ca s-o vezi aici.</p>`}
+  <div class="sec mt"><span>Mișcări în ${MON[mm-1].toLowerCase()}</span></div>
+  ${mv.length?`<div class="list">${mvRows}</div>`:`<div class="empty"><b>Nimic în luna asta</b>Apasă + ca să adaugi prima cheltuială.</div>`}`;
+}
+
+function renderParc(){
+  const cars=Object.values(S.cars),stock=cars.filter(c=>!c.sold).sort((a,b)=>a.buyDate<b.buyDate?-1:1),sold=cars.filter(c=>c.sold).sort((a,b)=>a.sellDate<b.sellDate?1:-1);
+  const cap=sum(stock,myInv),prof=sum(sold,myProfit),avg=sold.length?Math.round(sum(sold,carDays)/sold.length):null;
+  const list=UI.parcF==='stock'?stock:UI.parcF==='sold'?sold:[...stock,...sold];
+  const cards=list.map(c=>{const days=carDays(c),inv=carInvested(c);
+    if(!c.sold){const pct=Math.min(100,days/90*100),col=days<30?'var(--good)':days<60?'var(--amber)':'var(--bad)';
+      return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(inv)}</div></div>
+      <div class="car-sub">Cumpărat ${fmtDay(c.buyDate)} · ${eur(c.buyPrice)} + ${eur(carCosts(c))} costuri</div>
+      ${carShare(c)<1?`<div class="car-foot"><div class="pills"><span class="pill ice">${shareTag(c)}</span><span class="pill">partea ta ${eur(myInv(c))}</span></div></div>`:''}
+      <div class="gauge" style="color:${col}"><i style="width:${Math.max(3,pct)}%"></i></div><div class="gauge-l"><span>${zile(days)} în parc</span><span>90 zile</span></div></button>`}
+    const p=carProfit(c);
+    return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(c.sellPrice)}</div></div>
+    <div class="car-sub">Vândut ${fmtDay(c.sellDate)} · investit ${eur(inv)}</div>
+    <div class="car-foot"><div class="pills"><span class="pill ${p>=0?'good':'bad'}">${seur(carShare(c)<1?myProfit(c):p)}${carShare(c)<1?' partea ta':''}</span>${carShare(c)<1?`<span class="pill ice">${shareTag(c)}</span>`:''}<span class="pill">vândut în ${zile(days)}</span></div></div></button>`}).join('');
+  $('#parc').innerHTML=`<div class="page-head"><div><div class="eyebrow">Stoc mașini</div><h2>Parc auto</h2></div></div>
+  <div class="stats"><div class="stat hl"><span>Capitalul tău în parc</span><b>${eur(cap)}</b></div><div class="stat"><span>Mașini în parc</span><b>${stock.length}</b></div><div class="stat"><span>Profitul tău realizat</span><b class="${prof>=0?'good-t':'bad-t'}">${seur(prof)}</b></div><div class="stat"><span>Medie vânzare</span><b>${avg===null?'—':zile(avg)}</b></div></div>
+  <div class="seg">${[['stock','În parc'],['sold','Vândute'],['all','Toate']].map(([k,l])=>`<button class="${UI.parcF===k?'on':''}" data-act="parc-f" data-f="${k}">${l}</button>`).join('')}</div>
+  ${list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.parcF==='sold'?'Nicio mașină vândută încă':'Parcul e gol'}</b>Apasă + ca să adaugi o mașină cumpărată.</div>`}`;
+}
+
+function renderSvc(){
+  const jobs=Object.values(S.jobs),act=jobs.filter(j=>!j.done).sort((a,b)=>a.startDate<b.startDate?-1:1),fin=jobs.filter(j=>j.done).sort((a,b)=>a.doneDate<b.doneDate?1:-1);
+  const due=sum(jobs.filter(j=>!j.paid),j=>j.price),mnow=today().slice(0,7);
+  const profM=sum(jobs.filter(j=>j.paid&&String(j.paidDate||'').slice(0,7)===mnow),jobProfit),avg=fin.length?Math.round(sum(fin,jobDays)/fin.length):null;
+  const list=UI.svcF==='active'?act:UI.svcF==='done'?fin:[...act,...fin];
+  const cards=list.map(j=>{const days=jobDays(j),p=jobProfit(j);
+    return `<button class="car" data-act="open-job" data-id="${j.id}"><div class="car-top"><div class="car-name">${esc(j.title)}</div><div class="car-inv">${eur(j.price)}</div></div>
+    ${j.desc?`<div class="car-sub">${esc(j.desc)}</div>`:''}
+    <div class="car-foot"><div class="pills"><span class="pill ${j.done?'good':'amber'}">${j.done?`gata în ${zile(days)}`:`în lucru · ${zile(days)}`}</span><span class="pill ${j.paid?'good':'bad'}">${j.paid?'Încasat':'Neîncasat'}</span></div>
+    <span class="foot-r">piese ${eur(jobParts(j))} · <b class="${p>=0?'good-t':'bad-t'}">${seur(p)}</b></span></div></button>`}).join('');
+  $('#svc').innerHTML=`<div class="page-head"><div><div class="eyebrow">Atelier</div><h2>Service</h2></div></div>
+  <div class="stats"><div class="stat hl-ice"><span>De încasat</span><b>${eur(due)}</b></div><div class="stat"><span>Joburi active</span><b>${act.length}</b></div><div class="stat"><span>Profit ${MON[+mnow.slice(5)-1].toLowerCase()}</span><b class="${profM>=0?'good-t':'bad-t'}">${seur(profM)}</b></div><div class="stat"><span>Durată medie</span><b>${avg===null?'—':zile(avg)}</b></div></div>
+  <div class="seg">${[['active','Active'],['done','Finalizate'],['all','Toate']].map(([k,l])=>`<button class="${UI.svcF===k?'on':''}" data-act="svc-f" data-f="${k}">${l}</button>`).join('')}</div>
+  ${list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.svcF==='done'?'Niciun job finalizat':'Niciun job activ'}</b>Apasă + ca să deschizi un job nou.</div>`}`;
+}
+
+/* ---------- sheets ---------- */
+const sheetEl=$('#sheet'),sheetBody=$('#sheet-body');let sheet=null;
+function openSheet(html,init){
+  sheetBody.innerHTML='';const g=document.createElement('div');g.className='grab';const inner=document.createElement('div');inner.innerHTML=html;sheetBody.append(g,inner);sheetBody.scrollTop=0;
+  inner.addEventListener('click',e=>{if(e.target.closest('[data-close]'))closeSheet()});sheetEl.hidden=false;sheet={refresh:null};fitSheet();void sheetBody.offsetHeight;sheetEl.classList.add('open');
+  if(init)init(inner);
+}
+function closeSheet(){if(!sheet)return;sheet=null;sheetEl.classList.remove('open');if(document.activeElement)document.activeElement.blur();setTimeout(()=>{if(!sheet){sheetEl.hidden=true;sheetBody.innerHTML=''}},300)}
+$('#scrim').addEventListener('click',closeSheet);
+function fitSheet(){const vv=window.visualViewport;if(!vv){sheetEl.style.top='0px';sheetEl.style.height='100%';return}sheetEl.style.top=vv.offsetTop+'px';sheetEl.style.height=vv.height+'px'}
+if(window.visualViewport){visualViewport.addEventListener('resize',()=>{if(sheet)fitSheet()});visualViewport.addEventListener('scroll',()=>{if(sheet)fitSheet()})}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+$('#sync').addEventListener('click',()=>openBackup());
+function arm(btn,fn,label){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';const old=btn.innerHTML;btn.textContent=label||'Apasă din nou ca să confirmi';btn.classList.add('armed');setTimeout(()=>{if(btn.isConnected&&btn.dataset.armed){delete btn.dataset.armed;btn.innerHTML=old;btn.classList.remove('armed')}},3500)}
+const bar=(eb,title,saveId,saveLabel)=>`<div class="sh-bar"><button type="button" class="sh-x" data-close aria-label="Închide">×</button><div class="ttl"><small>${eb}</small><b>${title}</b></div>${saveId?`<button type="button" class="sh-save" id="${saveId}">${saveLabel||'Salvează'}</button>`:'<span class="sh-sp"></span>'}</div>`;
+const field=(label,inner,cls='')=>`<label class="fld ${cls}"><span>${label}</span>${inner}</label>`;
+const segHTML=(opts,val,name)=>`<div class="seg">${opts.map(([k,l])=>`<button type="button" class="${val===k?'on':''}" data-${name}="${k}">${l}</button>`).join('')}</div>`;
+
+function openTask(id){
+  const t0=S.tasks[id];if(!t0)return;
+  openSheet(`${bar(t0.time?'Programare':'Task','Editează','tk-save')}
+  ${field('Ce ai de făcut',`<input id="tk-text" class="in" value="${esc(t0.text)}">`)}
+  <div class="grid2">${field('Data',`<input id="tk-date" type="date" class="in" value="${esc(t0.date)}">`)}${field('Ora (opțional)',`<input id="tk-time" type="time" class="in" value="${esc(t0.time||'')}">`)}</div>
+  <div class="sh-actions"><button class="btn ghost danger block" id="tk-del">Șterge</button></div>`,root=>{
+    $('#tk-save',root).onclick=()=>{const t=S.tasks[id];if(!t)return closeSheet();const text=$('#tk-text',root).value.trim();if(!text)return;const time=$('#tk-time',root).value;put('tasks',{...t,text,date:$('#tk-date',root).value||t.date,time,type:time?'appt':'task'});closeSheet();toast('Salvat')};
+    $('#tk-del',root).onclick=e=>arm(e.currentTarget,()=>{del('tasks',id);closeSheet();toast('Șters')});
+    sheet.refresh=()=>{if(!S.tasks[id])closeSheet()};
+  });
+}
+
+function openExpense(o={}){
+  const ed=o.edit||null;
+  const X={cat:ed?ed.cat:(o.cat||'combustibil'),sub:o.sub||'new',carId:null,jobId:null,future:ed?!!ed.future:false};
+  if(!ed&&!cats().some(c=>c.id===X.cat))X.cat=cats().find(c=>!c.sys)?.id||'parc';
+  openSheet(`${bar(ed?'Editează':'Adaugă',ed?'Cheltuială':'Cheltuială nouă','ex-save')}
+  <label class="amt"><span class="amt-l" id="ex-amt-l">Sumă</span><div class="amt-row"><input id="ex-amt" class="amt-in" inputmode="decimal" placeholder="0" autocomplete="off" value="${ed?esc(ed.amount):''}"><span class="amt-c">€</span></div></label>
+  <div class="chips" id="ex-cats"></div>
+  <div id="ex-extra"></div>
+  <p class="err" id="ex-err" hidden></p>
+  ${ed?'<div class="sh-actions"><button class="btn ghost danger block" id="ex-del">Șterge cheltuiala</button></div>':''}`,root=>{
+    const amt=$('#ex-amt',root),err=$('#ex-err',root);
+    const dateIn=(lbl,id,val)=>field(lbl,`<input id="${id}" type="date" class="in" value="${esc(val||today())}">`);
+    function drawCats(){$('#ex-cats',root).innerHTML=cats().filter(c=>!ed||!c.sys).map(c=>`<button type="button" class="chip ${X.cat===c.id?'on':''}" style="--c:${c.color}" data-cat="${esc(c.id)}"><i style="background:${c.color}"></i>${esc(c.name)}</button>`).join('')}
+    function drawExtra(){
+      let h='',lbl='Sumă';
+      if(X.cat==='parc'){
+        const stock=Object.values(S.cars).filter(c=>!c.sold);if(stock.length===1&&!X.carId)X.carId=stock[0].id;
+        h+=segHTML([['new','Mașină cumpărată'],['add','Cost la o mașină']],X.sub,'sub');
+        if(X.sub==='new'){lbl='Preț cumpărare (total)';h+=field('Marcă / model','<input id="ex-name" class="in" placeholder="Ex: VW Golf 7 1.6 TDI 2015" autocomplete="off">')+dateIn('Data cumpărării','ex-date')+segHTML([['100','Doar a mea'],['50','50% cu partener']],X.share||'100','share')+`<div id="ex-pw" ${X.share==='50'?'':'hidden'}>${field('Partener','<input id="ex-partner" class="in" placeholder="Ex: Kaled" autocomplete="off">')}</div>`}
+        else{lbl='Cost';h+=stock.length?field('Mașina',`<div class="chips">${stock.map(c=>`<button type="button" class="chip ${X.carId===c.id?'on':''}" data-car="${c.id}">${esc(c.name)}</button>`).join('')}</div>`)+field('Pentru ce','<input id="ex-label" class="in" placeholder="Ex: plăcuțe frână, TÜV, detailing" autocomplete="off">')+dateIn('Data','ex-date'):'<p class="hint">Nu ai mașini în parc. Adaugă întâi o mașină cumpărată.</p>'}
+      }else if(X.cat==='service'){
+        const act=Object.values(S.jobs).filter(j=>!j.done);if(act.length===1&&!X.jobId)X.jobId=act[0].id;
+        h+=segHTML([['new','Job nou'],['add','Piese la un job']],X.sub,'sub');
+        if(X.sub==='new'){lbl='Cost piese (poate fi 0)';h+=field('Client / mașină','<input id="ex-title" class="in" placeholder="Ex: BMW 320d · Herr Meyer" autocomplete="off">')+field('Lucrare','<input id="ex-desc" class="in" placeholder="Ex: kit distribuție + pompă apă" autocomplete="off">')+`<div class="grid2">${field('De încasat','<input id="ex-price" class="in" inputmode="decimal" placeholder="€">')}${dateIn('Început','ex-date')}</div>`}
+        else{lbl='Cost piese';h+=act.length?field('Jobul',`<div class="chips">${act.map(j=>`<button type="button" class="chip ${X.jobId===j.id?'on':''}" data-job="${j.id}">${esc(j.title)}</button>`).join('')}</div>`)+field('Ce piese','<input id="ex-label" class="in" placeholder="Ex: kit ambreiaj LuK" autocomplete="off">')+dateIn('Data','ex-date'):'<p class="hint">Nu ai joburi active. Deschide întâi un job nou.</p>'}
+      }else{
+        h+=field('Notiță','<input id="ex-note" class="in" placeholder="Ex: motorină, asigurare, anunț" autocomplete="off" value="'+(ed?esc(ed.note||''):'')+'">');
+        h+=`<button type="button" class="sw" id="ex-fut" aria-pressed="${X.future}"><span>Cheltuială viitoare<small>O vezi la „Urmează de plătit” până o marchezi plătită</small></span><i></i></button>`;
+        h+=dateIn(X.future?'Scadență':'Data','ex-date',ed?ed.date:'');
+      }
+      $('#ex-amt-l',root).textContent=lbl;$('#ex-extra',root).innerHTML=h;err.hidden=true;
+    }
+    drawCats();drawExtra();
+    root.addEventListener('click',e=>{
+      const c=e.target.closest('[data-cat]');if(c){X.cat=c.dataset.cat;X.sub='new';drawCats();drawExtra();return}
+      const s=e.target.closest('[data-sub]');if(s){X.sub=s.dataset.sub;drawExtra();return}
+      const sh=e.target.closest('[data-share]');if(sh){X.share=sh.dataset.share;root.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',b===sh));const w=$('#ex-pw',root);if(w)w.hidden=X.share!=='50';return}
+      const car=e.target.closest('[data-car]');if(car){X.carId=car.dataset.car;root.querySelectorAll('[data-car]').forEach(b=>b.classList.toggle('on',b===car));return}
+      const jb=e.target.closest('[data-job]');if(jb){X.jobId=jb.dataset.job;root.querySelectorAll('[data-job]').forEach(b=>b.classList.toggle('on',b===jb));return}
+      const f=e.target.closest('#ex-fut');if(f){X.future=!X.future;f.setAttribute('aria-pressed',X.future);const l=$('#ex-date',root)?.closest('.fld')?.querySelector('span');if(l)l.textContent=X.future?'Scadență':'Data';return}
+    });
+    const fail=m=>{err.textContent=m;err.hidden=false};
+    $('#ex-save',root).onclick=()=>{
+      const a=num(amt.value),date=$('#ex-date',root)?.value||today(),v=id=>($('#'+id,root)?.value||'').trim();
+      if(X.cat==='parc'){
+        if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<=0)return fail('Scrie prețul de cumpărare.');const id=uid();put('cars',{id,name,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()});closeSheet();toast('Mașina a intrat în parc');return}
+        const c=S.cars[X.carId];if(!c)return fail('Alege mașina.');if(a<=0)return fail('Scrie suma.');put('cars',{...c,costs:[...(c.costs||[]),{id:uid(),label:v('ex-label')||'Cost',amount:a,date}]});closeSheet();toast('Cost adăugat la '+c.name);return}
+      if(X.cat==='service'){
+        if(X.sub==='new'){const title=v('ex-title');if(!title)return fail('Scrie clientul sau mașina.');const id=uid();put('jobs',{id,title,desc:v('ex-desc'),price:num(v('ex-price')),parts:a>0?[{id:uid(),label:'Piese',amount:a,date}]:[],startDate:date,done:false,paid:false,created:Date.now()});closeSheet();toast('Job deschis');return}
+        const j=S.jobs[X.jobId];if(!j)return fail('Alege jobul.');if(a<=0)return fail('Scrie costul pieselor.');put('jobs',{...j,parts:[...(j.parts||[]),{id:uid(),label:v('ex-label')||'Piese',amount:a,date}]});closeSheet();toast('Piese adăugate');return}
+      if(a<=0)return fail('Scrie suma.');
+      const id=ed?ed.id:uid();put('expenses',{...(ed||{}),id,amount:a,cat:X.cat,note:v('ex-note'),date,future:X.future,created:ed?ed.created:Date.now()});closeSheet();toast(X.future?'Adăugat la plăți viitoare':'Salvat');
+    };
+    if(ed)$('#ex-del',root).onclick=e=>arm(e.currentTarget,()=>{del('expenses',ed.id);closeSheet();toast('Șters')});
+    if(!ed&&!(X.cat==='service'&&X.sub==='new'))amt.focus();
+  });
+}
+
+function costLines(arr,emptyMsg){return arr.length?`<div class="list">${arr.map(x=>`<div class="line"><span class="l-main"><div>${esc(x.label||'Cost')}</div><small>${fmtDay(x.date)}</small></span><span class="l-amt">${eur(x.amount)}</span><button class="x" data-rm="${x.id}" aria-label="Șterge">×</button></div>`).join('')}</div>`:`<p class="hint">${emptyMsg}</p>`}
+
+function openCar(id){
+  const c0=S.cars[id];if(!c0)return;const D={sellPrice:'',sellDate:today()};
+  openSheet(`${bar('Mașină din parc','<span id="cs-title"></span>')}
+  <div id="cs-sum"></div>
+  <div class="sh-sec">Detalii cumpărare</div>
+  <div class="grid2">${field('Marcă / model',`<input id="cs-name" class="in" value="${esc(c0.name)}">`,'span2')}${field('Preț cumpărare',`<input id="cs-buy" class="in" inputmode="decimal" value="${esc(c0.buyPrice)}">`)}${field('Data',`<input id="cs-bdate" type="date" class="in" value="${esc(c0.buyDate)}">`)}</div>
+  <div class="fld"><span>Cota ta din mașină</span></div>${segHTML([['100','100% a mea'],['50','50% cu partener']],carShare(c0)<1?'50':'100','share')}
+  <div id="cs-pw" ${carShare(c0)<1?'':'hidden'}>${field('Partener',`<input id="cs-partner" class="in" placeholder="Ex: Kaled" value="${esc(c0.partner||'')}">`)}</div>
+  ${field('Detalii',`<input id="cs-specs" class="in" placeholder="Kombi · Diesel · Automat" value="${esc(c0.specs||'')}">`)}
+  ${field('Notițe',`<textarea id="cs-note" class="in" rows="3" placeholder="Km, TÜV, ce trebuie reparat…">${esc(c0.note||'')}</textarea>`)}
+  <div class="sh-sec">Costuri puse în mașină</div>
+  <div id="cs-costs"></div>
+  <form class="addline" id="cs-addf" autocomplete="off"><input id="cs-cl" class="in" placeholder="Ce? piese, TÜV…"><input id="cs-ca" class="in w-amt" inputmode="decimal" placeholder="€"><button class="btn primary sq" aria-label="Adaugă cost">+</button></form>
+  <div class="sh-sec">Vânzare</div>
+  <div id="cs-sell"></div>
+  <div class="sh-actions"><button class="btn ghost danger block" id="cs-del">Șterge mașina</button></div>`,root=>{
+    const preview=()=>{const c=S.cars[id],el=$('#cs-prev',root);if(!c||!el)return;const p=num(D.sellPrice)-carInvested(c),k=carShare(c);el.innerHTML=`<span>Profit estimat${k<1?' (partea ta)':''}</span><b class="${p>=0?'good-t':'bad-t'}">${D.sellPrice?seur(p*k):'—'}</b>`};
+    const refresh=()=>{const c=S.cars[id];if(!c){closeSheet();return}
+      $('#cs-title',root).textContent=c.name;const inv=carInvested(c),days=carDays(c);
+      const k=carShare(c),pr=carProfit(c);
+      $('#cs-sum',root).innerHTML=`<div class="box ${c.sold?'good':''}"><div class="box-row"><span>Investit total</span><b>${eur(inv)}</b></div>${k<1?`<div class="box-row"><span>Partea ta (${shareTag(c)})</span><b>${eur(inv*k)}</b></div>`:''}<div class="box-row"><span>${c.sold?'Vândut în':'În parc de'}</span><b>${zile(days)}</b></div>${c.sold?`<div class="box-row"><span>Profit${k<1?' total':''}</span><b class="${pr>=0?'good-t':'bad-t'}">${seur(pr)}</b></div>${k<1?`<div class="box-row"><span>Profitul tău</span><b class="${pr>=0?'good-t':'bad-t'}">${seur(pr*k)}</b></div>`:''}`:''}</div>`;
+      $('#cs-costs',root).innerHTML=costLines(c.costs||[],'Niciun cost încă. Adaugă piese, acte, detailing — se adună automat.');
+      const sell=$('#cs-sell',root);if(!sell.contains(document.activeElement)){
+        sell.innerHTML=c.sold?`<div class="box good"><div class="box-row"><span>Preț vânzare</span><b>${eur(c.sellPrice)}</b></div><div class="box-row"><span>Data</span><b>${fmtDay(c.sellDate)}</b></div></div><button class="btn ghost block" data-x="unsell">Anulează vânzarea</button>`
+        :`<div class="grid2">${field('Preț vânzare',`<input id="cs-sp" class="in" inputmode="decimal" placeholder="€" value="${esc(D.sellPrice)}">`)}${field('Data',`<input id="cs-sd" type="date" class="in" value="${esc(D.sellDate)}">`)}</div><div class="box"><div class="box-row" id="cs-prev"></div></div><button class="btn good block" data-x="sell">Marchează vândut</button>`;
+        preview();
+      }};
+    sheet.refresh=refresh;refresh();
+    const upd=patch=>{const c=S.cars[id];if(c)put('cars',{...c,...patch})};
+    $('#cs-name',root).onchange=e=>{const v=e.target.value.trim();if(v)upd({name:v})};
+    $('#cs-buy',root).onchange=e=>upd({buyPrice:num(e.target.value)});
+    $('#cs-bdate',root).onchange=e=>{if(e.target.value)upd({buyDate:e.target.value})};
+    $('#cs-partner',root).onchange=e=>upd({partner:e.target.value.trim()});
+    $('#cs-specs',root).onchange=e=>upd({specs:e.target.value.trim()});
+    $('#cs-note',root).onchange=e=>upd({note:e.target.value.trim()});
+    $('#cs-addf',root).onsubmit=e=>{e.preventDefault();const a=num($('#cs-ca',root).value);if(a<=0){$('#cs-ca',root).focus();return}const c=S.cars[id];put('cars',{...c,costs:[...(c.costs||[]),{id:uid(),label:$('#cs-cl',root).value.trim()||'Cost',amount:a,date:today()}]});$('#cs-cl',root).value='';$('#cs-ca',root).value='';$('#cs-cl',root).focus()};
+    root.addEventListener('input',e=>{if(e.target.id==='cs-sp'){D.sellPrice=e.target.value;preview()}if(e.target.id==='cs-sd')D.sellDate=e.target.value});
+    root.addEventListener('click',e=>{
+      const sh=e.target.closest('[data-share]');if(sh){root.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',b===sh));$('#cs-pw',root).hidden=sh.dataset.share!=='50';upd({share:+sh.dataset.share});return}
+      const rm=e.target.closest('[data-rm]');if(rm){arm(rm,()=>{const c=S.cars[id];upd({costs:(c.costs||[]).filter(x=>x.id!==rm.dataset.rm)})},'Șterge?');return}
+      const x=e.target.closest('[data-x]');if(!x)return;
+      if(x.dataset.x==='sell'){const p=num(D.sellPrice);if(p<=0){$('#cs-sp',root).focus();return}document.activeElement.blur();upd({sold:true,sellPrice:p,sellDate:D.sellDate||today()});toast('Vândut · profitul tău '+seur((p-carInvested(S.cars[id]))*carShare(S.cars[id])))}
+      if(x.dataset.x==='unsell'){const c=S.cars[id];D.sellPrice=String(c.sellPrice||'');upd({sold:false})}
+    });
+    $('#cs-del',root).onclick=e=>arm(e.currentTarget,()=>{del('cars',id);closeSheet();toast('Mașina a fost ștearsă')});
+  });
+}
+
+function openJob(id){
+  const j0=S.jobs[id];if(!j0)return;
+  openSheet(`${bar('Job service','<span id="js-title"></span>')}
+  <div id="js-sum"></div>
+  <div id="js-act" class="sh-actions"></div>
+  <div class="sh-sec">Detalii</div>
+  <div class="grid2">${field('Client / mașină',`<input id="js-t" class="in" value="${esc(j0.title)}">`,'span2')}${field('Lucrare',`<input id="js-d" class="in" value="${esc(j0.desc||'')}" placeholder="Ce se lucrează">`,'span2')}${field('De încasat',`<input id="js-p" class="in" inputmode="decimal" value="${esc(j0.price||'')}" placeholder="€">`)}${field('Început',`<input id="js-s" type="date" class="in" value="${esc(j0.startDate)}">`)}</div>
+  <div class="sh-sec">Piese cumpărate</div>
+  <div id="js-parts"></div>
+  <form class="addline" id="js-addf" autocomplete="off"><input id="js-pl" class="in" placeholder="Ce piesă?"><input id="js-pa" class="in w-amt" inputmode="decimal" placeholder="€"><button class="btn primary sq" aria-label="Adaugă piesă">+</button></form>
+  <div class="sh-actions" style="margin-top:18px"><button class="btn ghost danger block" id="js-del">Șterge jobul</button></div>`,root=>{
+    const refresh=()=>{const j=S.jobs[id];if(!j){closeSheet();return}const p=jobProfit(j);
+      $('#js-title',root).textContent=j.title;
+      $('#js-sum',root).innerHTML=`<div class="box ${j.done&&j.paid?'good':''}"><div class="box-row"><span>De încasat</span><b>${eur(j.price)}</b></div><div class="box-row"><span>Piese</span><b>${eur(jobParts(j))}</b></div><div class="box-row"><span>Profit</span><b class="${p>=0?'good-t':'bad-t'}">${seur(p)}</b></div><div class="box-row"><span>${j.done?'Finalizat în':'În lucru de'}</span><b>${zile(jobDays(j))}</b></div></div>`;
+      $('#js-act',root).innerHTML=`${j.done?'<button class="btn ghost block" data-x="reopen">Redeschide jobul</button>':'<button class="btn primary block" data-x="done">Finalizează jobul</button>'}<button class="btn ${j.paid?'ghost':'good'} block" data-x="paid">${j.paid?`Încasat ${fmtDay(j.paidDate)} · anulează`:`Marchează încasat ${eur(j.price)}`}</button>`;
+      $('#js-parts',root).innerHTML=costLines(j.parts||[],'Nicio piesă încă. Adaugă ce cumperi pentru job.');
+    };
+    sheet.refresh=refresh;refresh();
+    const upd=patch=>{const j=S.jobs[id];if(j)put('jobs',{...j,...patch})};
+    $('#js-t',root).onchange=e=>{const v=e.target.value.trim();if(v)upd({title:v})};
+    $('#js-d',root).onchange=e=>upd({desc:e.target.value.trim()});
+    $('#js-p',root).onchange=e=>upd({price:num(e.target.value)});
+    $('#js-s',root).onchange=e=>{if(e.target.value)upd({startDate:e.target.value})};
+    $('#js-addf',root).onsubmit=e=>{e.preventDefault();const a=num($('#js-pa',root).value);if(a<=0){$('#js-pa',root).focus();return}const j=S.jobs[id];put('jobs',{...j,parts:[...(j.parts||[]),{id:uid(),label:$('#js-pl',root).value.trim()||'Piese',amount:a,date:today()}]});$('#js-pl',root).value='';$('#js-pa',root).value='';$('#js-pl',root).focus()};
+    root.addEventListener('click',e=>{
+      const rm=e.target.closest('[data-rm]');if(rm){arm(rm,()=>{const j=S.jobs[id];upd({parts:(j.parts||[]).filter(x=>x.id!==rm.dataset.rm)})},'Șterge?');return}
+      const x=e.target.closest('[data-x]');if(!x)return;const j=S.jobs[id];
+      if(x.dataset.x==='done'){upd({done:true,doneDate:today()});toast(`Job finalizat în ${zile(daysBetween(j.startDate,today()))}`)}
+      if(x.dataset.x==='reopen')upd({done:false,doneDate:null});
+      if(x.dataset.x==='paid'){upd(j.paid?{paid:false,paidDate:null}:{paid:true,paidDate:today()});if(!j.paid)toast('Încasat '+eur(j.price))}
+    });
+    $('#js-del',root).onclick=e=>arm(e.currentTarget,()=>{del('jobs',id);closeSheet();toast('Jobul a fost șters')});
+  });
+}
+
+function openCat(catId){
+  const c0=catOf(catId);
+  openSheet(`${bar('<span id="ct-month"></span>','<span id="ct-title"></span>')}
+  <div id="ct-list"></div>
+  ${c0.sys?'':`<div class="sh-sec">Setări</div>${field('Nume',`<input id="ct-name" class="in" value="${esc(c0.name)}">`)}<div class="sh-actions"><button class="btn ghost block" id="ct-add">+ Cheltuială în ${esc(c0.name)}</button><button class="btn ghost danger block" id="ct-del">Șterge categoria</button></div>`}`,root=>{
+    const refresh=()=>{const c=catOf(catId),m=UI.month,[y,mm]=m.split('-').map(Number);
+      const items=Object.values(S.expenses).filter(e=>e.cat===catId&&(e.future||String(e.date).slice(0,7)===m)).sort((a,b)=>a.date<b.date?1:-1);
+      $('#ct-title',root).textContent=c.name;$('#ct-month',root).textContent=`${MON_S[mm-1]} ${y} · ${eur(sum(items.filter(e=>!e.future),e=>e.amount))}`;
+      $('#ct-list',root).innerHTML=items.length?`<div class="list">${items.map(e=>`<button class="line" data-ed="${e.id}"><span class="l-main"><div>${esc(e.note||c.name)}</div><small>${fmtDay(e.date)}${e.future?' · viitoare':''}</small></span><span class="l-amt">${eur(e.amount)}</span></button>`).join('')}</div>`:`<p class="hint">Nicio cheltuială în ${MON[mm-1].toLowerCase()}.</p>`};
+    sheet.refresh=refresh;refresh();
+    root.addEventListener('click',e=>{const b=e.target.closest('[data-ed]');if(b){const ex=S.expenses[b.dataset.ed];if(ex)openExpense({edit:ex})}});
+    if(!c0.sys){
+      $('#ct-name',root).onchange=e=>{const v=e.target.value.trim();if(!v)return;put('settings',{...S.settings,cats:cats().map(c=>c.id===catId?{...c,name:v}:c)})};
+      $('#ct-add',root).onclick=()=>openExpense({cat:catId});
+      $('#ct-del',root).onclick=e=>arm(e.currentTarget,()=>{put('settings',{...S.settings,cats:cats().filter(c=>c.id!==catId)});closeSheet();toast('Categoria a fost ștearsă')});
+    }
+  });
+}
+
+function openDay(day){
+  UI.calDay=day;render();
+  openSheet(`${bar(relLabel(day),fmtDM(day))}
+  <form class="quick" id="dy-form" autocomplete="off">
+    <input id="dy-time" type="time" class="in time" value="09:00" aria-label="Ora">
+    <input id="dy-text" class="in" placeholder="Job / programare…" enterkeyhint="done" aria-label="Job sau programare">
+    <button class="btn primary sq" aria-label="Adaugă">+</button>
+  </form>
+  <div id="dy-list"></div>
+  <div class="sh-actions"><button class="btn ghost block" id="dy-open">Vezi Planul zilei în Azi</button></div>`,root=>{
+    const refresh=()=>{const its=(tasksIndex()[day]||[]).sort(taskSort);
+      $('#dy-list',root).innerHTML=its.length?`<div class="tasks">${its.map(x=>taskRow(x)).join('')}</div>`:`<p class="hint">Nimic în ziua asta încă.</p>`};
+    sheet.refresh=refresh;refresh();
+    $('#dy-form',root).onsubmit=e=>{e.preventDefault();const t=$('#dy-text',root),tm=$('#dy-time',root),text=t.value.trim();if(!text){t.focus();return}
+      const id=uid();justAdded=id;put('tasks',{id,text,date:day,time:tm.value||'',type:tm.value?'appt':'task',done:false,created:Date.now()});t.value='';t.focus()};
+    root.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const t=S.tasks[b.dataset.id];
+      if(b.dataset.act==='toggle'&&t)put('tasks',{...t,done:!t.done,doneAt:!t.done?Date.now():null});
+      if(b.dataset.act==='edit-task'&&t)openTask(t.id)});
+    $('#dy-open',root).onclick=()=>{closeSheet();try{parent.postMessage({imp:'azi'},'*')}catch(e){}};
+  });
+}
+
+function openBackup(){
+  const counts=`${Object.keys(S.tasks).length} taskuri · ${Object.keys(S.cars).length} mașini · ${Object.keys(S.jobs).length} joburi · ${Object.keys(S.expenses).length} cheltuieli`;
+  const last=S.settings&&S.settings.lastBackup;
+  openSheet(`${bar('Datele tale','Backup')}
+  <p class="hint">Totul se salvează doar pe acest telefon. Importul adaugă datele din fișier peste cele existente, fără să șteargă nimic. Dacă ștergi aplicația de pe ecran, se șterg și datele. Fă un backup din când în când și păstrează fișierul în Fișiere sau iCloud.</p>
+  <div class="box"><div class="box-row"><span>În aplicație</span></div><div class="box-row"><b style="font-size:14px">${counts}</b></div><div class="box-row"><span>Ultimul backup</span><b style="font-size:14px">${last?fmtDM(last):'niciodată'}</b></div></div>
+  <div class="sh-actions">
+    <button class="btn primary block" id="bk-exp">Salvează backup</button>
+    <label class="btn block" for="bk-file">Importă din fișier</label>
+    <button class="btn block" id="bk-paste">Lipește backup copiat</button>
+    <input id="bk-file" type="file" accept="application/json,.json,text/plain" hidden>
+  </div>
+  <p class="err" id="bk-err" hidden></p>
+  <textarea id="bk-txt" class="in" rows="5" readonly hidden style="margin-top:10px;font-size:12px"></textarea>`,root=>{
+    const err=$('#bk-err',root);
+    const mark=()=>put('settings',{...S.settings,lastBackup:today()});
+    $('#bk-exp',root).onclick=async()=>{
+      const json=JSON.stringify({app:'hgroup-fundation',v:1,exported:new Date().toISOString(),tasks:S.tasks,expenses:S.expenses,cars:S.cars,jobs:S.jobs,settings:S.settings});
+      const name=`hgroup-backup-${today()}.json`;
+      try{const f=new File([json],name,{type:'application/json'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});mark();toast('Backup salvat');return}}catch(e){if(e&&e.name==='AbortError')return}
+      try{await navigator.clipboard.writeText(json);mark();toast('Backup copiat. Lipește-l într-o notiță.');return}catch(e){}
+      const t=$('#bk-txt',root);t.hidden=false;t.value=json;t.focus();t.select();mark();
+    };
+    const importTxt=txt=>{try{const d=JSON.parse(String(txt||'').trim());if(!d||typeof d!=='object'||!COLS.some(c=>d[c]&&typeof d[c]==='object'))throw 0;
+        let n=0;for(const c of COLS){const add=d[c]||{};n+=Object.keys(add).length;S[c]={...S[c],...add}}
+        if(d.settings&&Array.isArray(d.settings.cats)){const have=new Set(cats().map(x=>x.id));S.settings={...S.settings,cats:[...cats(),...d.settings.cats.filter(x=>!have.has(x.id))]}}
+        saveLocal();setSync();render();closeSheet();toast(`Importat: ${n} intrări`)}
+        catch(x){err.textContent='Nu e un backup HGroup valid.';err.hidden=false}};
+    $('#bk-file',root).onchange=e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>importTxt(r.result);r.readAsText(file)};
+    $('#bk-paste',root).onclick=async()=>{let t='';try{t=await navigator.clipboard.readText()}catch(x){}
+      if(!t){t=prompt('Lipește aici backup-ul copiat din HGroup:')||''}if(t)importTxt(t)};
+  });
+}
+
+function openAddCat(){
+  const used=new Set(cats().map(c=>c.color));let color=SWATCHES.find(s=>!used.has(s))||SWATCHES[0];
+  openSheet(`${bar('Categorie nouă','Adaugă','nc-save','Creează')}
+  ${field('Nume','<input id="nc-name" class="in" placeholder="Ex: Chirie hală, Unelte, Mâncare" autocomplete="off">')}
+  <div class="fld"><span>Culoare</span></div><div class="swrow" id="nc-sw"></div>`,root=>{
+    const draw=()=>{$('#nc-sw',root).innerHTML=SWATCHES.map(s=>`<button type="button" class="swatch ${s===color?'on':''}" style="background:${s}" data-sw="${s}" aria-label="Culoare ${s}"></button>`).join('')};draw();
+    root.addEventListener('click',e=>{const b=e.target.closest('[data-sw]');if(b){color=b.dataset.sw;draw()}});
+    $('#nc-save',root).onclick=()=>{const name=$('#nc-name',root).value.trim();if(!name){$('#nc-name',root).focus();return}put('settings',{...S.settings,cats:[...cats(),{id:'c'+uid(),name,color}]});closeSheet();toast('Categoria „'+name+'” e gata')};
+    $('#nc-name',root).focus();
+  });
+}
+
+/* ---------- toast ---------- */
+let tt=0;function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2200)}
+
+/* ---------- pager & tabs ---------- */
+const pager=$('#pager'),tabs=[...document.querySelectorAll('.tab')],ind=$('#tab-ind'),fab=$('#fab');
+const FAB_L=['Adaugă programare','Adaugă cheltuială','Adaugă mașină','Adaugă job'];
+function onScroll(){const w=pager.clientWidth||1,f=pager.scrollLeft/w;ind.style.transform=`translateX(${f*100}%)`;const p=Math.max(0,Math.min(3,Math.round(f)));if(p!==UI.page){UI.page=p;tabs.forEach((t,i)=>t.classList.toggle('on',i===p));fab.setAttribute('aria-label',FAB_L[p])}}
+pager.addEventListener('scroll',onScroll,{passive:true});
+function goPage(i,smooth=true){pager.scrollTo({left:i*pager.clientWidth,behavior:smooth?'smooth':'auto'})}
+tabs.forEach(t=>t.addEventListener('click',()=>goPage(+t.dataset.tab)));
+addEventListener('resize',()=>{pager.scrollLeft=UI.page*pager.clientWidth;onScroll()});
+fab.addEventListener('click',()=>{const p=UI.page;
+  if(p===0)openDay(UI.calDay);
+  else if(p===1)openExpense();else if(p===2)openExpense({cat:'parc',sub:'new'});else openExpense({cat:'service',sub:'new'})});
+
+/* ---------- quick add ---------- */
+$('#azi-form').addEventListener('submit',e=>{e.preventDefault();const t=$('#azi-text'),tm=$('#azi-time'),text=t.value.trim();if(!text){t.focus();return}
+  const id=uid();justAdded=id;put('tasks',{id,text,date:UI.day,time:tm.value||'',type:tm.value?'appt':'task',done:false,created:Date.now()});t.value='';tm.value='';t.focus()});
+
+/* ---------- page actions ---------- */
+function shiftMonth(ym,n){const[y,m]=ym.split('-').map(Number);const d=new Date(y,m-1+n,1);return `${d.getFullYear()}-${pad(d.getMonth()+1)}`}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||el.closest('#sheet'))return;
+  const id=el.dataset.id;
+  switch(el.dataset.act){
+    case 'toggle':{const t=S.tasks[id];if(t)put('tasks',{...t,done:!t.done,doneAt:!t.done?Date.now():null});break}
+    case 'edit-task':openTask(id);break;
+    case 'pick-day':UI.day=el.dataset.d;render();break;
+    case 'wk-prev':UI.day=addDays(UI.day,-7);render();break;
+    case 'wk-next':UI.day=addDays(UI.day,7);render();break;
+    case 'go-today':UI.day=today();render();break;
+    case 'move-today':{const t=S.tasks[id];if(t)put('tasks',{...t,date:today()});break}
+    case 'move-all':{const t=today();Object.values(S.tasks).filter(x=>!x.done&&x.date<t).forEach(x=>put('tasks',{...x,date:t}));toast('Mutate pe azi');break}
+    case 'cal-prev':UI.calMonth=shiftMonth(UI.calMonth,-1);render();break;
+    case 'cal-next':UI.calMonth=shiftMonth(UI.calMonth,1);render();break;
+    case 'cal-today':UI.calMonth=today().slice(0,7);UI.calDay=today();render();break;
+    case 'cal-pick':openDay(el.dataset.d);break;
+        case 'm-prev':UI.month=shiftMonth(UI.month,-1);render();break;
+    case 'm-next':UI.month=shiftMonth(UI.month,1);render();break;
+    case 'open-cat':{const c=el.dataset.cat;if(c==='parc')goPage(2);else if(c==='service')goPage(3);else openCat(c);break}
+    case 'add-cat':openAddCat();break;
+    case 'pay':{const x=S.expenses[id];if(x){put('expenses',{...x,future:false,date:today()});toast('Marcat plătit')}break}
+    case 'edit-exp':{const x=S.expenses[id];if(x)openExpense({edit:x});break}
+    case 'open-car':openCar(id);break;
+    case 'open-job':openJob(id);break;
+    case 'parc-f':UI.parcF=el.dataset.f;render();break;
+    case 'svc-f':UI.svcF=el.dataset.f;render();break;
+    case 'del-examples':{for(const c of COLS)for(const x of Object.values(S[c]))if(x.example)del(c,x.id);toast('Exemplele au fost șterse');break}
+  }
+});
+
+/* day rollover when the app comes back to the foreground */
+let lastToday=today();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&today()!==lastToday){if(UI.day===lastToday)UI.day=today();if(UI.calDay===lastToday)UI.calDay=today();lastToday=today();render()}});
+
+/* ---------- boot ---------- */
+renderAll();
+requestAnimationFrame(()=>{pager.scrollLeft=pager.clientWidth;onScroll();requestAnimationFrame(()=>{pager.scrollLeft=pager.clientWidth;onScroll()})});
+initStore();
+// IMPERIUM bifează taskurile din Planul zilei: reîncărcăm datele când se schimbă
+addEventListener('storage',e=>{if(e.key===LKEY){loadLocal();render()}});
+window.NC={reload(){loadLocal();render()},go(i){goPage(i,false)}};
+})();
+</script>
+</body>
+</html>

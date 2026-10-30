@@ -952,6 +952,14 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .tdadd input{flex:1;min-width:0;padding:13px 14px;border-radius:16px;font-size:15px}
 .tdadd .btn{flex:none;padding-inline:16px}
 #set-back{margin-top:calc(10px + env(safe-area-inset-top,0px))}
+.tdadd input[type=time]{flex:none;width:92px;padding:13px 8px;font-size:14px}
+.prow.appt{box-shadow:inset 3px 0 0 var(--accent)}
+.ptime{flex:none;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;color:var(--accent)}
+/* NextCar: aplicația de afaceri, pe tot ecranul, cu bara IMPERIUM deasupra */
+#v-nextcar{position:fixed;inset:0;z-index:5;background:#0f1012;padding-top:env(safe-area-inset-top,0px)}
+#v-nextcar iframe{display:block;width:100%;height:100%;border:0;background:#0f1012}
+.shbtn{display:flex;align-items:center;gap:5px;padding:6px 11px 6px 8px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--glass);border:1px solid var(--glass-b);color:var(--ink)}
+.shbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
 /* DEX: explicația cuvântului din cititor */
 .dxs{z-index:70}
 .dxs .gs-card{max-height:78vh}
@@ -992,6 +1000,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="bar">
       <div class="logo"><img src="brand/emblem-96.png" alt=""><span>IMPERIUM</span></div>
       <div class="live"><span class="dot"></span><span id="upd">live</span></div>
+      <button class="shbtn" id="go-shorts" aria-label="Shorts"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
       <button class="refresh musbtn" id="mus-h" aria-label="Muzică"></button>
       <button class="refresh" id="refresh" aria-label="Reîmprospătează"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
     </div>
@@ -1012,7 +1021,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="sec plan">
       <div class="plan-hd"><div class="plan-ring" id="pl-ring"></div><div class="plan-tt"><h3>Planul zilei</h3><span class="muted" id="hb-score"></span></div><button class="link" id="hb-edit">Editează</button></div>
       <div class="plist" id="habits"></div>
-      <form id="td-add" class="tdadd" autocomplete="off"><input id="td-in" placeholder="＋ Adaugă ceva de făcut azi…" maxlength="90" enterkeyhint="done"><button class="btn" type="submit" id="td-ok" hidden>Adaugă</button></form>
+      <form id="td-add" class="tdadd" autocomplete="off"><input id="td-in" placeholder="＋ Adaugă ceva de făcut azi…" maxlength="90" enterkeyhint="done"><input id="td-tm" type="time" aria-label="Ora (opțional)"><button class="btn" type="submit" id="td-ok" hidden>Adaugă</button></form>
       <form id="hb-add" class="hadd" hidden>
         <p class="note">Alege un emoji de pe tastatură sau din listă. Numele e opțional.</p>
         <div class="hemo-row">
@@ -1160,6 +1169,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 </main>
 
 <section id="v-shorts" hidden></section>
+<section id="v-nextcar" hidden></section>
 
 <div id="stage" class="loading" hidden>
   <div id="yt"></div><div id="yt2"></div>
@@ -1273,7 +1283,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 <nav id="nav" role="tablist"><span class="ind" id="ind"></span>
   <button class="tab" role="tab" data-v="azi" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4.4 3-7.5 8-7.5 0 5-3.2 7.8-8 7.5zM12 15c0-3.3-2.4-5.6-7-5.6 0 4 2.6 6 7 5.6z"/></svg>Azi</button>
   <button class="tab" role="tab" data-v="feed" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Feed</button>
-  <button class="tab" role="tab" data-v="shorts" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
+  <button class="tab" role="tab" data-v="nextcar" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5 16V12l2-4.5A2 2 0 0 1 8.8 6.3h6.4A2 2 0 0 1 17 7.5L19 12v4M4 12h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>NextCar</button>
   <button class="tab" role="tab" data-v="sport" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6.5 7.5v9M17.5 7.5v9M3.5 10v4M20.5 10v4M6.5 12h11"/></svg>Sport</button>
   <button class="tab" role="tab" data-v="raft" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5.5 4.5v14M9.5 4.5v14M14 6l3.6 12.6M3 20.5h18"/></svg>Raft</button>
 </nav>
@@ -2010,9 +2020,17 @@ function moveInd(){
   ind.style.width=a.offsetWidth+"px";ind.style.transform=`translateX(${a.offsetLeft-6}px)`;
 }
 addEventListener("resize",()=>requestAnimationFrame(moveInd));
+// ── NextCar (fosta aplicație HGroup): rulează în pagina ei, cu datele în același loc ──
+function showNextCar(on){
+  const box=$("v-nextcar");box.hidden=!on;
+  if(on&&!box.firstChild){const f=document.createElement("iframe");f.id="nc-frame";f.src="nextcar/index.html";f.title="NextCar";box.appendChild(f)}
+  if(on){try{const w=$("nc-frame").contentWindow;w.NC&&w.NC.reload()}catch(e){}}
+}
+addEventListener("message",e=>{if(e.origin===location.origin&&e.data&&e.data.imp==="azi")homeAzi()});
+$("go-shorts").addEventListener("click",()=>switchTo("shorts"));
 function switchTo(v,startShort){
   stopAll();
-  const navV=v==="saved"?"set":v;
+  const navV=v==="saved"?"set":v==="shorts"?"feed":v;
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===navV));
   moveInd();
   VIEWS.forEach(x=>{const el=$("v-"+x),show=x===v;el.hidden=!show;if(show){el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}});
@@ -2020,11 +2038,12 @@ function switchTo(v,startShort){
   if(v==="raft"){renderShelf();window.Grow&&Grow.renderNotes()}
   if(window.Sport){if(v==="sport"){Sport.show();window.Health&&Health.show()}else Sport.hide()}
   $("v-shorts").hidden=v!=="shorts";$("hdr").hidden=v!=="feed";$("newpill").hidden=true;
-  $("nav").classList.toggle("dark",v==="shorts");
+  $("nav").classList.toggle("dark",v==="shorts"||v==="nextcar");
+  showNextCar(v==="nextcar");
   if(v==="shorts")buildShorts(startShort);else{if(shortsIO){shortsIO.disconnect();$("v-shorts").innerHTML=""}if($("s-people"))$("s-people").hidden=true}
   if(v==="saved")renderSaved();
   if(v==="set"){settings();window.Music&&Music.settingsUI()}
-  $("mus-f").hidden=v==="feed"||v==="shorts";
+  $("mus-f").hidden=v==="feed"||v==="shorts"||v==="nextcar";
   window.Music&&Music.refresh();
   if(v!=="shorts")window.scrollTo(0,0);
 }
@@ -2032,7 +2051,9 @@ $("open-saved").addEventListener("click",()=>switchTo("saved"));
 // copie de siguranță: ca să muți datele când adaugi din nou aplicația pe ecran
 $("bkp-exp").addEventListener("click",async()=>{
   save();
-  const txt=localStorage.getItem("htube2")||"{}",name=`imperium-copie-${dk()}.json`;
+  let txt=localStorage.getItem("htube2")||"{}";
+  try{const hg=localStorage.getItem(HGK);if(hg){const o=JSON.parse(txt);o._nextcar=JSON.parse(hg);txt=JSON.stringify(o)}}catch(e){}
+  const name=`imperium-copie-${dk()}.json`;
   const file=new File([txt],name,{type:"application/json"});
   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file]});return}catch(e){if(e&&e.name==="AbortError")return}}
   const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -2043,7 +2064,8 @@ $("bkp-imp").addEventListener("change",async e=>{
     const txt=await f.text(),o=JSON.parse(txt);
     if(!o||typeof o!=="object"||Array.isArray(o))throw 0;
     if(!confirm("Înlocuiești datele din aplicație cu cele din copie?"))return;
-    localStorage.setItem("htube2",txt);toast("Copie importată");setTimeout(()=>location.reload(),700);
+    if(o._nextcar){localStorage.setItem(HGK,JSON.stringify(o._nextcar));delete o._nextcar}
+    localStorage.setItem("htube2",JSON.stringify(o));toast("Copie importată");setTimeout(()=>location.reload(),700);
   }catch(err){toast("Fișierul nu e o copie IMPERIUM")}
 });
 $("sv-back").addEventListener("click",()=>switchTo("set"));
@@ -2105,7 +2127,17 @@ function ringSVG(h){
   return `<svg viewBox="0 0 118 118" aria-hidden="true">${out}</svg>`;
 }
 // ── Planul zilei: obiceiurile de fiecare zi + sarcinile de azi, într-o singură listă ──
-S.todo=S.todo||[];                                   // [{id,t,c:"zi creată",d:"zi bifată"|null}]
+// sarcinile și programările stau în datele NextCar (aceleași ca în Calendar), ca să fie o singură listă
+const HGK="hgroup-fundation-v1";
+function hgRead(){try{const o=JSON.parse(localStorage.getItem(HGK)||"null");if(o&&typeof o==="object"){o.tasks=o.tasks||{};return o}}catch(e){}return {tasks:{},expenses:{},cars:{},jobs:{},settings:{cats:null}}}
+function hgWrite(o){try{localStorage.setItem(HGK,JSON.stringify(o))}catch(e){}try{const w=$("nc-frame")&&$("nc-frame").contentWindow;w&&w.NC&&w.NC.reload()}catch(e){}}
+const hgUid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+// sarcinile scrise înainte direct în IMPERIUM trec o dată în lista comună
+if(S.todo&&S.todo.length){const o=hgRead();S.todo.forEach(x=>{if(!o.tasks[x.id])o.tasks[x.id]={id:x.id,text:x.t,date:x.c,time:"",type:"task",done:!!x.d,doneAt:x.d?Date.now():null,created:Date.now()}});hgWrite(o);S.todo=[];save()}
+// ce apare azi: tot ce e nefăcut până azi (inclusiv restanțele) + ce ai bifat azi
+function hgToday(){const t=dk(),o=hgRead(),all=Object.values(o.tasks||{});
+  const doneToday=x=>x.done&&(x.doneAt?dk(new Date(x.doneAt))===t:x.date===t);
+  return {open:all.filter(x=>!x.done&&x.date<=t).sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:0)||((a.time||"99")<(b.time||"99")?-1:1)),done:all.filter(x=>x.date<=t&&doneToday(x))}}
 const dayDiff=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
 // ce deschide fiecare rând (ca să ajungi dintr-o atingere unde trebuie)
 function actOf(h){
@@ -2120,13 +2152,13 @@ async function planGo(k){
 }
 function planCount(){
   const t=dk(),hd=S.habits.filter(h=>isDone(h,t)).length;
-  const open=S.todo.filter(x=>!x.d).length,tdDone=S.todo.filter(x=>x.d===t).length;
+  const g=hgToday(),open=g.open.length,tdDone=g.done.length;
   return {done:hd+tdDone,total:S.habits.length+open+tdDone,left:S.habits.length-hd+open};
 }
 function planBadge(){try{const n=planCount().left;if(navigator.setAppBadge){n?navigator.setAppBadge(n):navigator.clearAppBadge()}}catch(e){}}
 function renderHabits(pop){
   let mig=false;S.habits.forEach(h=>{if(!h.e){h.e=guessEmo(h);mig=true}});
-  const t=dk(),cut=dk(dayAt(-14)),n0=S.todo.length;S.todo=S.todo.filter(x=>!x.d||x.d>=cut);if(mig||S.todo.length!==n0)save();
+  const t=dk();if(mig)save();
   const c=planCount(),p=c.total?c.done/c.total:0;
   $("hb-score").textContent=!c.total?"Adaugă primul lucru de făcut":c.left?`${c.done} din ${c.total} făcute · mai ai ${c.left}`:"Ziua e completă 👑";
   $("pl-ring").innerHTML=`<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="rb"/><circle cx="22" cy="22" r="18" class="rf" style="stroke-dasharray:${(p*113.1).toFixed(1)} 113.1"/></svg><b>${Math.round(p*100)}%</b>`;
@@ -2136,13 +2168,16 @@ function renderHabits(pop){
     return `<div class="prow${on?" done":""}${pop===h.id?" pop":""}"><button class="pchk" data-h="${h.id}" aria-pressed="${on}" aria-label="Bifează ${esc(h.n||h.e)}"></button>
       <span class="pem">${esc(h.e)}</span><div class="ptx"><b>${esc(h.n||"Obicei")}</b><small>${sub}</small></div>
       ${hbEdit?`<button class="pdel" data-hdel="${h.id}" aria-label="Șterge">${ic.x}</button>`:!on&&a?`<button class="pgo" data-go="${a.k}">${a.l} ›</button>`:""}</div>`};
-  const trow=x=>{const on=!!x.d,age=on?0:dayDiff(x.c,t);
-    const sub=on?"Făcut azi":age===1?"Rămas de ieri":age>1?`Așteaptă de ${age} zile`:"Pentru azi";
-    return `<div class="prow todo${on?" done":""}${age>0?" late":""}${pop===x.id?" pop":""}"><button class="pchk" data-td="${x.id}" aria-pressed="${on}" aria-label="Bifează"></button>
-      <div class="ptx"><b>${esc(x.t)}</b><small>${sub}</small></div>${hbEdit||on?`<button class="pdel" data-tdel="${x.id}" aria-label="Șterge">${ic.x}</button>`:""}</div>`};
+  const trow=x=>{const on=!!x.done,age=on?0:dayDiff(x.date,t);
+    const st=on?"Făcut azi":age===1?"Rămas de ieri":age>1?`Așteaptă de ${age} zile`:"";
+    const sub=x.time?"Programare"+(st?" · "+st:""):st||"Pentru azi";
+    return `<div class="prow todo${on?" done":""}${age>0?" late":""}${x.time?" appt":""}${pop===x.id?" pop":""}"><button class="pchk" data-td="${x.id}" aria-pressed="${on}" aria-label="Bifează"></button>
+      ${x.time?`<span class="ptime">${esc(x.time)}</span>`:""}<div class="ptx"><b>${esc(x.text)}</b><small>${sub}</small></div>${hbEdit||on?`<button class="pdel" data-tdel="${x.id}" aria-label="Șterge">${ic.x}</button>`:""}</div>`};
   const hs=S.habits.filter(h=>!isDone(h,t)),hd=S.habits.filter(h=>isDone(h,t));
-  const ts=S.todo.filter(x=>!x.d).sort((a,b)=>a.c<b.c?-1:1),td=S.todo.filter(x=>x.d===t);
-  const todo=hs.map(h=>hrow(h,false)).join("")+ts.map(trow).join("");
+  const g=hgToday(),ts=g.open,td=g.done;
+  // programările de azi cu oră merg primele, apoi obiceiurile, apoi restul sarcinilor
+  const ap=ts.filter(x=>x.time&&x.date===t),rest=ts.filter(x=>!(x.time&&x.date===t));
+  const todo=ap.map(trow).join("")+hs.map(h=>hrow(h,false)).join("")+rest.map(trow).join("");
   const done=hd.map(h=>hrow(h,true)).join("")+td.map(trow).join("");
   $("habits").innerHTML=(todo||(c.total?`<div class="pall">Ai bifat tot pentru azi. Bravo! 👑</div>`:""))
     +(done?`<div class="pdiv">Făcute azi · ${hd.length+td.length}</div>${done}`:"")
@@ -3044,10 +3079,10 @@ $("v-azi").addEventListener("click",e=>{
   if(h){const hb=S.habits.find(x=>x.id===h.dataset.h),d=dk();if(hb){const on=!isDone(hb,d);setDone(hb.id,d,on);renderHabits(on?hb.id:null);if(on&&navigator.vibrate)navigator.vibrate(12);
     if(window.Grow){if(on)Grow.award(`hb:${hb.id}:${d}`,5,hb.n||"Obicei");else Grow.revoke(`hb:${hb.id}:${d}`)}}return}
   const tdb=e.target.closest("[data-td]");
-  if(tdb){const x=S.todo.find(y=>y.id===tdb.dataset.td);if(x){x.d=x.d?null:dk();save();renderHabits(x.d?x.id:null);if(x.d&&navigator.vibrate)navigator.vibrate(12);
-    if(window.Grow){if(x.d)Grow.award(`td:${x.id}`,5,"Sarcină făcută");else Grow.revoke(`td:${x.id}`)}}return}
+  if(tdb){const o=hgRead(),x=o.tasks[tdb.dataset.td];if(x){x.done=!x.done;x.doneAt=x.done?Date.now():null;hgWrite(o);renderHabits(x.done?x.id:null);if(x.done&&navigator.vibrate)navigator.vibrate(12);
+    if(window.Grow){if(x.done)Grow.award(`td:${x.id}`,5,"Sarcină făcută");else Grow.revoke(`td:${x.id}`)}}return}
   const tdl=e.target.closest("[data-tdel]");
-  if(tdl){S.todo=S.todo.filter(y=>y.id!==tdl.dataset.tdel);save();renderHabits();return}
+  if(tdl){const o=hgRead();delete o.tasks[tdl.dataset.tdel];hgWrite(o);renderHabits();return}
   const go=e.target.closest("[data-go]");if(go){planGo(go.dataset.go);return}
   if(e.target.closest("#az-set")){switchTo("set");return}
   if(e.target.closest("#hb-plus")){openAdd(true);return}
@@ -3061,9 +3096,11 @@ $("v-azi").addEventListener("click",e=>{
 $("td-in").addEventListener("input",e=>{$("td-ok").hidden=!e.target.value.trim()});
 $("td-add").addEventListener("submit",e=>{
   e.preventDefault();const t=$("td-in").value.trim().replace(/\s+/g," ");if(!t)return;
-  const id="t"+Date.now().toString(36);S.todo.push({id,t,c:dk(),d:null});save();$("td-in").value="";$("td-ok").hidden=true;renderHabits(id);
+  const o=hgRead(),id=hgUid(),tm=$("td-tm").value||"";o.tasks[id]={id,text:t,date:dk(),time:tm,type:tm?"appt":"task",done:false,created:Date.now()};hgWrite(o);
+  $("td-in").value="";$("td-tm").value="";$("td-ok").hidden=true;renderHabits(id);
 });
 $("set-back").addEventListener("click",()=>switchTo("azi"));
+addEventListener("storage",e=>{if(e.key===HGK){if(!$("v-azi").hidden)renderHabits();else planBadge()}});
 $("hb-add").addEventListener("submit",e=>{
   e.preventDefault();
   const em=$("hb-emo").value.trim()||"🎯",n=$("hb-name").value.trim();
