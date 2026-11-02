@@ -109,6 +109,7 @@ function renderAziSub(name){
   if(name==="minte")renderBreathCard();
   if(name==="obiective")renderGoals();
   if(name==="raport")renderReport();
+  if(name==="nofap")window.NoFap&&NoFap.render();
 }
 function renderAzi(){refresh();document.querySelectorAll(".subnav").forEach(moveInd);renderAziSub()}
 

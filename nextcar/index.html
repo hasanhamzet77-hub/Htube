@@ -289,6 +289,9 @@ h3{font-size:20px;line-height:1.15;margin:2px 0 0;font-weight:800;letter-spacing
 #splash.out{opacity:0;pointer-events:none}
 .sp-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);text-align:center;font-size:12px;color:rgba(255,232,190,.35);font-weight:600;letter-spacing:.06em;opacity:0;animation:spskip .4s .6s forwards}
 @keyframes spskip{to{opacity:1}}
+.mrow .mamt{display:grid;justify-items:end;gap:1px}.mrow .mamt small{font-size:11px;color:var(--muted);font-weight:600}
+.l-amt.minus{color:var(--bad)}.mrow .go-a{font-style:normal;color:var(--muted);margin-left:2px}
+.seg button{white-space:nowrap}
 /* IMPERIUM: paginile sus, butonul + deasupra barei IMPERIUM */
 .top{padding-top:10px}
 .tabs{grid-template-columns:repeat(4,1fr);height:50px;padding-bottom:0;border-top:0;border-bottom:1px solid var(--line)}
@@ -387,7 +390,7 @@ const SWATCHES=['#FF8A5C','#B69CFF','#46E0A0','#F2D45C','#FF6FB5','#5B8CFF','#9B
 const S={tasks:{},expenses:{},cars:{},jobs:{},settings:{cats:null}};
 const cats=()=>(S.settings&&Array.isArray(S.settings.cats)&&S.settings.cats.length)?S.settings.cats:DEFAULT_CATS;
 const catOf=id=>cats().find(c=>c.id===id)||{id,name:'Altele',color:'#7F8BA0'};
-const UI={page:1,day:today(),calMonth:today().slice(0,7),calDay:today(),month:today().slice(0,7),parcF:'stock',svcF:'active'};
+const UI={page:1,day:today(),calMonth:today().slice(0,7),calDay:today(),month:today().slice(0,7),parcF:'stock',svcF:'active',baniV:'luna'};
 let justAdded=null;
 
 /* ---------- storage: claude db, else this device ---------- */
@@ -534,8 +537,10 @@ function renderBani(){
     return `<div class="line"><span class="l-ic" style="background:${c.color}26;color:${c.color}">${esc(c.name.slice(0,1))}</span><button class="l-main" data-act="edit-exp" data-id="${e.id}" style="background:none;border:0;padding:0;text-align:left"><div>${esc(e.note||c.name)}</div><small>${fmtDay(e.date)} · <span class="due ${cls}">${when}</span></small></button><span class="l-amt">${eur(e.amount)}</span><button class="paybtn" data-act="pay" data-id="${e.id}">Plătit</button></div>`}).join('');
   const mv=movements(m);
   const mvRows=mv.slice(0,40).map(x=>`<button class="line" data-act="${x.act}" data-id="${x.id}"><span class="l-ic" style="background:${x.color}26;color:${x.color}">${x.amt>0?'+':esc(x.sub.slice(0,1))}</span><span class="l-main"><div>${esc(x.label)}</div><small>${fmtDay(x.date)} · ${esc(x.sub)}</small></span><span class="l-amt ${x.amt>0?'plus':''}">${seur(x.amt)}</span></button>`).join('');
+  const segB=`<div class="seg">${[['luna','Luna asta'],['luni','Pe luni']].map(([k,l])=>`<button class="${UI.baniV===k?'on':''}" data-act="bani-v" data-f="${k}">${l}</button>`).join('')}</div>`;
+  if(UI.baniV==='luni'){$('#bani').innerHTML=`<div class="page-head"><div><div class="eyebrow">Cheltuieli generale</div><h2>Bani</h2></div></div>${segB}${monthsList('exp')}`;return}
   $('#bani').innerHTML=`<div class="page-head"><div><div class="eyebrow">Cheltuieli & încasări</div><h2>Bani</h2></div></div>
-  ${exBanner()}
+  ${segB}${exBanner()}
   <div class="hero">
     <div class="mnav"><button data-act="m-prev" aria-label="Luna trecută">‹</button><b>${MON[mm-1]} ${y}</b><button data-act="m-next" aria-label="Luna viitoare">›</button></div>
     <div class="eyebrow">Cheltuit</div><div class="big">${eur(L.spent)}</div>
@@ -553,7 +558,7 @@ function renderBani(){
 function renderParc(){
   const cars=Object.values(S.cars),stock=cars.filter(c=>!c.sold).sort((a,b)=>a.buyDate<b.buyDate?-1:1),sold=cars.filter(c=>c.sold).sort((a,b)=>a.sellDate<b.sellDate?1:-1);
   const cap=sum(stock,myInv),prof=sum(sold,myProfit),avg=sold.length?Math.round(sum(sold,carDays)/sold.length):null;
-  const list=UI.parcF==='stock'?stock:UI.parcF==='sold'?sold:[...stock,...sold];
+  const list=UI.parcF==='stock'?stock:UI.parcF==='sold'?sold:UI.parcF==='months'?[]:[...stock,...sold];
   const cards=list.map(c=>{const days=carDays(c),inv=carInvested(c);
     if(!c.sold){const pct=Math.min(100,days/90*100),col=days<30?'var(--good)':days<60?'var(--amber)':'var(--bad)';
       return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(inv)}</div></div>
@@ -566,15 +571,15 @@ function renderParc(){
     <div class="car-foot"><div class="pills"><span class="pill ${p>=0?'good':'bad'}">${seur(carShare(c)<1?myProfit(c):p)}${carShare(c)<1?' partea ta':''}</span>${carShare(c)<1?`<span class="pill ice">${shareTag(c)}</span>`:''}<span class="pill">vândut în ${zile(days)}</span></div></div></button>`}).join('');
   $('#parc').innerHTML=`<div class="page-head"><div><div class="eyebrow">Stoc mașini</div><h2>Parc auto</h2></div></div>
   <div class="stats"><div class="stat hl"><span>Capitalul tău în parc</span><b>${eur(cap)}</b></div><div class="stat"><span>Mașini în parc</span><b>${stock.length}</b></div><div class="stat"><span>Profitul tău realizat</span><b class="${prof>=0?'good-t':'bad-t'}">${seur(prof)}</b></div><div class="stat"><span>Medie vânzare</span><b>${avg===null?'—':zile(avg)}</b></div></div>
-  <div class="seg">${[['stock','În parc'],['sold','Vândute'],['all','Toate']].map(([k,l])=>`<button class="${UI.parcF===k?'on':''}" data-act="parc-f" data-f="${k}">${l}</button>`).join('')}</div>
-  ${list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.parcF==='sold'?'Nicio mașină vândută încă':'Parcul e gol'}</b>Apasă + ca să adaugi o mașină cumpărată.</div>`}`;
+  <div class="seg">${[['stock','În parc'],['sold','Vândute'],['all','Toate'],['months','Pe luni']].map(([k,l])=>`<button class="${UI.parcF===k?'on':''}" data-act="parc-f" data-f="${k}">${l}</button>`).join('')}</div>
+  ${UI.parcF==='months'?monthsList('parc'):list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.parcF==='sold'?'Nicio mașină vândută încă':'Parcul e gol'}</b>Apasă + ca să adaugi o mașină cumpărată.</div>`}`;
 }
 
 function renderSvc(){
   const jobs=Object.values(S.jobs),act=jobs.filter(j=>!j.done).sort((a,b)=>a.startDate<b.startDate?-1:1),fin=jobs.filter(j=>j.done).sort((a,b)=>a.doneDate<b.doneDate?1:-1);
   const due=sum(jobs.filter(j=>!j.paid),j=>j.price),mnow=today().slice(0,7);
   const profM=sum(jobs.filter(j=>j.paid&&String(j.paidDate||'').slice(0,7)===mnow),jobProfit),avg=fin.length?Math.round(sum(fin,jobDays)/fin.length):null;
-  const list=UI.svcF==='active'?act:UI.svcF==='done'?fin:[...act,...fin];
+  const list=UI.svcF==='active'?act:UI.svcF==='done'?fin:UI.svcF==='months'?[]:[...act,...fin];
   const cards=list.map(j=>{const days=jobDays(j),p=jobProfit(j);
     return `<button class="car" data-act="open-job" data-id="${j.id}"><div class="car-top"><div class="car-name">${esc(j.title)}</div><div class="car-inv">${eur(j.price)}</div></div>
     ${j.desc?`<div class="car-sub">${esc(j.desc)}</div>`:''}
@@ -582,8 +587,52 @@ function renderSvc(){
     <span class="foot-r">piese ${eur(jobParts(j))} · <b class="${p>=0?'good-t':'bad-t'}">${seur(p)}</b></span></div></button>`}).join('');
   $('#svc').innerHTML=`<div class="page-head"><div><div class="eyebrow">Atelier</div><h2>Service</h2></div></div>
   <div class="stats"><div class="stat hl-ice"><span>De încasat</span><b>${eur(due)}</b></div><div class="stat"><span>Joburi active</span><b>${act.length}</b></div><div class="stat"><span>Profit ${MON[+mnow.slice(5)-1].toLowerCase()}</span><b class="${profM>=0?'good-t':'bad-t'}">${seur(profM)}</b></div><div class="stat"><span>Durată medie</span><b>${avg===null?'—':zile(avg)}</b></div></div>
-  <div class="seg">${[['active','Active'],['done','Finalizate'],['all','Toate']].map(([k,l])=>`<button class="${UI.svcF===k?'on':''}" data-act="svc-f" data-f="${k}">${l}</button>`).join('')}</div>
-  ${list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.svcF==='done'?'Niciun job finalizat':'Niciun job activ'}</b>Apasă + ca să deschizi un job nou.</div>`}`;
+  <div class="seg">${[['active','Active'],['done','Finalizate'],['all','Toate'],['months','Pe luni']].map(([k,l])=>`<button class="${UI.svcF===k?'on':''}" data-act="svc-f" data-f="${k}">${l}</button>`).join('')}</div>
+  ${UI.svcF==='months'?monthsList('svc'):list.length?`<div class="cards">${cards}</div>`:`<div class="empty"><b>${UI.svcF==='done'?'Niciun job finalizat':'Niciun job activ'}</b>Apasă + ca să deschizi un job nou.</div>`}`;
+}
+
+/* ---------- pe luni: ce ai generat în fiecare lună ---------- */
+const mOf=d=>d?String(d).slice(0,7):'';
+const mName=m=>{const [y,mm]=m.split('-').map(Number);return `${MON[mm-1]} ${y}`};
+function monthsOf(kind){const M={};const g=m=>M[m]=M[m]||{m,amt:0,inc:0,prof:0,n:0,spent:0};
+  if(kind==='parc')for(const c of Object.values(S.cars)){if(c.sold&&mOf(c.sellDate)){const x=g(mOf(c.sellDate));x.n++;x.inc+=(+c.sellPrice||0)*carShare(c);x.prof+=myProfit(c);x.amt=x.prof}}
+  if(kind==='svc')for(const j of Object.values(S.jobs)){if(j.paid&&mOf(j.paidDate)){const x=g(mOf(j.paidDate));x.n++;x.inc+=+j.price||0;x.prof+=jobProfit(j);x.amt=x.inc}}
+  if(kind==='exp')for(const e of Object.values(S.expenses)){if(!e.future&&mOf(e.date)){const x=g(mOf(e.date));x.n++;x.amt+=+e.amount||0}}
+  return Object.values(M).sort((a,b)=>a.m<b.m?1:-1)}
+function monthsList(kind){
+  const L=monthsOf(kind);if(!L.length)return `<div class="empty"><b>Nimic încă</b>${kind==='parc'?'Când marchezi o mașină ca vândută, apare aici luna ei.':kind==='svc'?'Când un job e încasat, apare aici luna lui.':'Cheltuielile apar aici, lună de lună.'}</div>`;
+  const lab=kind==='parc'?'profit':kind==='svc'?'încasat':'cheltuit';
+  const yrs={};L.forEach(x=>{const y=x.m.slice(0,4);yrs[y]=(yrs[y]||0)+x.amt});let lastY='';
+  return `<div class="list mlist">${L.map(x=>{const y=x.m.slice(0,4),hd=y!==lastY?`<div class="sec mt"><span>${y}</span><b>${kind==='exp'?eur(yrs[y]):seur(yrs[y])} ${lab}</b></div>`:'';lastY=y;
+    const sub=kind==='parc'?`${x.n} ${x.n===1?'mașină vândută':'mașini vândute'} · încasat ${eur(x.inc)}`:kind==='svc'?`${x.n} ${x.n===1?'job încasat':'joburi încasate'} · profit ${seur(x.prof)}`:`${x.n} ${x.n===1?'plată':'plăți'}`;
+    const cls=kind==='exp'?'':x.amt>=0?'plus':'minus';
+    return hd+`<button class="line mrow" data-act="month" data-k="${kind}" data-m="${x.m}"><span class="l-main"><div>${mName(x.m)}</div><small>${sub}</small></span><span class="mamt"><span class="l-amt ${cls}">${kind==='exp'?eur(x.amt):seur(x.amt)}</span><small>${lab}</small></span><em class="go-a">›</em></button>`}).join('')}</div>`}
+function openMonth(kind,m){
+  const inM=d=>mOf(d)===m;let body='';
+  const row=(t,sub,amt,cls,act,id)=>`<button class="line" ${act?`data-act="${act}" data-id="${id}"`:''}><span class="l-main"><div>${esc(t)}</div><small>${sub}</small></span><span class="l-amt ${cls||''}">${amt}</span></button>`;
+  const box=rows=>`<div class="box">${rows.map(([a,b,c])=>`<div class="box-row"><span>${a}</span><b class="${c||''}">${b}</b></div>`).join('')}</div>`;
+  if(kind==='parc'){
+    const sold=Object.values(S.cars).filter(c=>c.sold&&inM(c.sellDate)).sort((a,b)=>a.sellDate<b.sellDate?-1:1);
+    const bought=Object.values(S.cars).filter(c=>inM(c.buyDate)).sort((a,b)=>a.buyDate<b.buyDate?-1:1);
+    const inc=sum(sold,c=>(+c.sellPrice||0)*carShare(c)),inv=sum(sold,myInv),pr=sum(sold,myProfit);
+    body=box([['Încasat din vânzări',eur(inc),'good-t'],['Investit în ele',eur(inv)],['Profitul tău',seur(pr),pr>=0?'good-t':'bad-t']])
+     +`<div class="sec mt"><span>Vândute · ${sold.length}</span></div>`+(sold.length?`<div class="list">${sold.map(c=>row(c.name+(carShare(c)<1?' ('+shareTag(c)+')':''),`${fmtDay(c.sellDate)} · vândut cu ${eur(c.sellPrice)} · investit ${eur(carInvested(c))} · ${zile(carDays(c))}`,seur(myProfit(c)),myProfit(c)>=0?'plus':'minus','open-car',c.id)).join('')}</div>`:`<p class="hint">Nicio mașină vândută în luna asta.</p>`)
+     +(bought.length?`<div class="sec mt"><span>Cumpărate · ${bought.length}</span><b>${eur(sum(bought,c=>(+c.buyPrice||0)*carShare(c)))}</b></div><div class="list">${bought.map(c=>row(c.name,`${fmtDay(c.buyDate)}${c.sold?' · vândută':' · în parc'}`,eur((+c.buyPrice||0)*carShare(c)),'','open-car',c.id)).join('')}</div>`:'');
+  }else if(kind==='svc'){
+    const paid=Object.values(S.jobs).filter(j=>j.paid&&inM(j.paidDate)).sort((a,b)=>a.paidDate<b.paidDate?-1:1);
+    const inc=sum(paid,j=>j.price),parts=sum(paid,jobParts),pr=inc-parts;
+    body=box([['Încasat',eur(inc),'good-t'],['Piese',eur(parts)],['Profit',seur(pr),pr>=0?'good-t':'bad-t']])
+     +`<div class="sec mt"><span>Joburi încasate · ${paid.length}</span></div>`+(paid.length?`<div class="list">${paid.map(j=>row(j.title,`${fmtDay(j.paidDate)}${j.desc?' · '+esc(j.desc):''} · piese ${eur(jobParts(j))} · profit ${seur(jobProfit(j))}`,eur(j.price),'plus','open-job',j.id)).join('')}</div>`:`<p class="hint">Niciun job încasat în luna asta.</p>`);
+  }else{
+    const ex=Object.values(S.expenses).filter(e=>!e.future&&inM(e.date)).sort((a,b)=>a.date<b.date?-1:1),L=ledger(m),res=L.income-L.spent;
+    const byC={};ex.forEach(e=>byC[e.cat]=(byC[e.cat]||0)+(+e.amount||0));
+    body=box([['Cheltuieli generale',eur(sum(ex,e=>e.amount)),'bad-t'],['Încasat (mașini + service)',eur(L.income),'good-t'],['Rezultatul lunii (tot)',seur(res),res>=0?'good-t':'bad-t']])
+     +`<div class="sec mt"><span>Pe categorii</span></div><div class="list">${Object.entries(byC).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const c=catOf(k);return `<div class="line"><span class="l-ic" style="background:${c.color}26;color:${c.color}">${esc(c.name.slice(0,1))}</span><span class="l-main"><div>${esc(c.name)}</div></span><span class="l-amt">${eur(v)}</span></div>`}).join('')}</div>`
+     +`<div class="sec mt"><span>Toate plățile · ${ex.length}</span></div><div class="list">${ex.map(e=>{const c=catOf(e.cat);return row(e.note||c.name,`${fmtDay(e.date)} · ${esc(c.name)}`,eur(e.amount),'','edit-exp',e.id)}).join('')}</div>`;
+  }
+  openSheet(`<div class="sh-head"><div><div class="eyebrow">${kind==='parc'?'Parc auto':kind==='svc'?'Service':'Cheltuieli'}</div><h3>${mName(m)}</h3></div></div>${body}`,root=>{
+    root.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;e.stopPropagation();const id=b.dataset.id;closeSheet();
+      setTimeout(()=>{if(b.dataset.act==='open-car')openCar(id);else if(b.dataset.act==='open-job')openJob(id);else if(b.dataset.act==='edit-exp'){const x=S.expenses[id];if(x)openExpense({edit:x})}},320)})});
 }
 
 /* ---------- sheets ---------- */
@@ -894,6 +943,8 @@ document.addEventListener('click',e=>{
     case 'open-job':openJob(id);break;
     case 'parc-f':UI.parcF=el.dataset.f;render();break;
     case 'svc-f':UI.svcF=el.dataset.f;render();break;
+    case 'bani-v':UI.baniV=el.dataset.f;render();break;
+    case 'month':openMonth(el.dataset.k,el.dataset.m);break;
     case 'del-examples':{for(const c of COLS)for(const x of Object.values(S[c]))if(x.example)del(c,x.id);toast('Exemplele au fost șterse');break}
   }
 });
@@ -908,7 +959,7 @@ requestAnimationFrame(()=>{pager.scrollLeft=pager.clientWidth;onScroll();request
 initStore();
 // IMPERIUM bifează taskurile din Planul zilei: reîncărcăm datele când se schimbă
 addEventListener('storage',e=>{if(e.key===LKEY){loadLocal();render()}});
-window.NC={reload(){loadLocal();render()},go(i){goPage(i,false)}};
+window.NC={reload(){loadLocal();render()},go(i){UI.page=i;pager.scrollLeft=i*pager.clientWidth;onScroll()}};
 })();
 </script>
 </body>

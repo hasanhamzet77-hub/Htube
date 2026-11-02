@@ -958,8 +958,40 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 /* NextCar: aplicația de afaceri, pe tot ecranul, cu bara IMPERIUM deasupra */
 #v-nextcar{position:fixed;inset:0;z-index:5;background:#0f1012;padding-top:env(safe-area-inset-top,0px)}
 #v-nextcar iframe{display:block;width:100%;height:100%;border:0;background:#0f1012}
+#nc-intro{position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:radial-gradient(120% 80% at 50% 45%,#1b1710 0%,#0f1012 60%);transition:opacity .4s ease,transform .45s ease}
+#nc-intro.out{opacity:0;transform:scale(1.04);pointer-events:none}
+.nci-in{display:grid;justify-items:center;gap:14px;transform:translateY(-30px)}
+#nc-intro svg{width:96px;height:96px;fill:none;stroke:#F2A93B;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 14px rgba(242,169,59,.45))}
+.nci-r{stroke-width:2.5;stroke-dasharray:327;stroke-dashoffset:327;transform-origin:60px 60px;transform:rotate(-90deg);animation:nciR .5s cubic-bezier(.6,0,.3,1) forwards}
+.nci-n{stroke-width:7;stroke-dasharray:190;stroke-dashoffset:190;animation:nciD .4s .12s cubic-bezier(.5,0,.3,1) forwards}
+#nc-intro b{font:800 15px/1 var(--display,system-ui);letter-spacing:.42em;color:#f4efe6;opacity:0;animation:nciT .35s .25s ease forwards;padding-left:.42em}
+#nc-intro b span{color:#F2A93B}
+.nci-l{width:120px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#F2A93B,transparent);transform:scaleX(0);animation:nciL .4s .3s ease forwards}
+#nc-intro.long .nci-r{animation-duration:.8s}#nc-intro.long .nci-n{animation-duration:.6s;animation-delay:.3s}
+#nc-intro.long b{animation-delay:.55s;animation-duration:.4s}#nc-intro.long .nci-l{animation-delay:.6s;animation-duration:.5s}
+@keyframes nciR{to{stroke-dashoffset:0}}@keyframes nciD{to{stroke-dashoffset:0}}@keyframes nciT{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes nciL{to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){#nc-intro *{animation-duration:.01s!important;animation-delay:0s!important}}
 .shbtn{display:flex;align-items:center;gap:5px;padding:6px 11px 6px 8px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--glass);border:1px solid var(--glass-b);color:var(--ink)}
 .shbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+/* NoFap */
+#v-azi .subnav button{font-size:12.5px;padding:8px 3px}
+.nf-hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}.nf-hd h3{margin:0}
+.nf-clock{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 16px}
+.nf-t{min-width:62px;padding:12px 8px 10px;border-radius:16px;background:var(--glass);border:1px solid var(--glass-b);display:grid;justify-items:center;gap:2px}
+.nf-t b{font:700 26px/1 var(--display,system-ui);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.nf-t small{font-size:11px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.06em}
+.nf-t.big{background:linear-gradient(135deg,var(--accent),var(--accent2,var(--accent)));border-color:transparent;color:#fff}.nf-t.big small{color:rgba(255,255,255,.8)}
+.nf-goal{margin-bottom:14px}.nf-goal small{font-size:12.5px;color:var(--muted)}
+.nf-bar{height:8px;border-radius:9px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden;margin-bottom:6px}
+.nf-bar i{display:block;height:100%;border-radius:9px;background:var(--live);transition:width .6s}
+.nf-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.nf-stats>div{padding:11px 12px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-b);display:grid;gap:2px}
+.nf-stats>div:nth-child(2){grid-row:span 1}.nf-stats>div:last-child{grid-column:1/-1}
+.nf-stats small{font-size:11.5px;color:var(--muted);font-weight:650}.nf-stats b{font-size:16px}.nf-stats em{font-style:normal;font-size:11.5px;color:#f59f00;font-weight:700}
+.nf-reset{width:100%;background:color-mix(in srgb,#e03131 85%,#000);color:#fff}
+.nf-hist{margin-top:16px;display:grid;gap:2px}.nf-ht{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.nf-row{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:14px}.nf-row span{color:var(--muted)}
+#nf-date{margin-top:10px;display:grid;gap:8px}
 /* DEX: explicația cuvântului din cititor */
 .dxs{z-index:70}
 .dxs .gs-card{max-height:78vh}
@@ -1016,7 +1048,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
       <div class="azi-hd"><div><small id="az-date"></small>
       <h2 id="az-hi" class="azhi1">Bună ziua</h2></div><div class="az-tools"><button class="xpchip" id="xp-chip" aria-label="Nivelul tău"></button><button class="gear" id="az-set" aria-label="Setări"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div></div>
     </div>
-    <div class="subnav" data-subnav="azi"><button data-sub="azi">Azi</button><button data-sub="minte">Minte</button><button data-sub="obiective">Obiective</button><button data-sub="raport">Raport</button></div>
+    <div class="subnav" data-subnav="azi"><button data-sub="azi">Azi</button><button data-sub="minte">Minte</button><button data-sub="obiective">Obiective</button><button data-sub="raport">Raport</button><button data-sub="nofap">NoFap</button></div>
     <div class="subpg" data-of="azi" data-subpg="azi">
     <div class="sec plan">
       <div class="plan-hd"><div class="plan-ring" id="pl-ring"></div><div class="plan-tt"><h3>Planul zilei</h3><span class="muted" id="hb-score"></span></div><button class="link" id="hb-edit">Editează</button></div>
@@ -1052,6 +1084,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     </div>
       <div class="sec" id="br-sec"></div>
     </div>
+    <div class="subpg" data-of="azi" data-subpg="nofap" hidden><div id="nf-root"></div></div>
     <div class="subpg" data-of="azi" data-subpg="obiective" hidden><div id="goals-root"></div></div>
     <div class="subpg" data-of="azi" data-subpg="raport" hidden>
       <div id="report-root"></div>
@@ -2021,10 +2054,28 @@ function moveInd(){
 }
 addEventListener("resize",()=>requestAnimationFrame(moveInd));
 // ── NextCar (fosta aplicație HGroup): rulează în pagina ei, cu datele în același loc ──
+let ncLoaded=false,ncShown=false,ncIntroT=0;
+function ncFrame(){
+  let f=$("nc-frame");if(f)return f;
+  f=document.createElement("iframe");f.id="nc-frame";f.src="nextcar/index.html";f.title="NextCar";
+  f.addEventListener("load",()=>{ncLoaded=true;if(!$("v-nextcar").hidden){ncFirst();ncIntroOut()}});
+  $("v-nextcar").appendChild(f);return f;
+}
+// pornim NextCar în fundal, după ce aplicația s-a liniștit, ca să se deschidă fără lag
+addEventListener("load",()=>setTimeout(()=>{(window.requestIdleCallback||(f=>setTimeout(f,1)))(()=>ncFrame())},2500));
+function ncFirst(){if(ncShown)return;ncShown=true;const go=()=>{try{const w=$("nc-frame").contentWindow;w.NC&&w.NC.go(1)}catch(e){}};go();requestAnimationFrame(()=>requestAnimationFrame(go));setTimeout(go,120)}
+function ncIntroOut(){const el=$("nc-intro");if(!el||el.classList.contains("out"))return;const wait=Math.max(0,ncIntroT-Date.now());
+  setTimeout(()=>{el.classList.add("out");setTimeout(()=>el.remove(),450)},wait)}
+function ncIntro(long){
+  $("nc-intro")&&$("nc-intro").remove();
+  const el=document.createElement("div");el.id="nc-intro";el.className=long?"long":"";
+  el.innerHTML=`<div class="nci-in"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="nci-r" cx="60" cy="60" r="52"/><path class="nci-n" d="M40 84V36l40 48V36"/></svg><b>NEXT<span>CAR</span></b><i class="nci-l"></i></div>`;
+  $("v-nextcar").appendChild(el);ncIntroT=Date.now()+(long?1100:450);
+}
 function showNextCar(on){
-  const box=$("v-nextcar");box.hidden=!on;
-  if(on&&!box.firstChild){const f=document.createElement("iframe");f.id="nc-frame";f.src="nextcar/index.html";f.title="NextCar";box.appendChild(f)}
-  if(on){try{const w=$("nc-frame").contentWindow;w.NC&&w.NC.reload()}catch(e){}}
+  const box=$("v-nextcar");box.hidden=!on;if(!on)return;
+  ncIntro(!ncShown);ncFrame();
+  if(ncLoaded){ncFirst();try{const w=$("nc-frame").contentWindow;w.NC&&w.NC.reload()}catch(e){}ncIntroOut()}
 }
 addEventListener("message",e=>{if(e.origin===location.origin&&e.data&&e.data.imp==="azi")homeAzi()});
 $("go-shorts").addEventListener("click",()=>switchTo("shorts"));
@@ -3147,6 +3198,7 @@ if("serviceWorker" in navigator){
 <script src="health.js"></script>
 <script src="watch.js"></script>
 <script src="dex.js"></script>
+<script src="nofap.js"></script>
 <script src="grow.js"></script>
 <script src="music.js"></script>
 </body>
