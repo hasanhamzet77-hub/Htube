@@ -1078,6 +1078,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
           <select id="md-msel" aria-label="Alege mantra"></select>
           <p class="mprev" id="md-mprev"></p>
           <label class="tog"><input type="checkbox" id="md-voice"> Citește-o și cu voce</label>
+          <div id="md-vpanel"></div>
         </div>
       </div>
       <button class="btn" id="md-start">Începe</button>
@@ -1324,6 +1325,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 <script src="data.js"></script>
 <script src="threads.js"></script>
 <script src="data2.js"></script>
+<script src="voice.js"></script>
 <script>
 const CATS={mot:"Motivație",dev:"Minte",biz:"Afaceri",soc:"Oameni",san:"Sănătate",int:"Înțelepciune"};
 const $=id=>document.getElementById(id);
@@ -2264,12 +2266,14 @@ function renderMantraSet(){
   $("md-mon").checked=on;$("md-mopt").hidden=!on;$("md-voice").checked=!!S.med.voice;
   $("md-msel").innerHTML=MANTRAS.map((m,k)=>`<option value="${k}"${k===i?" selected":""}>${esc(m.n)}</option>`).join("");
   $("md-mprev").textContent=MANTRAS[i].l.slice(0,i===4?5:6).join("\n")+(i===4?"\n(de 3 ori)":"");
+  $("md-vpanel").hidden=!S.med.voice;if(S.med.voice&&window.Voice)Voice.panel($("md-vpanel"),MANTRAS[i].l);
 }
 $("md-mon").addEventListener("change",e=>{S.med.mantraOn=e.target.checked;save();renderMantraSet()});
 $("md-msel").addEventListener("change",e=>{S.med.mantra=+e.target.value;save();renderMantraSet()});
-$("md-voice").addEventListener("change",e=>{S.med.voice=e.target.checked;save();if(e.target.checked)speak("Mulțumesc.")});
+$("md-voice").addEventListener("change",e=>{S.med.voice=e.target.checked;save();renderMantraSet();if(e.target.checked){window.Voice&&Voice.unlock();speak("Mulțumesc.")}});
 let roVoice=null;
 function speak(t){
+  if(window.Voice){Voice.line(t);return}
   try{
     const ss=window.speechSynthesis;if(!ss)return;
     if(!roVoice)roVoice=ss.getVoices().find(v=>/^ro/i.test(v.lang))||null;
@@ -2324,7 +2328,7 @@ function startMed(){
   if(S.med.breath)ov.classList.add("breath");
   setMedRun(true);bell(.22);lockWake();
   ov.classList.remove("mantra");$("md-mt").innerHTML="";
-  if(S.med.voice&&window.speechSynthesis){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+  if(S.med.voice){if(window.Voice)Voice.unlock();else if(window.speechSynthesis){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}catch(e){}}}
   clearInterval(mdInt);mdInt=setInterval(medTick,250);medTick();
   window.Music&&Music.refresh();
 }
@@ -2357,7 +2361,7 @@ function finishMed(full){
 }
 function closeMed(){
   window.Music&&Music.duck(false);
-  clearInterval(mdInt);unlockWake();md=null;try{speechSynthesis.cancel()}catch(e){}$("medov").classList.remove("mantra");$("medov").hidden=true;
+  clearInterval(mdInt);unlockWake();md=null;try{window.Voice&&Voice.stop();speechSynthesis.cancel()}catch(e){}$("medov").classList.remove("mantra");$("medov").hidden=true;
   renderMed();renderHabits();
 }
 $("md-ring").addEventListener("click",()=>{

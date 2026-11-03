@@ -373,6 +373,7 @@ function chime(f0,f1,t,vol,dur){   // clopoțel: fundamentală + armonică, cu g
 const SAY={in:"Inspiră",out:"Expiră",hold:"Ține"};
 let roVoice=null;
 function sayRo(txt){
+  if(window.Voice)return Voice.say(txt,{rate:.92});
   try{const ss=window.speechSynthesis;if(!ss)return false;
     roVoice=roVoice||ss.getVoices().find(v=>/^ro/i.test(v.lang))||null;
     ss.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang="ro-RO";if(roVoice)u.voice=roVoice;u.rate=.92;u.pitch=1;u.volume=1;ss.speak(u);return true}catch(e){return false}
