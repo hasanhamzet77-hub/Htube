@@ -289,6 +289,8 @@ h3{font-size:20px;line-height:1.15;margin:2px 0 0;font-weight:800;letter-spacing
 #splash.out{opacity:0;pointer-events:none}
 .sp-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);text-align:center;font-size:12px;color:rgba(255,232,190,.35);font-weight:600;letter-spacing:.06em;opacity:0;animation:spskip .4s .6s forwards}
 @keyframes spskip{to{opacity:1}}
+.trch .chip{flex-direction:column;align-items:flex-start;gap:1px;text-align:left}.trch .chip small{font-size:11px;color:var(--muted);font-weight:600}
+.chip.on small{color:inherit;opacity:.8}
 .mrow .mamt{display:grid;justify-items:end;gap:1px}.mrow .mamt small{font-size:11px;color:var(--muted);font-weight:600}
 .l-amt.minus{color:var(--bad)}.mrow .go-a{font-style:normal;color:var(--muted);margin-left:2px}
 .seg button{white-space:nowrap}
@@ -299,6 +301,7 @@ h3{font-size:20px;line-height:1.15;margin:2px 0 0;font-weight:800;letter-spacing
 .tab-ind{top:auto;bottom:-1px;width:25%}
 .fab{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
 .page{padding-block:8px 130px}
+#sheet{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 92px)}
 </style>
 </head>
 <body>
@@ -562,7 +565,7 @@ function renderParc(){
   const cards=list.map(c=>{const days=carDays(c),inv=carInvested(c);
     if(!c.sold){const pct=Math.min(100,days/90*100),col=days<30?'var(--good)':days<60?'var(--amber)':'var(--bad)';
       return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(inv)}</div></div>
-      <div class="car-sub">Cumpărat ${fmtDay(c.buyDate)} · ${eur(c.buyPrice)} + ${eur(carCosts(c))} costuri</div>
+      <div class="car-sub">${c.tradeFor&&S.cars[c.tradeFor]?'🔁 La schimb pentru '+esc(S.cars[c.tradeFor].name)+' · '+fmtDay(c.buyDate)+' · '+eur(c.buyPrice):'Cumpărat '+fmtDay(c.buyDate)+' · '+eur(c.buyPrice)} + ${eur(carCosts(c))} costuri</div>
       ${carShare(c)<1?`<div class="car-foot"><div class="pills"><span class="pill ice">${shareTag(c)}</span><span class="pill">partea ta ${eur(myInv(c))}</span></div></div>`:''}
       <div class="gauge" style="color:${col}"><i style="width:${Math.max(3,pct)}%"></i></div><div class="gauge-l"><span>${zile(days)} în parc</span><span>90 zile</span></div></button>`}
     const p=carProfit(c);
@@ -665,9 +668,47 @@ function openTask(id){
   });
 }
 
+/* ---------- mașini luate la schimb ---------- */
+const tradeCands=excl=>{const cs=Object.values(S.cars).filter(c=>c.id!==excl);
+  return [...cs.filter(c=>!c.sold).sort((a,b)=>a.buyDate<b.buyDate?-1:1),...cs.filter(c=>c.sold).sort((a,b)=>a.sellDate<b.sellDate?1:-1)]};
+function tradePick(T,excl){
+  const L=tradeCands(excl);if(!L.length)return '<p class="hint">Nu ai alte mașini în parc sau vândute.</p>';
+  const f=S.cars[T.forId];let more='';
+  if(f&&!f.sold)more=field('Bani primiți în plus (cash)',`<input id="tr-cash" class="in" inputmode="decimal" placeholder="€" value="${esc(T.cash||'')}">`)+`<p class="hint">La salvare, <b>${esc(f.name)}</b> se marchează vândută: banii cash + valoarea mașinii primite la schimb.</p>`;
+  if(f&&f.sold)more=`<button type="button" class="sw" id="tr-add" aria-pressed="${!!T.add}"><span>Adaugă valoarea la prețul de vânzare<small>La ${esc(f.name)} ai notat ${eur(f.sellPrice)}. Bifează dacă acolo e doar suma primită cash.</small></span><i></i></button>`;
+  return field('Pentru ce mașină ai primit-o',`<div class="chips trch">${L.map(c=>`<button type="button" class="chip ${T.forId===c.id?'on':''}" data-tfor="${c.id}">${esc(c.name)}<small>${c.sold?'vândută '+fmtDay(c.sellDate):'în parc'}</small></button>`).join('')}</div>`)+more;
+}
+// leagă mașina primită (b) de mașina dată (a); valoarea la schimb = prețul de cumpărare al lui b
+function applyTrade(b,T,cash){
+  const a=S.cars[T.forId];if(!a||!b)return;const V=+b.buyPrice||0;
+  put('cars',{...b,tradeFor:a.id});
+  const A={...a,tradeIns:[...new Set([...(a.tradeIns||[]),b.id])]};
+  if(!a.sold){A.sold=true;A.sellDate=b.buyDate||today();A.sellPrice=(+cash||0)+V;A.tradeVal=(+a.tradeVal||0)+V}
+  else if(T.add){A.sellPrice=(+a.sellPrice||0)+V;A.tradeVal=(+a.tradeVal||0)+V}
+  put('cars',A);
+  return A;
+}
+function tradeClick(e,T,root,redraw,onPick){
+  const t=e.target.closest('[data-tfor]');if(t){T.forId=t.dataset.tfor;const c=$('#tr-cash',root);if(c)T.cash=c.value;redraw();if(onPick)onPick(S.cars[T.forId]);return true}
+  const ad=e.target.closest('#tr-add');if(ad){T.add=!T.add;ad.setAttribute('aria-pressed',T.add);return true}
+  return false;
+}
+function openTradeLink(bId){
+  const b=S.cars[bId];if(!b)return;const T={forId:null,add:true,cash:''};
+  openSheet(`${bar('Luată la schimb',esc(b.name),'tr-save','Leagă')}
+  <p class="hint">Valoarea la schimb este prețul de cumpărare al mașinii: <b>${eur(b.buyPrice)}</b>. Dacă e altă sumă, schimb-o întâi în fișa mașinii.</p>
+  <div id="tr-box"></div><p class="err" id="tr-err" hidden></p>`,root=>{
+    const draw=()=>{$('#tr-box',root).innerHTML=tradePick(T,bId)};draw();
+    root.addEventListener('click',e=>{tradeClick(e,T,root,draw)});
+    root.addEventListener('input',e=>{if(e.target.id==='tr-cash')T.cash=e.target.value});
+    $('#tr-save',root).onclick=()=>{const er=$('#tr-err',root);if(!T.forId){er.textContent='Alege mașina pentru care ai primit-o.';er.hidden=false;return}
+      const A=applyTrade(S.cars[bId],T,num(T.cash));closeSheet();toast(A&&A.sold?`Legat · ${A.name}: vândută cu ${eur(A.sellPrice)}`:'Legat')};
+  });
+}
+
 function openExpense(o={}){
   const ed=o.edit||null;
-  const X={cat:ed?ed.cat:(o.cat||'combustibil'),sub:o.sub||'new',carId:null,jobId:null,future:ed?!!ed.future:false};
+  const X={cat:ed?ed.cat:(o.cat||'combustibil'),sub:o.sub||'new',carId:null,jobId:null,future:ed?!!ed.future:false,trade:false,T:{forId:null,add:true,cash:''}};
   if(!ed&&!cats().some(c=>c.id===X.cat))X.cat=cats().find(c=>!c.sys)?.id||'parc';
   openSheet(`${bar(ed?'Editează':'Adaugă',ed?'Cheltuială':'Cheltuială nouă','ex-save')}
   <label class="amt"><span class="amt-l" id="ex-amt-l">Sumă</span><div class="amt-row"><input id="ex-amt" class="amt-in" inputmode="decimal" placeholder="0" autocomplete="off" value="${ed?esc(ed.amount):''}"><span class="amt-c">€</span></div></label>
@@ -683,7 +724,9 @@ function openExpense(o={}){
       if(X.cat==='parc'){
         const stock=Object.values(S.cars).filter(c=>!c.sold);if(stock.length===1&&!X.carId)X.carId=stock[0].id;
         h+=segHTML([['new','Mașină cumpărată'],['add','Cost la o mașină']],X.sub,'sub');
-        if(X.sub==='new'){lbl='Preț cumpărare (total)';h+=field('Marcă / model','<input id="ex-name" class="in" placeholder="Ex: VW Golf 7 1.6 TDI 2015" autocomplete="off">')+dateIn('Data cumpărării','ex-date')+segHTML([['100','Doar a mea'],['50','50% cu partener']],X.share||'100','share')+`<div id="ex-pw" ${X.share==='50'?'':'hidden'}>${field('Partener','<input id="ex-partner" class="in" placeholder="Ex: Kaled" autocomplete="off">')}</div>`}
+        if(X.sub==='new'){lbl='Preț cumpărare (total)';h+=field('Marcă / model','<input id="ex-name" class="in" placeholder="Ex: VW Golf 7 1.6 TDI 2015" autocomplete="off">')+dateIn('Data cumpărării','ex-date')+segHTML([['100','Doar a mea'],['50','50% cu partener']],X.share||'100','share')+`<div id="ex-pw" ${X.share==='50'?'':'hidden'}>${field('Partener','<input id="ex-partner" class="in" placeholder="Ex: Kaled" autocomplete="off">')}</div>`
+          +`<button type="button" class="sw" id="ex-tr" aria-pressed="${X.trade}"><span>Luată la schimb<small>Ai primit-o în schimbul altei mașini (din parc sau deja vândută)</small></span><i></i></button><div id="tr-box">${X.trade?tradePick(X.T,null):''}</div>`;
+          if(X.trade)lbl='Valoare la schimb (cât a contat)'}
         else{lbl='Cost';h+=stock.length?field('Mașina',`<div class="chips">${stock.map(c=>`<button type="button" class="chip ${X.carId===c.id?'on':''}" data-car="${c.id}">${esc(c.name)}</button>`).join('')}</div>`)+field('Pentru ce','<input id="ex-label" class="in" placeholder="Ex: plăcuțe frână, TÜV, detailing" autocomplete="off">')+dateIn('Data','ex-date'):'<p class="hint">Nu ai mașini în parc. Adaugă întâi o mașină cumpărată.</p>'}
       }else if(X.cat==='service'){
         const act=Object.values(S.jobs).filter(j=>!j.done);if(act.length===1&&!X.jobId)X.jobId=act[0].id;
@@ -703,14 +746,22 @@ function openExpense(o={}){
       const s=e.target.closest('[data-sub]');if(s){X.sub=s.dataset.sub;drawExtra();return}
       const sh=e.target.closest('[data-share]');if(sh){X.share=sh.dataset.share;root.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',b===sh));const w=$('#ex-pw',root);if(w)w.hidden=X.share!=='50';return}
       const car=e.target.closest('[data-car]');if(car){X.carId=car.dataset.car;root.querySelectorAll('[data-car]').forEach(b=>b.classList.toggle('on',b===car));return}
+      const tr=e.target.closest('#ex-tr');if(tr){X.trade=!X.trade;tr.setAttribute('aria-pressed',X.trade);$('#tr-box',root).innerHTML=X.trade?tradePick(X.T,null):'';$('#ex-amt-l',root).textContent=X.trade?'Valoare la schimb (cât a contat)':'Preț cumpărare (total)';return}
+      if(tradeClick(e,X.T,root,()=>{$('#tr-box',root).innerHTML=tradePick(X.T,null)},f=>{
+        if(!f)return;const d=$('#ex-date',root);if(d&&f.sold&&f.sellDate)d.value=f.sellDate;
+        if(carShare(f)<1){const b50=root.querySelector('[data-share="50"]');if(b50&&X.share!=='50')b50.click();const pp=$('#ex-partner',root);if(pp&&!pp.value)pp.value=f.partner||''}}))return;
       const jb=e.target.closest('[data-job]');if(jb){X.jobId=jb.dataset.job;root.querySelectorAll('[data-job]').forEach(b=>b.classList.toggle('on',b===jb));return}
       const f=e.target.closest('#ex-fut');if(f){X.future=!X.future;f.setAttribute('aria-pressed',X.future);const l=$('#ex-date',root)?.closest('.fld')?.querySelector('span');if(l)l.textContent=X.future?'Scadență':'Data';return}
     });
+    root.addEventListener('input',e=>{if(e.target.id==='tr-cash')X.T.cash=e.target.value});
     const fail=m=>{err.textContent=m;err.hidden=false};
     $('#ex-save',root).onclick=()=>{
       const a=num(amt.value),date=$('#ex-date',root)?.value||today(),v=id=>($('#'+id,root)?.value||'').trim();
       if(X.cat==='parc'){
-        if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<=0)return fail('Scrie prețul de cumpărare.');const id=uid();put('cars',{id,name,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()});closeSheet();toast('Mașina a intrat în parc');return}
+        if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<=0)return fail('Scrie prețul de cumpărare.');if(X.trade&&!X.T.forId)return fail('Alege mașina pentru care ai primit-o la schimb.');
+          const id=uid(),nc={id,name,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()};put('cars',nc);
+          if(X.trade){const A=applyTrade(S.cars[id]||nc,X.T,num(v('tr-cash')||X.T.cash));closeSheet();toast(`Intrată în parc la schimb pentru ${A?A.name:''}`);return}
+          closeSheet();toast('Mașina a intrat în parc');return}
         const c=S.cars[X.carId];if(!c)return fail('Alege mașina.');if(a<=0)return fail('Scrie suma.');put('cars',{...c,costs:[...(c.costs||[]),{id:uid(),label:v('ex-label')||'Cost',amount:a,date}]});closeSheet();toast('Cost adăugat la '+c.name);return}
       if(X.cat==='service'){
         if(X.sub==='new'){const title=v('ex-title');if(!title)return fail('Scrie clientul sau mașina.');const id=uid();put('jobs',{id,title,desc:v('ex-desc'),price:num(v('ex-price')),parts:a>0?[{id:uid(),label:'Piese',amount:a,date}]:[],startDate:date,done:false,paid:false,created:Date.now()});closeSheet();toast('Job deschis');return}
@@ -740,12 +791,18 @@ function openCar(id){
   <form class="addline" id="cs-addf" autocomplete="off"><input id="cs-cl" class="in" placeholder="Ce? piese, TÜV…"><input id="cs-ca" class="in w-amt" inputmode="decimal" placeholder="€"><button class="btn primary sq" aria-label="Adaugă cost">+</button></form>
   <div class="sh-sec">Vânzare</div>
   <div id="cs-sell"></div>
+  <div id="cs-trade"></div>
   <div class="sh-actions"><button class="btn ghost danger block" id="cs-del">Șterge mașina</button></div>`,root=>{
     const preview=()=>{const c=S.cars[id],el=$('#cs-prev',root);if(!c||!el)return;const p=num(D.sellPrice)-carInvested(c),k=carShare(c);el.innerHTML=`<span>Profit estimat${k<1?' (partea ta)':''}</span><b class="${p>=0?'good-t':'bad-t'}">${D.sellPrice?seur(p*k):'—'}</b>`};
     const refresh=()=>{const c=S.cars[id];if(!c){closeSheet();return}
       $('#cs-title',root).textContent=c.name;const inv=carInvested(c),days=carDays(c);
       const k=carShare(c),pr=carProfit(c);
       $('#cs-sum',root).innerHTML=`<div class="box ${c.sold?'good':''}"><div class="box-row"><span>Investit total</span><b>${eur(inv)}</b></div>${k<1?`<div class="box-row"><span>Partea ta (${shareTag(c)})</span><b>${eur(inv*k)}</b></div>`:''}<div class="box-row"><span>${c.sold?'Vândut în':'În parc de'}</span><b>${zile(days)}</b></div>${c.sold?`<div class="box-row"><span>Profit${k<1?' total':''}</span><b class="${pr>=0?'good-t':'bad-t'}">${seur(pr)}</b></div>${k<1?`<div class="box-row"><span>Profitul tău</span><b class="${pr>=0?'good-t':'bad-t'}">${seur(pr*k)}</b></div>`:''}`:''}</div>`;
+      const tf=c.tradeFor&&S.cars[c.tradeFor],tin=(c.tradeIns||[]).map(x=>S.cars[x]).filter(Boolean);
+      $('#cs-trade',root).innerHTML=(tf||tin.length?`<div class="sh-sec">Schimb</div><div class="list">`
+        +(tf?`<button class="line" data-x="goto" data-id="${tf.id}"><span class="l-main"><div>🔁 Luată la schimb pentru ${esc(tf.name)}</div><small>${tf.sold?'vândută '+fmtDay(tf.sellDate)+' cu '+eur(tf.sellPrice):'în parc'} · valoarea ei aici: ${eur(c.buyPrice)}</small></span><em class="go-a">›</em></button>`:'')
+        +tin.map(t=>`<button class="line" data-x="goto" data-id="${t.id}"><span class="l-main"><div>🔁 Am primit la schimb ${esc(t.name)}</div><small>a contat ${eur(t.buyPrice)} din prețul de vânzare</small></span><em class="go-a">›</em></button>`).join('')+`</div>`:'')
+        +(tf?`<button class="btn ghost block" data-x="untrade">Scoate legătura de schimb</button>`:`<button class="btn ghost block" data-x="trade">🔁 Am luat-o la schimb pentru altă mașină</button>`);
       $('#cs-costs',root).innerHTML=costLines(c.costs||[],'Niciun cost încă. Adaugă piese, acte, detailing — se adună automat.');
       const sell=$('#cs-sell',root);if(!sell.contains(document.activeElement)){
         sell.innerHTML=c.sold?`<div class="box good"><div class="box-row"><span>Preț vânzare</span><b>${eur(c.sellPrice)}</b></div><div class="box-row"><span>Data</span><b>${fmtDay(c.sellDate)}</b></div></div><button class="btn ghost block" data-x="unsell">Anulează vânzarea</button>`
@@ -767,6 +824,10 @@ function openCar(id){
       const rm=e.target.closest('[data-rm]');if(rm){arm(rm,()=>{const c=S.cars[id];upd({costs:(c.costs||[]).filter(x=>x.id!==rm.dataset.rm)})},'Șterge?');return}
       const x=e.target.closest('[data-x]');if(!x)return;
       if(x.dataset.x==='sell'){const p=num(D.sellPrice);if(p<=0){$('#cs-sp',root).focus();return}document.activeElement.blur();upd({sold:true,sellPrice:p,sellDate:D.sellDate||today()});toast('Vândut · profitul tău '+seur((p-carInvested(S.cars[id]))*carShare(S.cars[id])))}
+      if(x.dataset.x==='trade'){closeSheet();setTimeout(()=>openTradeLink(id),320);return}
+      if(x.dataset.x==='goto'){const gid=x.dataset.id;closeSheet();setTimeout(()=>openCar(gid),320);return}
+      if(x.dataset.x==='untrade'){arm(x,()=>{const c=S.cars[id],a=S.cars[c.tradeFor];const {tradeFor,...rest}=c;put('cars',rest);
+        if(a)put('cars',{...a,tradeIns:(a.tradeIns||[]).filter(z=>z!==id)});toast(a?`Legătura a fost scoasă. Prețul de vânzare la ${a.name} a rămas ${eur(a.sellPrice)}.`:'Legătura a fost scoasă')},'Sigur?');return}
       if(x.dataset.x==='unsell'){const c=S.cars[id];D.sellPrice=String(c.sellPrice||'');upd({sold:false})}
     });
     $('#cs-del',root).onclick=e=>arm(e.currentTarget,()=>{del('cars',id);closeSheet();toast('Mașina a fost ștearsă')});
