@@ -647,12 +647,12 @@ const mkt=c=>{const h=c.mkt||[];return h.length?h[h.length-1]:null};   // ultimu
 // ce valorează mașina azi, dacă o vinzi: piața + beneficiile tale; altfel după istoricul tău
 function carValue(c,H){
   const m=mkt(c),inv=carInvested(c);
-  if(m&&+m.p>0)return {v:Math.round(+m.p+benSum(c)),how:'piata',age:daysBetween(m.d,today())};
+  if(m&&+m.p>0)return {v:Math.round(+m.p+benSum(c)),how:'piata',age:daysBetween(m.d,today()),n:m.n||''};
   H=H===undefined?histRatio():H;
   if(H&&inv>0)return {v:Math.round(inv*H.k/50)*50,how:'istoric',k:H.k,n:H.n};
   return {v:Math.round(inv),how:'cost'};
 }
-const howTxt=x=>x.how==='piata'?'după prețul pieței + ce oferi la vânzare'+(x.age>30?` · notat acum ${zile(x.age)}, actualizează-l`:''):x.how==='istoric'?`după istoricul tău: vinzi în medie cu +${Math.round((x.k-1)*100)}% peste investiție (${x.n} mașini vândute). Notează prețul pieței pentru o estimare mai exactă.`:'la cost: notează prețul pieței (sau, după 3 vânzări, se calculează din istoricul tău)';
+const howTxt=x=>x.how==='piata'?'după prețul pieței'+(x.n?` (${esc(x.n)})`:'')+' + ce oferi la vânzare'+(x.age>30?` · notat acum ${zile(x.age)}, actualizează-l`:''):x.how==='istoric'?`după istoricul tău: vinzi în medie cu +${Math.round((x.k-1)*100)}% peste investiție (${x.n} mașini vândute). Notează prețul pieței pentru o estimare mai exactă.`:'la cost: notează prețul pieței (sau, după 3 vânzări, se calculează din istoricul tău)';
 
 /* ---------- pe luni: ce ai generat în fiecare lună ---------- */
 const mOf=d=>d?String(d).slice(0,7):'';
@@ -1021,7 +1021,11 @@ function openBackup(){
       try{await navigator.clipboard.writeText(json);mark();toast('Backup copiat. Lipește-l într-o notiță.');return}catch(e){}
       const t=$('#bk-txt',root);t.hidden=false;t.value=json;t.focus();t.select();mark();
     };
-    const importTxt=txt=>{try{const d=JSON.parse(String(txt||'').trim());if(!d||typeof d!=='object'||!COLS.some(c=>d[c]&&typeof d[c]==='object'))throw 0;
+    const importTxt=txt=>{try{const d=JSON.parse(String(txt||'').trim());
+        // fișier doar cu prețuri de piață: se adaugă în istoricul fiecărei mașini, fără să schimbe altceva
+        if(d&&d.mkt&&typeof d.mkt==='object'&&!COLS.some(c=>d[c])){let n=0;for(const [id,e] of Object.entries(d.mkt)){const c=S.cars[id];if(!c||!(+e.p>0))continue;
+          const h=(c.mkt||[]).filter(z=>z.d!==e.d);S.cars[id]={...c,mkt:[...h,{p:+e.p,d:e.d||today(),n:e.n||''}].slice(-12)};n++}
+          saveLocal();setSync();render();closeSheet();toast(`Prețuri de piață notate: ${n} mașini`);return}if(!d||typeof d!=='object'||!COLS.some(c=>d[c]&&typeof d[c]==='object'))throw 0;
         let n=0;for(const c of COLS){const add=d[c]||{};n+=Object.keys(add).length;S[c]={...S[c],...add}}
         if(d.settings&&Array.isArray(d.settings.cats)){const have=new Set(cats().map(x=>x.id));S.settings={...S.settings,cats:[...cats(),...d.settings.cats.filter(x=>!have.has(x.id))]}}
         autoTagAll();saveLocal();setSync();render();closeSheet();toast(`Importat: ${n} intrări`)}
