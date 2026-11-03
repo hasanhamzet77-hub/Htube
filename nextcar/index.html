@@ -758,7 +758,7 @@ function openExpense(o={}){
     $('#ex-save',root).onclick=()=>{
       const a=num(amt.value),date=$('#ex-date',root)?.value||today(),v=id=>($('#'+id,root)?.value||'').trim();
       if(X.cat==='parc'){
-        if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<=0)return fail('Scrie prețul de cumpărare.');if(X.trade&&!X.T.forId)return fail('Alege mașina pentru care ai primit-o la schimb.');
+        if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<0)return fail('Prețul nu poate fi negativ.');if(X.trade&&!X.T.forId)return fail('Alege mașina pentru care ai primit-o la schimb.');
           const id=uid(),nc={id,name,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()};put('cars',nc);
           if(X.trade){const A=applyTrade(S.cars[id]||nc,X.T,num(v('tr-cash')||X.T.cash));closeSheet();toast(`Intrată în parc la schimb pentru ${A?A.name:''}`);return}
           closeSheet();toast('Mașina a intrat în parc');return}
