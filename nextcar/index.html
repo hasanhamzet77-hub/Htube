@@ -291,6 +291,8 @@ h3{font-size:20px;line-height:1.15;margin:2px 0 0;font-weight:800;letter-spacing
 @keyframes spskip{to{opacity:1}}
 .trch .chip{flex-direction:column;align-items:flex-start;gap:1px;text-align:left}.trch .chip small{font-size:11px;color:var(--muted);font-weight:600}
 .chip.on small{color:inherit;opacity:.8}
+.atc{margin-bottom:10px}.atc .chip{padding:7px 12px}
+.autot{font-style:normal;font-size:11px;color:var(--amber);font-weight:600;margin-left:4px}
 .mrow .mamt{display:grid;justify-items:end;gap:1px}.mrow .mamt small{font-size:11px;color:var(--muted);font-weight:600}
 .l-amt.minus{color:var(--bad)}.mrow .go-a{font-style:normal;color:var(--muted);margin-left:2px}
 .seg button{white-space:nowrap}
@@ -400,7 +402,36 @@ let justAdded=null;
 let db=null, mode='pending'; const queue=[];
 const LKEY='hgroup-fundation-v1';
 function readLocal(){try{return JSON.parse(localStorage.getItem(LKEY)||'null')}catch(e){return null}}
-function loadLocal(){const r=readLocal();if(r){for(const k of COLS)S[k]=r[k]||{};S.settings=r.settings||{cats:null}}}
+function loadLocal(){const r=readLocal();if(r){for(const k of COLS)S[k]=r[k]||{};S.settings=r.settings||{cats:null}}if(autoTagAll())saveLocal()}
+/* ---------- cutie, combustibil, caroserie: se aleg cu un tap ---------- */
+const ATTR=[
+  ['gear','Cutie',[['man','Manuală'],['aut','Automată']]],
+  ['fuel','Combustibil',[['benz','Benzină'],['diesel','Diesel'],['hybrid','Hybrid'],['electric','Electric'],['gpl','GPL']]],
+  ['body','Caroserie',[['2u','2 uși'],['4u','4 uși'],['kombi','Kombi'],['suv','SUV'],['mono','Monovolum'],['cabrio','Cabrio'],['util','Utilitară']]]];
+const attrLabel=(k,v)=>{const a=ATTR.find(x=>x[0]===k);const o=a&&a[2].find(x=>x[0]===v);return o?o[1]:''};
+// ghicim din ce e scris deja la mașină (nume, detalii, notițe); doar ce e sigur
+function inferAttrs(c){
+  const t=' '+[c.name,c.specs,c.note].filter(Boolean).join(' ').toLowerCase().replace(/[·,/()|]/g,' ')+' ',o={};
+  if(/hybrid|hibrid|phev|plug-in/.test(t))o.fuel='hybrid';
+  else if(/electric|elektro|e-tron|e-golf|\bzoe\b|tesla|nissan leaf|\bbmw i3\b|\bev\b/.test(t))o.fuel='electric';
+  else if(/\b(lpg|gpl|autogas)\b/.test(t))o.fuel='gpl';
+  else if(/\b(tdi|cdi|crdi|dci|hdi|cdti|tdci|jtd|jtdm|multijet|d-?4d|ddis|bluehdi|bluetec|sdv\d*|tdv\d*|diesel|motorină|motorina)\b|\b\d{3}d\b|\b[xs]?drive\s?\d{2}d\b|\b\d\.\d\s?d\b|\bd5\b|\btd\b/.test(t))o.fuel='diesel';
+  else if(/\b(tsi|tfsi|fsi|sidi|benzin\w*|benzină|kompressor|vtec|mpi|gti|ecoboost|duratec|cgi|tce|puretech|t-?jet|vvt-?i|\d{3}i)\b/.test(t))o.fuel='benz';
+  if(o.fuel==='electric')o.gear='aut';
+  else if(/automat\w*|automatic|\bdsg\b|s-?tronic|tiptronic|multitronic|\b[579]g\b|7g-tronic|steptronic|\bcvt\b|\bedc\b|powershift|easytronic|\bat\b|w166|ml ?350|640d/.test(t))o.gear='aut';
+  else if(/manual\w*|manuală|schalter|schaltgetriebe|\bmt\b|[56]-gang|\b[56] trepte/.test(t))o.gear='man';
+  if(/kombi|combi|avant|touring|variant|estate|tourer|\bsw\b|break|sportwagon|sports ?tourer|t-modell|\bs20[34]\b|\bs21[123]\b|caravan|\bst\b/.test(t))o.body='kombi';
+  else if(/\bsuv\b|\bml ?\d|w166|\bx[1-7]\b|\bq[2-8]\b|tiguan|touareg|qashqai|sportage|tucson|kuga|rav ?4|cr-?v|x-?trail|duster|\bglk\b|\bgle\b|\bglc\b|santa fe|sorento|kodiaq|ateca|karoq|xc ?[69]0|cayenne|range rover|evoque|jeep|t-roc|captur|3008|5008/.test(t))o.body='suv';
+  else if(/c-?max|s-?max|galaxy|touran|sharan|zafira|sc[eé]nic|altea|b-klasse|b-class|verso|picasso|meriva|monovolum|\bvan\b/.test(t))o.body='mono';
+  else if(/cabrio|convertible|roadster|\bf12\b|cabriolet/.test(t))o.body='cabrio';
+  else if(/coup[eé]|2-türer|3-türer|2 uși|3 uși|2 usi|3 usi|\bf13\b/.test(t))o.body='2u';
+  else if(/transporter|sprinter|\bvito\b|caddy|transit|kangoo|berlingo|\bpartner\b|ducato|crafter|\bmaster\b|trafic|vivaro|\bt[456]\b/.test(t))o.body='util';
+  else if(/limuzin\w*|limousine|sedan|\blimo\b|[45]-türer|[45] uși|[45] usi|hatchback|schrägheck/.test(t))o.body='4u';
+  return o;
+}
+function autoTagAll(){let ch=false;for(const c of Object.values(S.cars)){const g=inferAttrs(c);for(const [k] of ATTR){if(!c[k]&&g[k]){c[k]=g[k];c.auto={...(c.auto||{}),[k]:1};ch=true}}}return ch}
+const attrPills=c=>{const miss=ATTR.filter(([k])=>!c[k]).length;return ATTR.filter(([k])=>c[k]).map(([k])=>`<span class="pill">${attrLabel(k,c[k])}</span>`).join('')+(miss?`<span class="pill amber">${miss===3?'completează detaliile':'lipsește '+ATTR.filter(([k])=>!c[k]).map(([,l])=>l.toLowerCase()).join(', ')}</span>`:'')};
+const attrPick=(c,pref)=>ATTR.map(([k,l,opts])=>`<div class="fld"><span>${l}${c&&c.auto&&c.auto[k]?' <em class="autot">ghicit din nume · verifică</em>':''}</span></div><div class="chips atc">${opts.map(([v,lb])=>`<button type="button" class="chip ${c&&c[k]===v?'on':''}" data-${pref}="${k}" data-v="${v}">${lb}</button>`).join('')}</div>`).join('');
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify({tasks:S.tasks,expenses:S.expenses,cars:S.cars,jobs:S.jobs,settings:S.settings}))}catch(e){}}
 const chains={};
 function enqueue(key,fn,retried){chains[key]=(chains[key]||Promise.resolve()).then(fn).catch(err=>{
@@ -566,12 +597,12 @@ function renderParc(){
     if(!c.sold){const pct=Math.min(100,days/90*100),col=days<30?'var(--good)':days<60?'var(--amber)':'var(--bad)';
       return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(inv)}</div></div>
       <div class="car-sub">${c.tradeFor&&S.cars[c.tradeFor]?'🔁 La schimb pentru '+esc(S.cars[c.tradeFor].name)+' · '+fmtDay(c.buyDate)+' · '+eur(c.buyPrice):'Cumpărat '+fmtDay(c.buyDate)+' · '+eur(c.buyPrice)} + ${eur(carCosts(c))} costuri</div>
-      ${carShare(c)<1?`<div class="car-foot"><div class="pills"><span class="pill ice">${shareTag(c)}</span><span class="pill">partea ta ${eur(myInv(c))}</span></div></div>`:''}
+      <div class="car-foot"><div class="pills">${carShare(c)<1?`<span class="pill ice">${shareTag(c)}</span><span class="pill">partea ta ${eur(myInv(c))}</span>`:''}${attrPills(c)}</div></div>
       <div class="gauge" style="color:${col}"><i style="width:${Math.max(3,pct)}%"></i></div><div class="gauge-l"><span>${zile(days)} în parc</span><span>90 zile</span></div></button>`}
     const p=carProfit(c);
     return `<button class="car" data-act="open-car" data-id="${c.id}"><div class="car-top"><div class="car-name">${esc(c.name)}</div><div class="car-inv">${eur(c.sellPrice)}</div></div>
     <div class="car-sub">Vândut ${fmtDay(c.sellDate)} · investit ${eur(inv)}</div>
-    <div class="car-foot"><div class="pills"><span class="pill ${p>=0?'good':'bad'}">${seur(carShare(c)<1?myProfit(c):p)}${carShare(c)<1?' partea ta':''}</span>${carShare(c)<1?`<span class="pill ice">${shareTag(c)}</span>`:''}<span class="pill">vândut în ${zile(days)}</span></div></div></button>`}).join('');
+    <div class="car-foot"><div class="pills"><span class="pill ${p>=0?'good':'bad'}">${seur(carShare(c)<1?myProfit(c):p)}${carShare(c)<1?' partea ta':''}</span>${carShare(c)<1?`<span class="pill ice">${shareTag(c)}</span>`:''}<span class="pill">vândut în ${zile(days)}</span>${attrPills(c)}</div></div></button>`}).join('');
   $('#parc').innerHTML=`<div class="page-head"><div><div class="eyebrow">Stoc mașini</div><h2>Parc auto</h2></div></div>
   <div class="stats"><div class="stat hl"><span>Capitalul tău în parc</span><b>${eur(cap)}</b></div><div class="stat"><span>Mașini în parc</span><b>${stock.length}</b></div><div class="stat"><span>Profitul tău realizat</span><b class="${prof>=0?'good-t':'bad-t'}">${seur(prof)}</b></div><div class="stat"><span>Medie vânzare</span><b>${avg===null?'—':zile(avg)}</b></div></div>
   <div class="seg">${[['stock','În parc'],['sold','Vândute'],['all','Toate'],['months','Pe luni']].map(([k,l])=>`<button class="${UI.parcF===k?'on':''}" data-act="parc-f" data-f="${k}">${l}</button>`).join('')}</div>
@@ -708,7 +739,7 @@ function openTradeLink(bId){
 
 function openExpense(o={}){
   const ed=o.edit||null;
-  const X={cat:ed?ed.cat:(o.cat||'combustibil'),sub:o.sub||'new',carId:null,jobId:null,future:ed?!!ed.future:false,trade:false,T:{forId:null,add:true,cash:''}};
+  const X={cat:ed?ed.cat:(o.cat||'combustibil'),sub:o.sub||'new',carId:null,jobId:null,future:ed?!!ed.future:false,A:{},trade:false,T:{forId:null,add:true,cash:''}};
   if(!ed&&!cats().some(c=>c.id===X.cat))X.cat=cats().find(c=>!c.sys)?.id||'parc';
   openSheet(`${bar(ed?'Editează':'Adaugă',ed?'Cheltuială':'Cheltuială nouă','ex-save')}
   <label class="amt"><span class="amt-l" id="ex-amt-l">Sumă</span><div class="amt-row"><input id="ex-amt" class="amt-in" inputmode="decimal" placeholder="0" autocomplete="off" value="${ed?esc(ed.amount):''}"><span class="amt-c">€</span></div></label>
@@ -724,7 +755,7 @@ function openExpense(o={}){
       if(X.cat==='parc'){
         const stock=Object.values(S.cars).filter(c=>!c.sold);if(stock.length===1&&!X.carId)X.carId=stock[0].id;
         h+=segHTML([['new','Mașină cumpărată'],['add','Cost la o mașină']],X.sub,'sub');
-        if(X.sub==='new'){lbl='Preț cumpărare (total)';h+=field('Marcă / model','<input id="ex-name" class="in" placeholder="Ex: VW Golf 7 1.6 TDI 2015" autocomplete="off">')+dateIn('Data cumpărării','ex-date')+segHTML([['100','Doar a mea'],['50','50% cu partener']],X.share||'100','share')+`<div id="ex-pw" ${X.share==='50'?'':'hidden'}>${field('Partener','<input id="ex-partner" class="in" placeholder="Ex: Kaled" autocomplete="off">')}</div>`
+        if(X.sub==='new'){lbl='Preț cumpărare (total)';h+=field('Marcă / model','<input id="ex-name" class="in" placeholder="Ex: VW Golf 7 1.6 TDI 2015" autocomplete="off">')+dateIn('Data cumpărării','ex-date')+`<div id="ex-attr">${attrPick(X.A,'na')}</div>`+segHTML([['100','Doar a mea'],['50','50% cu partener']],X.share||'100','share')+`<div id="ex-pw" ${X.share==='50'?'':'hidden'}>${field('Partener','<input id="ex-partner" class="in" placeholder="Ex: Kaled" autocomplete="off">')}</div>`
           +`<button type="button" class="sw" id="ex-tr" aria-pressed="${X.trade}"><span>Luată la schimb<small>Ai primit-o în schimbul altei mașini (din parc sau deja vândută)</small></span><i></i></button><div id="tr-box">${X.trade?tradePick(X.T,null):''}</div>`;
           if(X.trade)lbl='Valoare la schimb (cât a contat)'}
         else{lbl='Cost';h+=stock.length?field('Mașina',`<div class="chips">${stock.map(c=>`<button type="button" class="chip ${X.carId===c.id?'on':''}" data-car="${c.id}">${esc(c.name)}</button>`).join('')}</div>`)+field('Pentru ce','<input id="ex-label" class="in" placeholder="Ex: plăcuțe frână, TÜV, detailing" autocomplete="off">')+dateIn('Data','ex-date'):'<p class="hint">Nu ai mașini în parc. Adaugă întâi o mașină cumpărată.</p>'}
@@ -746,6 +777,7 @@ function openExpense(o={}){
       const s=e.target.closest('[data-sub]');if(s){X.sub=s.dataset.sub;drawExtra();return}
       const sh=e.target.closest('[data-share]');if(sh){X.share=sh.dataset.share;root.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',b===sh));const w=$('#ex-pw',root);if(w)w.hidden=X.share!=='50';return}
       const car=e.target.closest('[data-car]');if(car){X.carId=car.dataset.car;root.querySelectorAll('[data-car]').forEach(b=>b.classList.toggle('on',b===car));return}
+      const na=e.target.closest('[data-na]');if(na){const k=na.dataset.na;X.A[k]=X.A[k]===na.dataset.v?'':na.dataset.v;$('#ex-attr',root).innerHTML=attrPick(X.A,'na');return}
       const tr=e.target.closest('#ex-tr');if(tr){X.trade=!X.trade;tr.setAttribute('aria-pressed',X.trade);$('#tr-box',root).innerHTML=X.trade?tradePick(X.T,null):'';$('#ex-amt-l',root).textContent=X.trade?'Valoare la schimb (cât a contat)':'Preț cumpărare (total)';return}
       if(tradeClick(e,X.T,root,()=>{$('#tr-box',root).innerHTML=tradePick(X.T,null)},f=>{
         if(!f)return;const d=$('#ex-date',root);if(d&&f.sold&&f.sellDate)d.value=f.sellDate;
@@ -759,7 +791,8 @@ function openExpense(o={}){
       const a=num(amt.value),date=$('#ex-date',root)?.value||today(),v=id=>($('#'+id,root)?.value||'').trim();
       if(X.cat==='parc'){
         if(X.sub==='new'){const name=v('ex-name');if(!name)return fail('Scrie marca și modelul.');if(a<0)return fail('Prețul nu poate fi negativ.');if(X.trade&&!X.T.forId)return fail('Alege mașina pentru care ai primit-o la schimb.');
-          const id=uid(),nc={id,name,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()};put('cars',nc);
+          const g=inferAttrs({name}),au={};for(const [k] of ATTR)if(!X.A[k]&&g[k]){X.A[k]=g[k];au[k]=1}
+          const id=uid(),nc={id,name,...X.A,auto:au,buyPrice:a,buyDate:date,costs:[],sold:false,share:X.share==='50'?50:100,partner:X.share==='50'?v('ex-partner'):'',created:Date.now()};put('cars',nc);
           if(X.trade){const A=applyTrade(S.cars[id]||nc,X.T,num(v('tr-cash')||X.T.cash));closeSheet();toast(`Intrată în parc la schimb pentru ${A?A.name:''}`);return}
           closeSheet();toast('Mașina a intrat în parc');return}
         const c=S.cars[X.carId];if(!c)return fail('Alege mașina.');if(a<=0)return fail('Scrie suma.');put('cars',{...c,costs:[...(c.costs||[]),{id:uid(),label:v('ex-label')||'Cost',amount:a,date}]});closeSheet();toast('Cost adăugat la '+c.name);return}
@@ -784,7 +817,8 @@ function openCar(id){
   <div class="grid2">${field('Marcă / model',`<input id="cs-name" class="in" value="${esc(c0.name)}">`,'span2')}${field('Preț cumpărare',`<input id="cs-buy" class="in" inputmode="decimal" value="${esc(c0.buyPrice)}">`)}${field('Data',`<input id="cs-bdate" type="date" class="in" value="${esc(c0.buyDate)}">`)}</div>
   <div class="fld"><span>Cota ta din mașină</span></div>${segHTML([['100','100% a mea'],['50','50% cu partener']],carShare(c0)<1?'50':'100','share')}
   <div id="cs-pw" ${carShare(c0)<1?'':'hidden'}>${field('Partener',`<input id="cs-partner" class="in" placeholder="Ex: Kaled" value="${esc(c0.partner||'')}">`)}</div>
-  ${field('Detalii',`<input id="cs-specs" class="in" placeholder="Kombi · Diesel · Automat" value="${esc(c0.specs||'')}">`)}
+  <div id="cs-attr">${attrPick(c0,'at')}</div>
+  ${field('Alte detalii',`<input id="cs-specs" class="in" placeholder="An, km, motor, culoare…" value="${esc(c0.specs||'')}">`)}
   ${field('Notițe',`<textarea id="cs-note" class="in" rows="3" placeholder="Km, TÜV, ce trebuie reparat…">${esc(c0.note||'')}</textarea>`)}
   <div class="sh-sec">Costuri puse în mașină</div>
   <div id="cs-costs"></div>
@@ -821,6 +855,7 @@ function openCar(id){
     root.addEventListener('input',e=>{if(e.target.id==='cs-sp'){D.sellPrice=e.target.value;preview()}if(e.target.id==='cs-sd')D.sellDate=e.target.value});
     root.addEventListener('click',e=>{
       const sh=e.target.closest('[data-share]');if(sh){root.querySelectorAll('[data-share]').forEach(b=>b.classList.toggle('on',b===sh));$('#cs-pw',root).hidden=sh.dataset.share!=='50';upd({share:+sh.dataset.share});return}
+      const at=e.target.closest('[data-at]');if(at){const c=S.cars[id],k=at.dataset.at,v=c[k]===at.dataset.v?'':at.dataset.v,au={...(c.auto||{})};delete au[k];upd({[k]:v,auto:au});$('#cs-attr',root).innerHTML=attrPick(S.cars[id],'at');return}
       const rm=e.target.closest('[data-rm]');if(rm){arm(rm,()=>{const c=S.cars[id];upd({costs:(c.costs||[]).filter(x=>x.id!==rm.dataset.rm)})},'Șterge?');return}
       const x=e.target.closest('[data-x]');if(!x)return;
       if(x.dataset.x==='sell'){const p=num(D.sellPrice);if(p<=0){$('#cs-sp',root).focus();return}document.activeElement.blur();upd({sold:true,sellPrice:p,sellDate:D.sellDate||today()});toast('Vândut · profitul tău '+seur((p-carInvested(S.cars[id]))*carShare(S.cars[id])))}
@@ -937,7 +972,7 @@ function openBackup(){
     const importTxt=txt=>{try{const d=JSON.parse(String(txt||'').trim());if(!d||typeof d!=='object'||!COLS.some(c=>d[c]&&typeof d[c]==='object'))throw 0;
         let n=0;for(const c of COLS){const add=d[c]||{};n+=Object.keys(add).length;S[c]={...S[c],...add}}
         if(d.settings&&Array.isArray(d.settings.cats)){const have=new Set(cats().map(x=>x.id));S.settings={...S.settings,cats:[...cats(),...d.settings.cats.filter(x=>!have.has(x.id))]}}
-        saveLocal();setSync();render();closeSheet();toast(`Importat: ${n} intrări`)}
+        autoTagAll();saveLocal();setSync();render();closeSheet();toast(`Importat: ${n} intrări`)}
         catch(x){err.textContent='Nu e un backup HGroup valid.';err.hidden=false}};
     $('#bk-file',root).onchange=e=>{const file=e.target.files&&e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>importTxt(r.result);r.readAsText(file)};
     $('#bk-paste',root).onclick=async()=>{let t='';try{t=await navigator.clipboard.readText()}catch(x){}
