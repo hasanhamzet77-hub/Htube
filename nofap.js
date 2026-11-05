@@ -30,10 +30,15 @@ function fmtDur(ms){
   else if(days<7&&h)out.push(h+" h");
   return out.slice(0,3).join(" ");
 }
-function tiles(p){
-  const U=[["y",p.y===1?"an":"ani"],["mo",p.mo===1?"lună":"luni"],["w","săpt."],["d",p.d===1?"zi":"zile"],["h","ore"],["mi","min"],["s","sec"]];
-  const first=U.findIndex(([k])=>p[k]>0);const from=first<0?U.length-1:Math.min(first,U.length-2);
-  return U.slice(from).map(([k,l],i)=>`<div class="nf-t${i===0?" big":""}"><b>${k==="h"||k==="mi"||k==="s"?pad(p[k]):p[k]}</b><small>${l}</small></div>`).join("");
+// ceasul: zilele mari (mereu vizibile), dedesubt orele și minutele; secundele doar în prima oră
+function clock(start,now){
+  const ms=Math.max(0,now-start),D=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),mi=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);
+  const p=parts(start,now),big=[];
+  if(p.y)big.push(p.y+(p.y===1?" an":" ani"));if(p.mo)big.push(p.mo+(p.mo===1?" lună":" luni"));if(p.w)big.push(p.w+" săpt.");if(p.d&&big.length)big.push(p.d+(p.d===1?" zi":" zile"));
+  const t=(v,l)=>`<div class="nf-t"><b>${v}</b><small>${l}</small></div>`;
+  return `<div class="nf-days"><b>${D}</b><span>${D===1?"zi":"zile"}</span></div>
+    ${D>=7?`<div class="nf-brk">= ${big.join(" · ")}</div>`:""}
+    <div class="nf-hms">${t(pad(h),"ore")}${t(pad(mi),"min")}${ms<36e5?t(pad(s),"sec"):""}</div>`;
 }
 let tick=0;
 function render(){
@@ -52,7 +57,7 @@ function render(){
   const pr=Math.max(0,Math.min(1,(days-prev)/(next-prev)));
   R.innerHTML=`<div class="sec nf">
     <div class="nf-hd"><h3>NoFap</h3><span class="muted">Încercarea ${tries}</span></div>
-    <div class="nf-clock" id="nf-clock">${tiles(p)}</div>
+    <div class="nf-clock" id="nf-clock">${clock(N.start,now)}</div>
     <div class="nf-goal"><div class="nf-bar"><i style="width:${(pr*100).toFixed(1)}%"></i></div><small>Următorul prag: <b>${next} ${next===1?"zi":"zile"}</b> · mai ai ${fmtDur(Math.max(0,next*864e5-cur))}</small></div>
     <div class="nf-stats">
       <div><small>Încercări</small><b>${tries}</b></div>
@@ -73,7 +78,7 @@ function hist(N){
 function loop(){
   clearInterval(tick);
   tick=setInterval(()=>{const R=$n("nf-root");if(!R||!R.offsetParent||document.hidden)return;const N=st();if(!N.start)return;
-    const c=$n("nf-clock");if(c)c.innerHTML=tiles(parts(N.start,Date.now()));
+    const c=$n("nf-clock");if(c)c.innerHTML=clock(N.start,Date.now());
     if(new Date().getSeconds()===0)render()},1000);
 }
 document.addEventListener("click",e=>{
