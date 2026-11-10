@@ -1021,6 +1021,122 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
 .dx-load i{width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dxb 1s infinite ease-in-out}
 .dx-load i:nth-child(2){animation-delay:.15s}.dx-load i:nth-child(3){animation-delay:.3s}
 @keyframes dxb{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:none}}
+
+/* ══════ ȘTIRI ══════ */
+#feed.newsmode{padding-top:4px}
+.nchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -18px 6px;padding:2px 18px}
+.nchips::-webkit-scrollbar{display:none}
+.nchip{flex:none;padding:7px 13px;border-radius:999px;font-size:13px;font-weight:650;color:var(--muted);background:var(--soft)}
+.nchip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.nupd{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin:8px 0 2px;min-height:30px}
+.nupd .dot{width:6px;height:6px;border-radius:50%;background:var(--live);flex:none}
+.nsum{margin-left:auto;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.nday{font:700 11.5px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:22px 0 2px}
+.nrow{display:block;padding:14px 0 15px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;position:relative}
+.nlist .nrow{animation:rise .42s var(--ease) both;animation-delay:calc(var(--i,0)*32ms)}
+.nmeta2{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:5px}
+.nsrc{font-weight:750;color:var(--ink)}
+.nsrc::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--muted)}
+.nsrc.c-cry::before{background:#f59e0b}.nsrc.c-eco::before{background:#10b981}.nsrc.c-lum::before{background:#3b82f6}.nsrc.c-de::before{background:#a855f7}.nsrc.c-ro::before{background:#ef4444}.nsrc.c-auto::before{background:#64748b}
+.ncat{margin-left:auto;font-size:11px}
+.nrow h3{font:650 16.5px/1.3 var(--sans);letter-spacing:-.01em;margin:0;text-wrap:pretty}
+.nrow p{font-size:13.5px;line-height:1.45;color:var(--muted);margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nrow.hot h3::before{content:"●";color:#ef4444;font-size:9px;vertical-align:4px;margin-right:6px}
+.nrow.read h3,.nrow.read p{opacity:.5}
+.nfoot{font-size:12px;color:var(--muted);text-align:center;margin:18px 0 6px}
+.nskel{display:grid;gap:18px;margin-top:22px}.nskel i{display:block;height:54px;border-radius:14px;background:linear-gradient(90deg,var(--soft),transparent 60%,var(--soft));background-size:200% 100%;animation:skel 1.3s linear infinite}
+@keyframes skel{to{background-position:-200% 0}}
+.nsumcard{margin:8px 0 6px;padding:14px 16px;border-radius:18px;background:var(--card);border:1px solid var(--line);font-size:14.5px;line-height:1.5;animation:rise .4s var(--ease) both}
+.nsumcard small{display:block;font-size:11.5px;color:var(--muted);margin-bottom:8px}.nsumcard ul{margin:0;padding-left:18px;display:grid;gap:6px}.nsumcard p{margin:8px 0 0}.nsumcard.err{color:#e03131}
+.aznews{padding-bottom:6px}
+.anrow{display:grid;gap:3px;padding:11px 0;border-top:1px solid var(--line);color:inherit;text-decoration:none}
+.anrow b{font-size:14.5px;font-weight:650;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.anrow small{font-size:12px;color:var(--muted)}
+/* ══════ ÎNȚELEPTUL ══════ */
+.sg-orb{position:relative;width:64px;height:64px;border-radius:50%;flex:none;display:block;background:radial-gradient(circle at 32% 28%,#fff 0,color-mix(in srgb,var(--accent2) 70%,#fff) 22%,var(--accent) 62%,color-mix(in srgb,var(--accent) 60%,#000) 100%);box-shadow:0 8px 26px color-mix(in srgb,var(--accent) 35%,transparent)}
+.sg-orb i{position:absolute;inset:-7px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--accent) 45%,transparent);animation:orb 3.6s ease-in-out infinite}
+.sg-orb.sm{width:40px;height:40px;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 30%,transparent)}.sg-orb.sm i{inset:-5px}
+@keyframes orb{0%,100%{transform:scale(.94);opacity:.9}50%{transform:scale(1.12);opacity:.15}}
+.sagecard{display:flex;align-items:center;gap:14px;width:100%;margin-top:18px;padding:14px 16px;border-radius:22px;background:var(--card);border:1px solid var(--line);text-align:left}
+.sc-t{flex:1;min-width:0;display:grid;gap:2px}.sc-t b{font:650 16.5px/1.2 var(--display)}.sc-t small{font-size:13px;color:var(--muted);line-height:1.35}
+.sagecard em{font-style:normal;font-size:22px;color:var(--muted)}
+#sgpage{position:fixed;inset:0;z-index:60;height:100dvh;display:flex;flex-direction:column;background:var(--bg);transform:translateY(24px);opacity:0;transition:transform .34s var(--ease),opacity .26s}
+#sgpage.in{transform:none;opacity:1}
+#sgpage[hidden]{display:none}
+.sg-bar{position:static;display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--line)}
+.sg-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink);flex:none}
+.sg-ic svg,.sg-send svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sg-tt{flex:1;min-width:0;display:grid}.sg-tt b{font:650 17px/1.2 var(--display)}.sg-tt small{font-size:12px;color:var(--muted)}
+.sg-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px 16px 12px;display:flex;flex-direction:column;gap:16px}
+.sg-m{display:grid;gap:6px;max-width:100%;animation:rise .34s var(--ease) both}
+.sg-m.u{justify-self:end;align-self:flex-end;max-width:84%}
+.sg-m.u .sg-b{padding:11px 15px;border-radius:20px 20px 6px 20px;background:var(--grad);color:#fff;font-size:15.5px;line-height:1.45;overflow-wrap:anywhere}
+.sg-m.a .sg-b{font:400 17.5px/1.58 var(--serif);overflow-wrap:anywhere}
+.sg-m.a .sg-b p{margin:0 0 .7em}.sg-m.a .sg-b p:last-child{margin-bottom:0}.sg-m.a .sg-b ul{margin:0 0 .7em;padding-left:20px;display:grid;gap:4px}
+.sg-m.a .sg-b blockquote{margin:0 0 .7em;padding-left:12px;border-left:2px solid var(--accent);color:var(--muted);font-style:italic}
+.sg-m.a.err .sg-b{font:500 14.5px/1.45 var(--sans);color:#e03131;padding:11px 14px;border-radius:16px;background:color-mix(in srgb,#e03131 8%,transparent)}
+.sg-acts{display:flex;gap:6px}.sg-acts button{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:650;color:var(--muted);background:var(--soft)}
+.sg-brk{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted);margin:6px 0}.sg-brk::before,.sg-brk::after{content:"";flex:1;height:1px;background:var(--line)}
+.sg-dots{display:inline-flex;gap:5px;padding:6px 0}.sg-dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:dxb 1s infinite ease-in-out}.sg-dots i:nth-child(2){animation-delay:.15s}.sg-dots i:nth-child(3){animation-delay:.3s}
+.sg-cur{display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--accent);animation:pulseT 1s steps(2) infinite}
+.sg-hello,.sg-on{margin:auto 0;display:grid;justify-items:center;text-align:center;gap:10px;padding:10px 6px 20px}
+.sg-hello h3,.sg-on h3{font:650 22px/1.2 var(--display);margin-top:10px}.sg-hello p,.sg-on p{font-size:14.5px;line-height:1.5;color:var(--muted);max-width:32ch}
+.sg-sugs{display:grid;gap:8px;width:100%;margin-top:10px}.sg-sugs button{padding:12px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:14.5px;font-weight:550;text-align:left}
+.sg-sugs button:nth-child(1){animation:rise .4s .05s var(--ease) both}.sg-sugs button:nth-child(2){animation:rise .4s .1s var(--ease) both}.sg-sugs button:nth-child(3){animation:rise .4s .15s var(--ease) both}.sg-sugs button:nth-child(4){animation:rise .4s .2s var(--ease) both}
+.sg-on{text-align:left;justify-items:stretch}.sg-on .sg-orb{justify-self:center}.sg-on h3{text-align:center}.sg-on p{max-width:none}
+.sg-on ol{margin:2px 0;padding-left:20px;display:grid;gap:6px;font-size:14.5px;line-height:1.45}
+#sg-keyf{display:grid;gap:8px;margin-top:6px}#sg-keyf input{padding:13px 14px;border-radius:14px;font-size:15px;width:100%}
+.sg-fine{font-size:12.5px!important}
+.sg-form{display:flex;align-items:flex-end;gap:8px;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.sg-form[hidden]{display:none}
+#sg-in{flex:1;min-width:0;resize:none;max-height:140px;padding:12px 16px;border-radius:22px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:400 16px/1.4 var(--sans)}
+#sg-in:focus{outline:none;border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.sg-send{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--grad);color:#fff}
+#sgpage.busy .sg-send{background:var(--soft);color:var(--ink)}#sgpage.busy .sg-send svg{display:none}#sgpage.busy .sg-send::after{content:"";width:13px;height:13px;border-radius:3px;background:currentColor}
+.sgset{z-index:70}.sgset h3{font:650 20px/1.2 var(--display)}
+.sg-sec{display:grid;gap:8px}.sg-sec>small{font:700 11.5px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sg-models{display:grid;gap:6px}.sg-models button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--soft);text-align:left}
+.sg-models button span{font-size:12.5px;color:var(--muted)}.sg-models button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+/* ══════ MIȘCARE ȘI CURĂȚENIE: totul răspunde la atingere, fără efecte grele ══════ */
+:root{--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.3,1.45,.4,1);--card:rgba(255,255,255,.8)}
+@media (prefers-color-scheme: dark){:root{--card:rgba(24,26,36,.82)}}
+html{-webkit-tap-highlight-color:transparent}
+button,a,label,summary{touch-action:manipulation}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes vfade{from{opacity:0}}
+/* intrarea în pagină: fără blur (costă mult pe iPhone), cu secțiunile urcând una după alta */
+.enter{animation:vfade .24s ease both}
+.enter>*{animation:rise .46s var(--ease) both}
+.enter>*:nth-child(2){animation-delay:.04s}.enter>*:nth-child(3){animation-delay:.08s}.enter>*:nth-child(4){animation-delay:.12s}.enter>*:nth-child(n+5){animation-delay:.16s}
+.enter .subpg:not([hidden])>*{animation:rise .46s var(--ease) both}
+.enter .subpg:not([hidden])>*:nth-child(1){animation-delay:.08s}.enter .subpg:not([hidden])>*:nth-child(2){animation-delay:.13s}.enter .subpg:not([hidden])>*:nth-child(3){animation-delay:.18s}.enter .subpg:not([hidden])>*:nth-child(n+4){animation-delay:.23s}
+.enter .plist .prow{animation:rise .4s var(--ease) both}
+.enter .plist .prow:nth-child(1){animation-delay:.12s}.enter .plist .prow:nth-child(2){animation-delay:.15s}.enter .plist .prow:nth-child(3){animation-delay:.18s}.enter .plist .prow:nth-child(4){animation-delay:.21s}.enter .plist .prow:nth-child(5){animation-delay:.24s}.enter .plist .prow:nth-child(n+6){animation-delay:.27s}
+/* răspuns la atingere */
+.btn,.chip,.nchip,.tab,.pgo,.link,.gear,.xpchip,.refresh,.subnav button,.back,.sagecard,.sg-ic,.sg-send,.sg-sugs button,.sg-acts button,.pre,.gbtn,.pnew,.pdel,.pchk,.act,.nsum,.shbtn,.sg-models button{transition:transform .22s var(--ease),background-color .2s,color .2s,opacity .2s,box-shadow .2s}
+.btn:active,.chip:active,.nchip:active,.pgo:active,.gear:active,.xpchip:active,.refresh:active,.back:active,.sg-ic:active,.sg-send:active,.sg-sugs button:active,.sg-acts button:active,.pre:active,.gbtn:active,.pnew:active,.pdel:active,.nsum:active,.shbtn:active,.sg-models button:active{transform:scale(.95)}
+.tab:active svg{transform:scale(.86)}.subnav button:active{transform:scale(.94)}.link:active{opacity:.5}
+.sagecard:active,.prow:has(.pchk:active){transform:scale(.985)}
+.prow{transition:transform .22s var(--ease),opacity .3s}
+.pchk:active{transform:scale(.82)}
+.prow.done .pchk::after{animation:tick .32s var(--spring) both}
+@keyframes tick{from{transform:translateY(-1px) rotate(-45deg) scale(0);opacity:0}to{transform:translateY(-1px) rotate(-45deg) scale(1);opacity:1}}
+.nrow,.anrow{transition:opacity .2s}.nrow:active,.anrow:active{opacity:.55}
+.toast{animation:toastin .32s var(--ease) both}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,12px) scale(.96)}}
+/* mai puțină sticlă: cardurile nu mai blurează fundalul (derularea devine mult mai lină) */
+.sec,.prow,.stats div,.xpchip,.gear,.chip,input,select,.nf-t,.nf-stats>div{-webkit-backdrop-filter:none;backdrop-filter:none}
+.sec{background:var(--card);border-color:var(--line);box-shadow:0 1px 2px rgba(10,12,30,.03)}
+.prow,.xpchip,.gear{background:var(--card);border-color:var(--line)}
+.btn{box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 18%,transparent)}
+.btn.ghost{box-shadow:none}
+/* antetul Feed-ului: o singură linie curată, patru file egale */
+.bar{gap:8px}.live{white-space:nowrap}
+.logo span{font-size:15.5px;letter-spacing:.14em}
+.chips{gap:6px;border-bottom:0;padding-bottom:10px}
+.chips .chip{flex:1;text-align:center;padding:8px 6px;font-size:13px}
+@media (prefers-reduced-motion:reduce){.enter,.enter>*,.enter .subpg>*,.enter .plist .prow,.nlist .nrow,.sg-m,.sg-sugs button,.toast,.nsumcard,.sg-orb i,.nskel i{animation:none!important}
+  .btn,.chip,.nchip,.tab,.pgo,.sagecard,.prow,.pchk{transition:none}#sgpage{transition:opacity .2s;transform:none}}
 </style>
 </head>
 <body>
@@ -1037,7 +1153,7 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
     <div class="bar">
       <div class="logo"><img src="brand/emblem-96.png" alt=""><span>IMPERIUM</span></div>
       <div class="live"><span class="dot"></span><span id="upd">live</span></div>
-      <button class="shbtn" id="go-shorts" aria-label="Shorts"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
+      <button class="shbtn" id="go-shorts" aria-label="Shorts" hidden><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Shorts</button>
       <button class="refresh musbtn" id="mus-h" aria-label="Muzică"></button>
       <button class="refresh" id="refresh" aria-label="Reîmprospătează"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
     </div>
@@ -1069,6 +1185,8 @@ nav.dark .tab[aria-selected="true"]{color:#fff}
         <div class="hadd-b"><button class="btn ghost" type="button" id="hb-cancel">Renunță</button><button class="btn" type="submit">Adaugă</button></div>
       </form>
     </div>
+      <button class="sagecard" id="sage-open"><span class="sg-orb sm"><i></i></span><span class="sc-t"><b>Înțeleptul</b><small id="sage-sub">Vorbește cu el ca într-un jurnal. Răspunde din cărți.</small></span><em>›</em></button>
+      <div id="az-news"></div>
       <div id="az-card"></div>
       <div class="sec" id="sup-sec"></div>
     </div>
@@ -1391,7 +1509,7 @@ function mix(arr){
 
 // generator de feed infinit: clipuri, citate, idei și benzi de Shorts, amestecate fără sfârșit
 // două secțiuni: „Învățături” (citate, idei, threaduri și Shorts) și „Video” (clipurile lungi)
-let cat=S.fmode==="video"?"video":"main", gen=null;
+let cat=["video","news"].includes(S.fmode)?S.fmode:"main", gen=null;
 function makeGen(){
   const ok=x=>!S.hidden.includes(x.id);
   const all=vids().filter(ok);
@@ -1669,7 +1787,12 @@ function render(x){
     <p class="vtitle">${esc(x.t)}</p>${actions(x)}</article>`;
 }
 
-function resetFeed(){stopAll();gen=makeGen();$("feed").innerHTML="";more()}
+function resetFeed(){
+  stopAll();
+  // Știri: lista vine din news.js, nu din amestecul de clipuri și citate
+  if(cat==="news"&&window.News){gen=null;$("sentinel").hidden=true;$("newpill").hidden=true;$("feed").classList.add("newsmode");News.show($("feed"));return}
+  $("feed").classList.remove("newsmode");window.News&&News.hide();
+  gen=makeGen();$("feed").innerHTML="";more()}
 function more(){
   const batch=gen(14);
   if(!batch.length){$("feed").innerHTML=`<div class="empty">${cat==="video"?"Clipurile apar aici după prima actualizare automată.":"Nimic aici încă."}</div>`;$("sentinel").hidden=true;return}
@@ -1681,7 +1804,7 @@ function more(){
 new IntersectionObserver(e=>{if(e[0].isIntersecting&&gen&&!$("v-feed").hidden)more()},{rootMargin:"900px"}).observe($("sentinel"));
 
 function chips(){
-  $("chips").innerHTML=[["main","Învățături"],["video","Video"]].map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
+  $("chips").innerHTML=[["main","Învățături"],["video","Video"],["shorts","Shorts"],["news","Știri"]].map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${k===cat}">${v}</button>`).join("");
 }
 
 // ── un singur player YouTube, refolosit pentru toate clipurile ──
@@ -2012,9 +2135,9 @@ async function loadFeed(user){
     if(first)await Promise.race([artP,new Promise(r=>setTimeout(r,1500))]);
     FEED=data;
     const fresh=first?0:data.items.filter(i=>!before.has(i.id)).length;
-    $("upd").textContent=data.updated?"actualizat acum "+(ago(data.updated)||"puțin"):"live";
-    if(first||user){resetFeed();if(user)toast(fresh?fresh+" clipuri noi":"Feed amestecat din nou")}
-    else if(fresh){const p=$("newpill");p.textContent="↑ "+fresh+" clipuri noi";p.hidden=false}
+    $("upd").textContent=data.updated?"acum "+(ago(data.updated)||"puțin"):"live";
+    if(cat==="news"){if(first)resetFeed()}else if(first||user){resetFeed();if(user)toast(fresh?fresh+" clipuri noi":"Feed amestecat din nou")}
+    else if(fresh&&cat!=="news"){const p=$("newpill");p.textContent="↑ "+fresh+" clipuri noi";p.hidden=false}
   }catch(e){if(!gen)resetFeed();if(user)toast("Fără internet. Arăt ce am.")}
   r.classList.remove("spin");
 }
@@ -2030,7 +2153,7 @@ document.addEventListener("click",async e=>{
   const st=e.target.closest(".sthumb,.scard");
   if(st){switchTo("shorts",st.dataset.short);return}
   const ch=e.target.closest(".chip");
-  if(ch){cat=ch.dataset.c;S.fmode=cat;save();chips();resetFeed();window.scrollTo(0,0);return}
+  if(ch){if(ch.dataset.c==="shorts"){switchTo("shorts");return}cat=ch.dataset.c;S.fmode=cat;save();chips();resetFeed();window.scrollTo(0,0);return}
   const a=e.target.closest("[data-a]");
   if(a&&a.dataset.a==="expand"){
     const art=a.closest(".thread");art.querySelectorAll(".th-parts li").forEach(li=>li.hidden=false);a.remove();return;
@@ -2050,7 +2173,7 @@ document.addEventListener("click",async e=>{
     save();if(!$("v-saved").hidden)renderSaved();return;
   }
   if(e.target.closest("#newpill")){$("newpill").hidden=true;window.scrollTo(0,0);resetFeed();return}
-  if(e.target.closest("#refresh")){loadFeed(true);return}
+  if(e.target.closest("#refresh")){if(cat==="news"&&window.News)News.load(true);else loadFeed(true);return}
   const t=e.target.closest(".tab");if(t)switchTo(t.dataset.v);
 });
 const VIEWS=["feed","saved","set","azi","raft","sport"];
@@ -2091,7 +2214,7 @@ function switchTo(v,startShort){
   const navV=v==="saved"?"set":v==="shorts"?"feed":v;
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===navV));
   moveInd();
-  VIEWS.forEach(x=>{const el=$("v-"+x),show=x===v;el.hidden=!show;if(show){el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}});
+  VIEWS.forEach(x=>{const el=$("v-"+x),show=x===v;el.hidden=!show;if(show){el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter");clearTimeout(el._en);el._en=setTimeout(()=>el.classList.remove("enter"),900)}});
   if(v==="azi")renderAzi();
   if(v==="raft"){renderShelf();window.Grow&&Grow.renderNotes()}
   if(window.Sport){if(v==="sport"){Sport.show();window.Health&&Health.show()}else Sport.hide()}
@@ -3122,7 +3245,20 @@ if(introOn)WALL.forEach(u=>{const im=new Image();im.onload=()=>WALLOK.add(u);im.
 setTimeout(()=>{if(!introOn)checkMood()},1200);
 
 // ── pagina Azi ──
+// Azi: cele mai importante 3 știri (titlu + sursă); restul în Feed → Știri
+function azNews(){
+  const el=$("az-news");if(!el||!window.News)return;const T=News.top(3);
+  el.innerHTML=T.length?`<div class="sec aznews"><div class="sec-h"><h3>Știri importante</h3><button class="link" id="az-news-all">Toate ›</button></div>
+    ${T.map(x=>`<a class="anrow" href="${esc(x.u)}" target="_blank" rel="noopener"><b>${esc(x.t)}</b><small>${esc(x.s)} · ${ago(x.d)||"acum"}</small></a>`).join("")}</div>`:"";
+}
+function azSage(){
+  const el=$("sage-sub");if(!el||!window.Sage)return;
+  const n=((S.sage&&S.sage.msgs)||[]).filter(m=>m.r==="u").length;
+  el.textContent=!Sage.hasKey()?"Mentorul tău AI. Răspunde din cărți. Apasă ca să-l pornești.":n?"Continuă conversația. Ține minte ce ați vorbit.":"Vorbește cu el ca într-un jurnal. Răspunde din cărți.";
+}
+document.addEventListener("sage-key",azSage);
 function renderAzi(){
+  azNews();azSage();
   const now=new Date(),h=now.getHours();
   $("az-date").textContent=now.toLocaleDateString("ro-RO",{weekday:"long",day:"numeric",month:"long"});
   $("az-hi").textContent=h<5?"Noapte bună":h<11?"Bună dimineața":h<18?"Bună ziua":"Bună seara";
@@ -3145,6 +3281,7 @@ $("v-azi").addEventListener("click",e=>{
   if(tdl){const o=hgRead();delete o.tasks[tdl.dataset.tdel];hgWrite(o);renderHabits();return}
   const go=e.target.closest("[data-go]");if(go){planGo(go.dataset.go);return}
   if(e.target.closest("#az-set")){switchTo("set");return}
+  if(e.target.closest("#az-news-all")){cat="news";S.fmode=cat;save();chips();switchTo("feed");resetFeed();return}
   if(e.target.closest("#hb-plus")){openAdd(true);return}
   const del=e.target.closest("[data-hdel]");
   if(del){const hb=S.habits.find(x=>x.id===del.dataset.hdel);if(hb&&confirm(`Ștergi obiceiul „${hb.n}”?`)){S.habits=S.habits.filter(x=>x!==hb);save();renderHabits()}return}
@@ -3176,7 +3313,10 @@ document.addEventListener("visibilitychange",()=>{
 chips();loadFeed();
 // aplicația se deschide mereu pe „Azi” (planul zilei); la fel când revii după o pauză mai lungă
 function homeAzi(){S.sub=S.sub||{};S.sub.azi="azi";window.Grow&&Grow.setSub("azi","azi",false);switchTo("azi")}
-addEventListener("load",()=>{if(!$("v-azi").hidden)renderAzi()});
+addEventListener("load",()=>{if(!$("v-azi").hidden)renderAzi();
+  $("sage-open").addEventListener("click",()=>window.Sage&&Sage.open());
+  // știrile se aduc în fundal, ca să fie gata când deschizi pagina
+  window.News&&News.load(false).then(()=>{if(!$("v-azi").hidden)azNews()})});
 homeAzi();openFromLink();
 let hidAt=0;
 document.addEventListener("visibilitychange",()=>{
@@ -3208,6 +3348,8 @@ if("serviceWorker" in navigator){
 <script src="watch.js"></script>
 <script src="dex.js"></script>
 <script src="nofap.js"></script>
+<script src="news.js"></script>
+<script src="sage.js"></script>
 <script src="grow.js"></script>
 <script src="music.js"></script>
 </body>
