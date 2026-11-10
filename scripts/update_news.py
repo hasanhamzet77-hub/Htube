@@ -129,7 +129,9 @@ def main():
             n += 1
             if n >= per:
                 break
-        log.append(f"{src['name']}: {n}" + (f" · EROARE {err}" if err else "" if rows else " · flux gol"))
+        dates = [d for _, _, d, _ in rows if d]
+        newest = max(dates).strftime("%d.%m %H:%M") if dates else "fără dată"
+        log.append(f"{src['name']}: {n} din {len(rows)} (cel mai nou {newest})" + (f" · EROARE {err}" if err else "" if rows else " · flux gol"))
 
     items.sort(key=lambda x: x["d"], reverse=True)
     items = items[: CFG.get("max_items", 420)]

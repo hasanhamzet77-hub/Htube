@@ -27,8 +27,7 @@
     {"name": "HotNews", "c": "ro", "l": "ro", "url": "https://hotnews.ro/feed"},
     {"name": "DW Română", "c": "ro", "l": "ro", "url": "https://rss.dw.com/rdf/rss-rom-all"},
 
-    {"name": "kfz-betrieb", "c": "auto", "l": "de", "url": "https://www.kfz-betrieb.vogel.de/rss/news.xml"},
-    {"name": "Automobilwoche", "c": "auto", "l": "de", "url": "https://www.automobilwoche.de/feed"}
+    {"name": "kfz-betrieb", "c": "auto", "l": "de", "url": "https://www.kfz-betrieb.vogel.de/rss/news.xml"}
   ],
   "breaking": ["just in", "breaking", "eilmeldung", "eil:", "ultima oră", "ultima ora", "alertă", "live:"],
   "important": [
