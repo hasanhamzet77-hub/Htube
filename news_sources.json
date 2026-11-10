@@ -1,0 +1,45 @@
+{
+  "_info": "Sursele paginii Știri. c = categorie: cry (crypto & piețe), eco (economie), lum (lume), de (Germania), ro (România), auto. Adaugi/scoți o sursă aici și se actualizează singură.",
+  "max_age_hours": 60,
+  "max_items": 420,
+  "per_source": 30,
+  "sources": [
+    {"name": "Watcher Guru", "c": "cry", "l": "en", "url": "https://watcher.guru/news/feed"},
+    {"name": "CoinDesk", "c": "cry", "l": "en", "url": "https://www.coindesk.com/arc/outboundfeeds/rss/"},
+    {"name": "Cointelegraph", "c": "cry", "l": "en", "url": "https://cointelegraph.com/rss"},
+
+    {"name": "CNBC", "c": "eco", "l": "en", "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"},
+    {"name": "CNBC Finance", "c": "eco", "l": "en", "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664"},
+    {"name": "MarketWatch", "c": "eco", "l": "en", "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories"},
+    {"name": "BBC Business", "c": "eco", "l": "en", "url": "https://feeds.bbci.co.uk/news/business/rss.xml"},
+    {"name": "Tagesschau Wirtschaft", "c": "eco", "l": "de", "url": "https://www.tagesschau.de/wirtschaft/index~rss2.xml"},
+    {"name": "Ziarul Financiar", "c": "eco", "l": "ro", "url": "https://www.zf.ro/rss"},
+
+    {"name": "BBC World", "c": "lum", "l": "en", "url": "https://feeds.bbci.co.uk/news/world/rss.xml"},
+    {"name": "The Guardian", "c": "lum", "l": "en", "url": "https://www.theguardian.com/world/rss"},
+    {"name": "Al Jazeera", "c": "lum", "l": "en", "url": "https://www.aljazeera.com/xml/rss/all.xml"},
+    {"name": "DW", "c": "lum", "l": "en", "url": "https://rss.dw.com/rdf/rss-en-all"},
+
+    {"name": "Tagesschau", "c": "de", "l": "de", "url": "https://www.tagesschau.de/index~rss2.xml"},
+    {"name": "Spiegel", "c": "de", "l": "de", "url": "https://www.spiegel.de/schlagzeilen/tops/index.rss"},
+
+    {"name": "Digi24", "c": "ro", "l": "ro", "url": "https://www.digi24.ro/rss"},
+    {"name": "HotNews", "c": "ro", "l": "ro", "url": "https://hotnews.ro/feed"},
+    {"name": "DW Română", "c": "ro", "l": "ro", "url": "https://rss.dw.com/rdf/rss-rom-all"},
+
+    {"name": "kfz-betrieb", "c": "auto", "l": "de", "url": "https://www.kfz-betrieb.vogel.de/rss/news.xml"},
+    {"name": "Automobilwoche", "c": "auto", "l": "de", "url": "https://www.automobilwoche.de/feed"}
+  ],
+  "breaking": ["just in", "breaking", "eilmeldung", "eil:", "ultima oră", "ultima ora", "alertă", "live:"],
+  "important": [
+    "bitcoin", "btc", "ethereum", "etf", "sec ", "stablecoin",
+    "fed ", "federal reserve", "powell", "ecb", "ezb", "bce", "lagarde", "bundesbank",
+    "interest rate", "rate cut", "rate hike", "leitzins", "zinsen", "dobând",
+    "inflation", "inflați", "cpi", "recession", "rezession", "recesiune",
+    "tariff", "zölle", "zoll", "tarife vamale", "sanction", "sanktion", "sancțiun",
+    "all-time high", "record high", "rekordhoch", "crash", "sell-off", "default",
+    "oil price", "ölpreis", "opec", "gold",
+    "ceasefire", "waffenruhe", "armistițiu", "nato", "nuclear",
+    "gebrauchtwagen", "autohandel", "kfz-steuer", "used car", "tüv", "e-auto", "verbrenner"
+  ]
+}

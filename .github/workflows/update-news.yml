@@ -1,0 +1,39 @@
+name: Actualizează știrile
+
+on:
+  schedule:
+    - cron: "4,24,44 * * * *"   # la fiecare 20 de minute
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["news_sources.json", "scripts/update_news.py", ".github/workflows/update-news.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: news
+  cancel-in-progress: true
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Adună titlurile
+        run: python scripts/update_news.py
+      # news.json stă pe o ramură separată, cu un singur commit rescris de fiecare dată:
+      # așa istoricul aplicației nu se umple cu zeci de actualizări pe zi
+      - name: Publică pe ramura news-data
+        run: |
+          mkdir out && cp news.json out/ && cd out
+          git init -q -b news-data
+          git config user.name "htube-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news.json
+          git commit -q -m "Știri $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" news-data
