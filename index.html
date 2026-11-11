@@ -1137,6 +1137,48 @@ button,a,label,summary{touch-action:manipulation}
 .chips .chip{flex:1;text-align:center;padding:8px 6px;font-size:13px}
 @media (prefers-reduced-motion:reduce){.enter,.enter>*,.enter .subpg>*,.enter .plist .prow,.nlist .nrow,.sg-m,.sg-sugs button,.toast,.nsumcard,.sg-orb i,.nskel i{animation:none!important}
   .btn,.chip,.nchip,.tab,.pgo,.sagecard,.prow,.pchk{transition:none}#sgpage{transition:opacity .2s;transform:none}}
+
+/* ══════ PLAYLIST DE CITIT ══════ */
+.gbtn.ghostb{margin-left:auto;background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.gbtn.ghostb+.gbtn{margin-left:0}
+.gbtn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.plsheet{z-index:66}
+.plsheet .gs-card{max-height:86vh;gap:12px}
+.pl-hd{display:flex;align-items:center;justify-content:space-between;gap:10px}.pl-hd h3{font:650 20px/1.2 var(--display);margin:0}.pl-hd .tog{margin:0}
+.pl-body{display:grid;gap:8px}
+.pl-now{display:grid;gap:4px;padding:16px;border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--card)),var(--card));border:1px solid var(--line)}
+.pl-now small{font:700 11px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pl-now b{font-size:16px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pl-bar{display:block;height:4px;border-radius:4px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden;margin:6px 0 4px}
+.pl-bar i{display:block;height:100%;background:var(--grad);border-radius:4px;transition:width 1s linear}
+.pl-ctl{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:4px}
+.pl-ctl button{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--ink);transition:transform .2s var(--ease)}
+.pl-ctl button:active{transform:scale(.88)}
+.pl-ctl svg{width:22px;height:22px;fill:currentColor;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.pl-ctl .pl-pp{width:58px;height:58px;background:var(--grad);color:#fff;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 35%,transparent)}
+.pl-ctl .pl-pp svg{width:24px;height:24px}
+.pl-modes{display:flex;gap:6px}.pl-modes button{flex:1;padding:8px 4px;border-radius:12px;font-size:12.5px;font-weight:650;color:var(--muted);background:var(--soft);transition:transform .2s var(--ease),background-color .2s,color .2s}
+.pl-modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}.pl-modes button:active{transform:scale(.95)}
+.pl-h{display:flex;align-items:center;justify-content:space-between;margin:10px 2px 0}
+.pl-h span{font:700 11.5px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pl-add{font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;padding:6px 2px}
+.plr{display:flex;align-items:center;gap:4px;border-radius:16px;transition:background-color .2s}
+.plr.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.plp{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:9px 10px;text-align:left;transition:transform .2s var(--ease)}
+.plp:active{transform:scale(.98)}
+.plic{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--soft);color:var(--ink)}
+.plic svg{width:14px;height:14px;fill:currentColor}
+.plr.on .plic{background:var(--grad);color:#fff}
+.plic .eq{display:flex;gap:2px;align-items:flex-end;height:12px}.plic .eq i{width:3px;background:currentColor;border-radius:1px;animation:eq 1s ease-in-out infinite}
+.plic .eq i:nth-child(2){animation-delay:.25s}.plic .eq i:nth-child(3){animation-delay:.5s}
+.plt{flex:1;min-width:0;display:grid;gap:1px}
+.plt b{font-size:14.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plr.on .plt b{color:var(--accent)}
+.plt small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pld{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:50%;color:var(--muted)}
+.pld svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.pl-empty{font-size:13.5px;line-height:1.45;color:var(--muted);padding:8px 4px}
+.pl-cr{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -1234,7 +1276,7 @@ button,a,label,summary{touch-action:manipulation}
     <div id="sp-watch" hidden></div>
   </section>
   <section id="v-raft" hidden>
-    <div class="ptop"><h2 class="ptitle">Raft</h2><span class="muted" id="bk-count"></span><label class="gbtn" for="bk-file"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>PDF</label></div>
+    <div class="ptop"><h2 class="ptitle">Raft</h2><span class="muted" id="bk-count"></span><button class="gbtn ghostb" id="bk-mus" aria-label="Muzică pentru citit"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>Muzică</button><label class="gbtn" for="bk-file"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>PDF</label></div>
     <input type="file" id="bk-file" accept="application/pdf,.pdf" multiple hidden>
     <div class="subnav" data-subnav="raft"><button data-sub="carti">Cărți</button><button data-sub="notite">Notițe</button></div>
     <div class="subpg" data-of="raft" data-subpg="carti">
