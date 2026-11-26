@@ -123,6 +123,7 @@ function render(){
       <label class="hl-wide">Obiectivul<select id="hl-goal"><option value="lose"${(p.goal||"lose")==="lose"?" selected":""}>Slăbire (~0,5 kg/săptămână)</option><option value="keep"${p.goal==="keep"?" selected":""}>Menținere</option><option value="gain"${p.goal==="gain"?" selected":""}>Masă musculară</option></select></label>
     </div>
     <div id="hl-calc">${calcOut()}</div>
+    <button class="btn" data-food-open style="margin-top:12px;width:100%;border:0">🍽️ Jurnalul de mâncare — notează ce ai mâncat azi</button>
   </div>`,
     diet:()=>`
   <div class="sec hl">
@@ -387,6 +388,6 @@ function setTab(t){
   else{window.Sport&&Sport.hide();t==="body"?render():t==="watch"?(window.Watch&&Watch.render()):renderHeat();startTick()}
 }
 function show(){tab=["body","heat","watch"].includes(S.spTab)?S.spTab:"train";setTab(tab)}
-window.Health={show,render,renderHeat,saunaMusic:()=>!!S.heat.cur&&S.heat.music!==false&&tab==="heat"};
+window.Health={calc,show,render,renderHeat,saunaMusic:()=>!!S.heat.cur&&S.heat.music!==false&&tab==="heat"};
 const musR=()=>{try{window.Music&&Music.refresh()}catch(e){}};
 })();
